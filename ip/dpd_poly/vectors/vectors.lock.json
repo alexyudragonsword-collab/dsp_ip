@@ -1,0 +1,92 @@
+{
+ "sets": {
+  "ddr_r1_w12": {
+   "command": "python tools/lockstep.py dpd_poly --set ddr_r1_w12 --update-lock",
+   "files": {
+    "STATS.txt": "fccc8c0e9be52d5ceee63168b4b8ead256cf5c9df13a319cce4751fe8f896ce1",
+    "config.json": "86095db1533efb33135f91c6e3239075e899dcaadf7cc9ba25befcf6da7ab8da",
+    "dims.svh": "f20bc238dab8a5913a9ab3e0ad8d117124cd1d1c84f2839e1b2af2bc2b27b23b",
+    "dims_params.svh": "d276d23e39cd198e0a3fd9c7852327b40d0b1892602ee4ac6bc69a4f20f40b0d",
+    "w_im.txt": "9f3d7c0b37687d3e483ef15696af291be049995b361b729ff647800bce7e0291",
+    "w_re.txt": "728733d63c37195704ba6bee756aa7de74b909e11842c3d51fe9b741baf852ea",
+    "x_im.txt": "01a8e5eef0b3281e2514f290302e6143e90f0c81533fffc231d0d19f47b34ed1",
+    "x_re.txt": "8871505036f67197b5216abd541e38e365984c8a7c3868b480cc39420d53677c",
+    "y_im.txt": "5a1e1ed7fcd5db9bd9591ef16312adf5580d3d885d8c371622e8adf8b5e77825",
+    "y_re.txt": "3acd8cf1379c2631cd06b2b3fb7eaf73705b40e9a19f89abed8e71aa48039fe5"
+   }
+  },
+  "ddr_r1_w16": {
+   "command": "python tools/lockstep.py dpd_poly --set ddr_r1_w16 --update-lock",
+   "files": {
+    "STATS.txt": "2ba2c5e21949b82d3c7f45cc9e3b9b888822b8efcc31722e492d2509e9217e55",
+    "config.json": "4a4cdaabf985cf9e38fc25851948edd744e5e8c02070db72b8f85659e57aa709",
+    "dims.svh": "2888588f3acdeedf36097889e5084c15419cc7b6108ad370f0098c1d5d060b00",
+    "dims_params.svh": "686b1928b45e43ae6e54b3c6c39c20d21ebf2ec2f3abb41fa5667c4aa45f0677",
+    "w_im.txt": "4d10f6e4e5f01d55baff4ea15d2fd92b03c54b60f2613660b9475eacfe932ce7",
+    "w_re.txt": "adcf47a31553bfbf5c90dbfd1d0f5e251fd1c5ac936dc070ac2d854bc59a4225",
+    "x_im.txt": "f2067a08a1890274792544201cf32a8f53d19f08d0b6c41f401ac0c450bf678e",
+    "x_re.txt": "e64ba12c2efc6078b69142d5c35b19110202d6fd7b0aa6c65b1eed2cbf53b465",
+    "y_im.txt": "23eda99f9aea53602e9beb2d8d20cf62c08adcd230db0e028ca96a81c4422702",
+    "y_re.txt": "029f5537d437b243e342cc20a79cc2bcea010b5ece604f696d044894c44637f5"
+   }
+  },
+  "gmp510_w12": {
+   "command": "python tools/lockstep.py dpd_poly --set gmp510_w12 --update-lock",
+   "files": {
+    "STATS.txt": "da492768c73c8c5377452b597b2d3ef4c278bf82678e61bf7effb21911c8f292",
+    "config.json": "c3d04dc08c6e32bd304685552e4516203b28638db0b38e34cb749090fccb41fd",
+    "dims.svh": "5c41295244a0af843ec6301bc1b581a2e8986cd319b262a20b2156e526705667",
+    "dims_params.svh": "6c1e77a4e69c8387fb0d249f34731c676de5ae4df3bb2160d88ef8e6d25e74d8",
+    "w_im.txt": "c47ce11b84bcda3cde459c48fbe8f60ccd553bf8f7b2fc652742c065bc778675",
+    "w_re.txt": "e8de3cbf264d0fa43736e3d85f03ffe704c31639f1c13053d018599308cdfdfc",
+    "x_im.txt": "01a8e5eef0b3281e2514f290302e6143e90f0c81533fffc231d0d19f47b34ed1",
+    "x_re.txt": "8871505036f67197b5216abd541e38e365984c8a7c3868b480cc39420d53677c",
+    "y_im.txt": "629b80e10d36dcc6c578910587c84f7a26a60d18464f81439878437cbe7bc05e",
+    "y_re.txt": "0f82a376c428a775eeea364b59e06e40696150ecb4b3b4e7af6ff11f38646663"
+   }
+  },
+  "gmp510_w16": {
+   "command": "python tools/lockstep.py dpd_poly --set gmp510_w16 --update-lock",
+   "files": {
+    "STATS.txt": "49350dd9f63c9e138f3329f76c0e96bf101dfb1f5570b0cb31e501e9d452da18",
+    "config.json": "4095cdec351e8c5f7c09f326a6957e195dd31c98bc63cda76c4c0083fd7f7b19",
+    "dims.svh": "248b336ccd4c3bab36cc2afb0614fe618e940fca7253061b3116780e4e8fb382",
+    "dims_params.svh": "d903c1c314f7c1e9dbc6849dcdc65bfab602d373050968379a62ac772984589f",
+    "w_im.txt": "3a0034dea73c71d62c307fc1966ac86f826aecec73488494b22c57f1b600278b",
+    "w_re.txt": "326140cf516670a0c2468d8caf47ac4395cc839d7f642f732c42edcbb28b935f",
+    "x_im.txt": "f2067a08a1890274792544201cf32a8f53d19f08d0b6c41f401ac0c450bf678e",
+    "x_re.txt": "e64ba12c2efc6078b69142d5c35b19110202d6fd7b0aa6c65b1eed2cbf53b465",
+    "y_im.txt": "4d3a39ca72cd3b2edd3a95b93c6b5b450e4616d74f07e2e8cb9fb86f2fa60e0a",
+    "y_re.txt": "b3ba639d00f64800b046c11876298ea7e8cc17875c930127a14744156ce97278"
+   }
+  },
+  "rand_w16": {
+   "command": "python tools/lockstep.py dpd_poly --set rand_w16 --update-lock",
+   "files": {
+    "STATS.txt": "222cbe3a970a4f65819326302c13c3cc0bc740582044964fbf7055751f624c80",
+    "config.json": "4095cdec351e8c5f7c09f326a6957e195dd31c98bc63cda76c4c0083fd7f7b19",
+    "dims.svh": "c1df13b0edc50c4fb31e018b828c6bd7595ed9332b9f8b336daa18e2e74688ef",
+    "dims_params.svh": "d903c1c314f7c1e9dbc6849dcdc65bfab602d373050968379a62ac772984589f",
+    "w_im.txt": "3a0034dea73c71d62c307fc1966ac86f826aecec73488494b22c57f1b600278b",
+    "w_re.txt": "326140cf516670a0c2468d8caf47ac4395cc839d7f642f732c42edcbb28b935f",
+    "x_im.txt": "8763d66bb17abcb9cd5d479f72da6d9cad92f1bb637c280da0b6d44f7c24297b",
+    "x_re.txt": "08f6c3a9cf7730afac46203267a8c02cdfd1a706275fa75d0cc269ef2f6acac4",
+    "y_im.txt": "18c36825baaa9fdb172749567aa6b559ecec7f4a83ef4ed86391abfa10973459",
+    "y_re.txt": "f09d61c3371546a0c60c347c0fac9cf6adfeab5a660c1566d39e28a3ef3c328d"
+   }
+  }
+ },
+ "upstream": {
+  "command": "see ip/dpd_poly/upstream/DPA_160MHz/EXPORT.md (PA_DPD@08b9725 scripts/export_deploy.py)",
+  "files": {
+   "ddr_r1_w12_coeffs.json": "8a2fb8ddedf3fea5565bb5808879916f1e1d49f4fbfd6afb1d336a7433ae0ba9",
+   "ddr_r1_w12_refvec.csv": "fd13c372cd96bb0f600d97f4b02c9fae1eca56c26bbd31cd40dfced976b5c7ca",
+   "ddr_r1_w16_coeffs.json": "f3a243a3e32b832b7275dc8df8a6855ec0c7aab6547f0696b679f14fcd1fd771",
+   "ddr_r1_w16_refvec.csv": "5918698c02ce267a6b5d5174f24c0fd4ff59feea961a2191bb4c8ab511a5740f",
+   "gmp510_w12_coeffs.json": "0840f5d2b5fff42d6ea2162b4088e6278bac3a5b1eb9d7964b9725039bd10175",
+   "gmp510_w12_refvec.csv": "1b6f4a3f906da500d427ec7efeac57d06059638be23cb175a70a2549881e2c8d",
+   "gmp510_w16_coeffs.json": "af44012105ed5c794044a8a7815166de0abcc6feeb021d3eca2c5fa1b9bbb3b4",
+   "gmp510_w16_refvec.csv": "587a23af8dc358890448e48987b0a36d67d2fc6093ec0e378d89f9cee29617bb"
+  }
+ }
+}

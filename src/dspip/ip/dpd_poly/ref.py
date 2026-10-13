@@ -45,6 +45,8 @@ class RunResult:
     y_re: list[int]
     y_im: list[int]
     traces: dict[int, SampleTrace] = field(default_factory=dict)
+    n_sat_phi: int = 0   # column codes that hit the w_phi rails (non-vacuity of saturation)
+    n_sat_out: int = 0   # outputs that hit the w_out rails
 
 
 class _Plan:
@@ -125,12 +127,17 @@ class DpdPolyRef:
         cfg = self.cfg
         trace_samples = set(trace_samples)
         y_re, y_im, traces = [], [], {}
+        phi_hi, phi_lo = (1 << (cfg.w_phi - 1)) - 1, -(1 << (cfg.w_phi - 1))
+        out_hi, out_lo = (1 << (cfg.w_out - 1)) - 1, -(1 << (cfg.w_out - 1))
+        n_sat_phi = n_sat_out = 0
         for n, a, pws, envp, phr, phi in _stream(cfg, self.plan, x_re, x_im):
             acc_re = acc_im = 0
             code_re, code_im = [], []
             for c in range(cfg.n_terms):
                 cr = dp.quantize_phi(phr[c], cfg.s_c[c], cfg.w_phi)
                 ci = dp.quantize_phi(phi[c], cfg.s_c[c], cfg.w_phi)
+                if cr in (phi_hi, phi_lo) or ci in (phi_hi, phi_lo):
+                    n_sat_phi += 1
                 mr, mi = dp.cmul(cr, ci, cfg.coef_re[c], cfg.coef_im[c])
                 acc_re += mr << cfg.al_c[c]
                 acc_im += mi << cfg.al_c[c]
@@ -139,12 +146,14 @@ class DpdPolyRef:
                     code_im.append(ci)
             yr = dp.output(acc_re, cfg.s_out, cfg.w_out)
             yi = dp.output(acc_im, cfg.s_out, cfg.w_out)
+            if yr in (out_hi, out_lo) or yi in (out_hi, out_lo):
+                n_sat_out += 1
             y_re.append(yr)
             y_im.append(yi)
             if n in trace_samples:
                 traces[n] = SampleTrace(n, a, pws, envp, phr, phi, code_re, code_im,
                                         acc_re, acc_im, yr, yi)
-        return RunResult(y_re, y_im, traces)
+        return RunResult(y_re, y_im, traces, n_sat_phi, n_sat_out)
 
     # ---- numpy int64 twin -------------------------------------------------------------
     def run_vec(self, x_re, x_im) -> tuple[np.ndarray, np.ndarray]:

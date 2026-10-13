@@ -1,0 +1,27 @@
+name: dpd_poly
+top: dpd_poly
+rtl:
+  - ../sat_shift/rtl/sat_shift.sv
+  - rtl/dpd_env.sv
+  - rtl/dpd_pow.sv
+  - rtl/dpd_term.sv
+  - rtl/dpd_acc.sv
+  - rtl/dpd_poly.sv
+tb: rtl/tb_dpd_poly.sv
+check: python
+params:
+  P: [1, 2, 4]          # samples per clock; throughput = f_clk x P
+generator: dspip.ip.dpd_poly.gen_vectors:generate
+probe: dspip.ip.dpd_poly.gen_vectors:probe
+vector_sets:
+  - {name: ddr_r1_w16, source: generated}
+  - {name: gmp510_w16, source: generated}
+  - {name: ddr_r1_w12, source: generated}
+  - {name: gmp510_w12, source: generated}
+  - {name: rand_w16,   source: generated}
+compare:
+  - {golden: y_re.txt, rtl: rtl_y_re.txt}
+  - {golden: y_im.txt, rtl: rtl_y_im.txt}
+latency_note: >
+  Fixed pipeline latency (W_ENV+1 envelope sqrt, 3 powers, 1 window, 4 term, clog2(N)/2+1
+  accumulate) plus LEAD samples; the tb counts out_valid and drops the first LEAD outputs.

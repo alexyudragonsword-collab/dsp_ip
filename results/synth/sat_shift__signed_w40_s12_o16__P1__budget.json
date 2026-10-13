@@ -1,0 +1,41 @@
+{
+ "kind": "estimate",
+ "ip": "sat_shift",
+ "set": "signed_w40_s12_o16",
+ "P": 1,
+ "mode": "budget",
+ "liberty": {
+  "name": "nangate45",
+  "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
+  "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+ },
+ "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+ "abc_script": "strash; map; topo; stime -p",
+ "ff": {
+  "cell": "DFF_X1",
+  "t_cq_ps": 112.7,
+  "t_setup_ps": 41.2,
+  "total_ps": 153.9
+ },
+ "n_terms_full": null,
+ "points": [
+  {
+   "label": "full",
+   "params": {},
+   "delay_ps": 585.7,
+   "runtime_s": 0.9,
+   "area_um2": 201.894,
+   "cells": 218,
+   "flops": null
+  }
+ ],
+ "delay_ps": 585.7,
+ "period_ps": 739.6,
+ "f_est_mhz": 1352.1,
+ "throughput_est_msps": 1352.1,
+ "p_for_640msps": 1,
+ "area_um2": 201.894,
+ "cells": 218,
+ "method": "whole design synthesized with the real term count; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup",
+ "runtime_s": 0.9
+}

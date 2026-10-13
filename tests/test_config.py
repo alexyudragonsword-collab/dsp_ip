@@ -84,7 +84,7 @@ def test_bitwidth_is_config(ddr16):
     assert (a.w_pw, a.env_frac, a.w_phi) == (16, 0, 16)
     assert (b.w_pw, b.env_frac, b.w_phi) == (20, 2, 18)
     assert b.q_k != a.q_k and b.s_c != a.s_c and b.w_acc != a.w_acc
-    assert "W_PW      = 20" in b.to_svh(10) and "W_PW      = 16" in a.to_svh(10)
+    assert "W_PW      = 20" in b.to_svh_params() and "W_PW      = 16" in a.to_svh_params()
     assert "ENV_FRAC  = 2" in b.to_svh(10)
 
 
@@ -122,7 +122,8 @@ def test_json_round_trip_and_svh(cfg_ddr16, tmp_path):
     assert DpdPolyConfig.from_json(cfg.to_json()) == cfg
     json.loads(cfg.to_json())
     svh = cfg.to_svh(4096)
-    assert "localparam int N_TERMS   = 140;" in svh
+    assert "parameter int N_TERMS   = 140," in cfg.to_svh_params()
+    assert "parameter int P         = 2," in cfg.to_svh_params(p=2)
     assert "localparam int N_SAMPLES = 4096;" in svh
     assert "localparam logic [1119:0] T_SH" in svh  # 140 * 8 - 1
     assert "localparam int" in svh and "'{" not in svh   # no unpacked-array localparams
