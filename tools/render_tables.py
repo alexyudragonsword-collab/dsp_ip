@@ -80,10 +80,18 @@ def synth_section() -> str:
     lines.append("")
     for basis in sorted({r["set"] for r in reps}):
         rs = [r for r in reps if r["set"] == basis]
-        f = min(r["f_est_mhz"] for r in rs)
-        p = max(r["p_for_640msps"] for r in rs)
-        lines.append(f"- **{basis}**: f_est ≥ {f:.0f} MHz (estimate) ⇒ **P = {p}** reaches 640 MSPS "
-                     f"(throughput = f_clk × P).")
+        hier = [r for r in rs if r["mode"] == "hier"] or rs   # real term count when available
+        f = min(r["f_est_mhz"] for r in hier)
+        p = max(r["p_for_640msps"] for r in hier)
+        tag = "hier, real term count" if hier is not rs else "budget extrapolation"
+        lines.append(f"- **{basis}**: f_est ≥ {f:.0f} MHz ({tag}, estimate) ⇒ **P = {p}** reaches "
+                     f"640 MSPS (throughput = f_clk × P).")
+        for h in [r for r in rs if r["mode"] == "hier"]:
+            b = [r for r in rs if r["mode"] == "budget" and r["P"] == h["P"]]
+            if b:
+                err = (b[0]["area_um2"] - h["area_um2"]) / h["area_um2"] * 100
+                lines.append(f"  - P={h['P']}: budget extrapolation vs hier area {err:+.0f} %, "
+                             f"critical path {b[0]['delay_ps']:.0f} vs {h['delay_ps']:.0f} ps.")
     lines.append("")
     return "\n".join(lines)
 

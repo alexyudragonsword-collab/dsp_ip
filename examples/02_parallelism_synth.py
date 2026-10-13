@@ -43,11 +43,13 @@ def print_table(reps: list[dict]) -> None:
     print()
     for basis in sorted({r["set"] for r in reps}):
         rs = [r for r in reps if r["set"] == basis]
-        f = min(r["f_est_mhz"] for r in rs)
-        p = max(r["p_for_640msps"] for r in rs)
-        ok = [r for r in rs if r["throughput_est_msps"] >= 640]
+        hier = [r for r in rs if r["mode"] == "hier"] or rs   # real term count when available
+        f = min(r["f_est_mhz"] for r in hier)
+        p = max(r["p_for_640msps"] for r in hier)
+        ok = [r for r in hier if r["throughput_est_msps"] >= 640]
         hit = f", the synthesized P={min(r['P'] for r in ok)} point already exceeds it" if ok else ""
-        print(f"{basis}: f_est >= {f:.0f} MHz (estimate), so P = {p} reaches 640 MSPS{hit}.")
+        tag = "hier, real term count" if hier is not rs else "budget extrapolation"
+        print(f"{basis}: f_est >= {f:.0f} MHz ({tag}, estimate), so P = {p} reaches 640 MSPS{hit}.")
 
 
 if __name__ == "__main__":
