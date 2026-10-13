@@ -1,5 +1,17 @@
 # CHANGELOG（按里程碑）
 
+## 里程碑 1 之后的收尾（2026-10-13）
+
+### 变更
+- `dpd_term`：双因子包络级拆成"乘 → 寄存 → 舍入饱和"两级（TERM_LAT 4→5）；累加树每级都打拍（ACC_LAT = clog2(N)+1）。全部 36 个 lockstep 点（两仿真器 × 18）仍 0 不匹配。
+- `tools/synth.py --mode hier`：保留 `dpd_term/env/pow/acc` 层次（`sat_shift` 打平进父模块），ABC 逐模块映射——真实项数可在本机跑完（DDR 140 项 ~4 min），不再外推；`--mode full` 打平在 ~9 GB 被 OOM。
+- ABC 流程改为 yosys 自带的 `&nf -D 1000`（`--legacy-map` 保留旧 `map` 对比）：旧 `map` 的延迟随网表规模摆动 ±40 %。
+- CI `synth` job 改跑 hier 模式；`synth.py --out` 自动建目录（CI 曾因此红）。
+
+### 被推翻的判断
+- "预算模式（子集打平 + 线性外推）给的频率与全项数一致"：同一 RTL 打平 1783 ps、分模块 1278 ps；结论改用 hier + `&nf`。
+- "累加树两级加法一拍没问题"：GMP 顶层 167 k 门的树在旧 `map` 下映成 29 门 1969 ps 路径；每级打拍后仍要靠 `&nf` 才降到 1441 ps——瓶颈是行波进位加法器的映射，不是级数。
+
 ## 里程碑 1 — `dpd_poly` 定点 DPD 数据通路 + 通用 lockstep 脚手架（2026-10-13）
 
 ### 新增

@@ -24,11 +24,14 @@ stat -liberty <lib>
   (`--lib sky130`) but every committed number is NanGate45.
 - **Critical path**: ABC `stime` after liberty mapping — the longest combinational path
   between registers with the library's cell delays, **no wire load**.
-- **Mapping**: the committed numbers use `dch -f` and `map -D 1000` (delay-oriented
-  mapping toward a 1 ns target). ABC's default `map` is area-oriented and its delay swung
+- **Mapping**: the committed numbers use yosys's own liberty flow (`&fraig; scorr; dc2;
+  dretime; &dch -f; &nf -D 1000`, i.e. the modern `&nf` mapper with a 1 ns delay target).
+  The old area-oriented `map` is kept behind `--legacy-map` for comparison: its delay swung
   by ±40 % with the size of the netlist it was handed (the same DDR RTL mapped to 1783 ps
-  flattened and 1278 ps per module; the GMP top module to 1129 vs 1751 ps); with a delay
-  target the two cuts agree to within a few percent.
+  flattened and 1278 ps per module; the GMP top module, 167 k gates of adder trees, to
+  1969 ps even with `dch` and `map -D`, where `&nf` gives 1441 ps). Yosys 0.33 maps `$add`
+  to ripple-carry logic (no `choices/` prefix adders), so how well ABC balances a 40-bit
+  carry chain is what these numbers measure; treat ±10 % as noise.
 - **Frequency**: `f_est = 1 / (critical path + t_cq + t_setup)`, the flop terms read from
   the library's `DFF_X1` tables (median entries: 113 ps + 41 ps).
 - **Area**: `stat -liberty` total cell area (µm²), flops included.

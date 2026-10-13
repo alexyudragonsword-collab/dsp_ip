@@ -58,12 +58,19 @@ LIBS = {
 }
 ABC_FAST = "strash\nmap\ntopo\nstime -p\n"
 ABC_DCH = "strash\ndch -f\nmap\ntopo\nstime -p\n"
+# yosys's own default liberty flow (&nf mapper) with a delay target, plus stime for the report
+ABC_NF = ("strash\n&get -n\n&fraig -x\n&put\nscorr\ndc2\ndretime\nstrash\n&get -n\n&dch -f\n"
+          "&nf -D {D}\n&put\ntopo\nstime -p\n")
+DEFAULT_TARGET_PS = 1000.0
 
 
-def abc_script(dch: bool, target_ps: float | None) -> str:
-    """ABC script: ``map`` is area-oriented unless given a delay target ``-D <ps>``; the
-    mapper then trades area for delay toward the target, which removes most of the
-    run-to-run spread between flattened and per-module mapping of the same logic."""
+def abc_script(dch: bool, target_ps: float | None, legacy: bool = False) -> str:
+    """ABC script. Default: the ``&nf`` mapper with a delay target (what yosys's own
+    ``abc -liberty -D`` runs), which maps a 167 k-gate adder tree to 1441 ps where the old
+    area-oriented ``map`` left a 1969 ps path. ``legacy`` selects the old ``map`` flow
+    (``dch`` optional, ``-D`` optional) for comparison."""
+    if not legacy:
+        return ABC_NF.replace("{D}", str(int(target_ps or DEFAULT_TARGET_PS)))
     s = ABC_DCH if dch else ABC_FAST
     if target_ps:
         s = s.replace("\nmap\n", f"\nmap -D {int(target_ps)}\n")
@@ -198,7 +205,7 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
 
 
 def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: int | None,
-                dch: bool, target_ps: float | None = None) -> dict:
+                dch: bool, target_ps: float | None = None, legacy: bool = False) -> dict:
     lib = LIBS[lib_name]
     lib_path = lib["path"]
     if not lib_path.exists():
@@ -212,9 +219,9 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     if dp.exists():
         m = re.search(r"N_TERMS\s*=\s*(\d+)", dp.read_text())
         n_full = int(m.group(1)) if m else None
-    script = abc_script(dch, target_ps)
-    tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + ("_dch" if dch else "")
-           + (f"_D{int(target_ps)}" if target_ps else ""))
+    script = abc_script(dch, target_ps, legacy)
+    tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + ("_legacy" if legacy else "")
+           + ("_dch" if dch else "") + (f"_D{int(target_ps)}" if target_ps else ""))
     work = RESULTS / "logs" / spec.name / tag
     base_params = {"P": P} if "P" in spec.params else {}
     ff = ff_overhead_ps(lib_path, lib["dff"])
@@ -283,9 +290,11 @@ def main(argv=None) -> int:
     ap.add_argument("--mode", choices=["budget", "full", "hier"], default="budget")
     ap.add_argument("--terms", type=int, help="budget mode: smaller term count T (and 2T)")
     ap.add_argument("--lib", choices=list(LIBS), default="nangate45")
-    ap.add_argument("--dch", action="store_true", help="ABC dch before map (slower, better)")
+    ap.add_argument("--legacy-map", action="store_true", dest="legacy",
+                    help="old ABC 'map' flow instead of the default &nf flow (comparison)")
+    ap.add_argument("--dch", action="store_true", help="legacy flow: dch before map")
     ap.add_argument("--target-ps", type=float, default=None,
-                    help="ABC map -D delay target in ps (delay-oriented mapping)")
+                    help=f"ABC delay target in ps (default {DEFAULT_TARGET_PS:.0f} for the &nf flow)")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if shutil.which("yosys") is None:
@@ -293,9 +302,10 @@ def main(argv=None) -> int:
         return 2
     spec = load_ipspec(IP_ROOT / args.ip)
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,
-                      args.target_ps)
+                      args.target_ps, args.legacy)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    suffix = ("_dch" if args.dch else "") + (f"_D{int(args.target_ps)}" if args.target_ps else "")
+    suffix = (("_legacy" if args.legacy else "") + ("_dch" if args.dch else "")
+              + (f"_D{int(args.target_ps)}" if args.target_ps else ""))
     out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))

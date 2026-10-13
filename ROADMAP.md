@@ -2,8 +2,8 @@
 
 ## 里程碑 1 收尾（可选、不阻塞验收）
 
-- [ ] `tools/synth.py --mode full`：完整 N_TERMS 的 P=1 综合跑一次（预计数小时），把面积外推误差写进 `docs/results.md`。
-- [ ] 关键路径再切一刀：预算综合显示 1948 ps（NanGate45 fast map）比单项 1294 ps 长，怀疑是 `dpd_env` 第 0 级（两个 16×16 平方 + 加 + 移位）或 `dpd_term` 第 1 级（乘 + sat_shift）；各加一级流水可把 f_est 推高，但要重跑全部 lockstep。
+- [ ] 加法树的 40 位加法器：yosys 0.33 把 `$add` 映射成行波进位（无 `choices/` 并行前缀加法器），ABC 能否把 40 级进位链平衡好决定了顶层的关键路径（GMP 顶层 `&nf` 下 1441 ps）。
+      可选：手写一个 Kogge-Stone / Brent-Kung `$lcu` techmap 放进 `tools/`，或把累加树改成进位保留（CSA）结构。
 - [ ] `env_frac`（F）/ `w_pw` 扫描做成 `examples/01` 的可选参数并入表（现在只有默认与 +4 两档）。
 
 ## 里程碑 2：Halo_Serdes 的 5 个模块进同一脚手架（本轮不做）
