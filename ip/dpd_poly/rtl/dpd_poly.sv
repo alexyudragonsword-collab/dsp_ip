@@ -35,7 +35,7 @@ module dpd_poly #(
     localparam int ENV_LAT   = W_ENV + 1;
     localparam int POW_LAT   = 3;
     localparam int FE_LAT    = ENV_LAT + POW_LAT;      // front end: x must be delayed as much
-    localparam int TERM_LAT  = 4;
+    localparam int TERM_LAT  = 5;
     localparam int LV        = (N_TERMS <= 1) ? 1 : $clog2(N_TERMS);
     localparam int ACC_LAT   = LV / 2 + 1;
     localparam int TOTAL_LAT = FE_LAT + 1 + TERM_LAT + ACC_LAT;   // +1: window register

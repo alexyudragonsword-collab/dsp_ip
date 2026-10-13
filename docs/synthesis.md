@@ -49,9 +49,14 @@ the real tables, widths and pipeline) and:
 on a 15 GB machine, so the committed P = 4 points use 7/14 (DDR) and 8/16 (GMP) terms. Keep
 a budget point under ~60 term instances unless the machine has more memory.
 
-`--mode full` synthesizes the real term count and is meant for a manual or nightly run;
-when a full result exists it is listed next to the budget one in `docs/results.md` so the
-extrapolation can be judged.
+`--mode full` synthesizes the real term count flattened and is meant for a machine with
+much more memory. **`--mode hier`** is the practical full-count run: the IP's own modules
+(`dpd_env`, `dpd_pow`, `dpd_term`, `dpd_acc`) keep their hierarchy (`keep_hierarchy`), the
+helper `sat_shift` is flattened into them so no pipeline stage straddles a boundary, and
+ABC maps and times each derived module separately (140/255 small `dpd_term` variants
+instead of one multi-million-cell netlist). Delay is the maximum over modules; area is the
+`stat -liberty` hierarchy total. A hier result is listed next to the budget one in
+`docs/results.md` so the extrapolation can be judged.
 
 ## How to read `results/synth/*.json`
 

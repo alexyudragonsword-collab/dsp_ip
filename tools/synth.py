@@ -12,7 +12,11 @@ Modes (``--mode``):
           fast ABC mapping. The critical path (f_est) is a property of the pipeline stages
           (multiplier, 2 adder levels, sqrt step) and does not depend on the term count;
           the area is extrapolated linearly to the full term count from the two points.
-  full    synthesize the top with the real N_TERMS (slow: ABC on millions of cells).
+  full    synthesize the top flattened with the real N_TERMS (ABC on millions of cells:
+          slow and >9 GB for the big bases).
+  hier    real N_TERMS, hierarchy kept for the IP's own modules (helpers such as sat_shift
+          flattened into them): ABC maps each derived module on its own, so memory stays
+          small and the real term count is synthesized; delay = max over modules.
 
 Frequency: ABC ``stime`` reports the longest combinational path of the mapped netlist with
 the liberty's cell delays and no wire load; f_est = 1 / (delay + t_cq + t_setup) with the
@@ -135,21 +139,42 @@ def yosys_version() -> str:
     return r.stdout.strip()
 
 
+def keep_modules(spec) -> list[str]:
+    """Modules kept as hierarchy in --mode hier: the IP's own RTL modules except the top.
+    Helpers pulled in from other IPs (e.g. ../sat_shift) are flattened into their parents so
+    a pipeline stage never straddles a module boundary that ABC would time separately."""
+    own = []
+    for r in spec.rtl:
+        if r.startswith(".."):
+            continue
+        stem = Path(r).stem
+        if stem != spec.top:
+            own.append(stem)
+    return own
+
+
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,
               flatten: bool = True) -> tuple[str, float]:
     work.mkdir(parents=True, exist_ok=True)
     (work / "abc.script").write_text(abc_script)
     srcs = " ".join(str(p) for p in spec.rtl_paths())
     chp = " ".join(f"-chparam {k} {v}" for k, v in params.items())
-    ys = "\n".join([
-        f"read_verilog -sv -I {set_dir} {srcs}",
-        f"hierarchy -top {spec.top} {chp}",
-        f"synth -top {spec.top}" + (" -flatten" if flatten else ""),
+    lines = [f"read_verilog -sv -I {set_dir} {srcs}", f"hierarchy -top {spec.top} {chp}"]
+    if flatten:
+        lines.append(f"synth -top {spec.top} -flatten")
+    else:
+        keep = " ".join(f"*{m}*" for m in keep_modules(spec))
+        lines += ["proc",
+                  f"setattr -mod -set keep_hierarchy 1 {keep}" if keep else "",
+                  "flatten",
+                  f"synth -top {spec.top}"]
+    lines += [
         f"dfflibmap -liberty {lib}",
         f"abc -liberty {lib} -script {work / 'abc.script'}",
         "opt_clean",
         f"stat -liberty {lib}",
-    ]) + "\n"
+    ]
+    ys = "\n".join(ln for ln in lines if ln) + "\n"
     (work / "synth.ys").write_text(ys)
     t0 = time.time()
     r = subprocess.run(["yosys", "-q", "-l", str(work / "yosys.log"), str(work / "synth.ys")],
@@ -188,15 +213,15 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
            "yosys": yosys_version(), "abc_script": abc_script.strip().replace("\n", "; "),
            "ff": ff, "n_terms_full": n_full, "points": []}
     points = []
-    if mode == "full" or n_full is None:
-        points.append(("full", {}))
+    if mode in ("full", "hier") or n_full is None:
+        points.append((mode if n_full is not None else "full", {}))
     else:
         t = terms or 16
         points.append((f"terms{t}", {"N_TERMS": t}))
         points.append((f"terms{2 * t}", {"N_TERMS": 2 * t}))
     for label, extra in points:
         log, dt = run_yosys(spec, set_dir, lib_path, {**base_params, **extra}, work / label,
-                            abc_script)
+                            abc_script, flatten=(mode != "hier"))
         delays = parse_abc_delay(log)
         st = parse_stat(log)
         pt = {"label": label, "params": {**base_params, **extra}, "delay_ps": max(delays) if delays else None,
@@ -211,7 +236,15 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     rep["f_est_mhz"] = round(f_mhz, 1)
     rep["throughput_est_msps"] = round(f_mhz * P, 1)
     rep["p_for_640msps"] = math.ceil(640.0 / f_mhz)
-    if mode == "full" or n_full is None:
+    if mode == "hier":
+        rep["area_um2"] = rep["points"][0]["area_um2"]
+        rep["cells"] = rep["points"][0]["cells"]
+        rep["method"] = ("whole design, real term count, hierarchy kept for "
+                         f"{', '.join(keep_modules(spec))} (helpers flattened into them); ABC "
+                         "maps and times each module separately, delay = max over modules "
+                         "(no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty "
+                         "hierarchy total")
+    elif mode == "full" or n_full is None:
         rep["area_um2"] = rep["points"][0]["area_um2"]
         rep["cells"] = rep["points"][0]["cells"]
         rep["method"] = ("whole design synthesized with the real term count; "
@@ -235,7 +268,7 @@ def main(argv=None) -> int:
     ap.add_argument("--ip", required=True)
     ap.add_argument("--set", required=True, dest="set_name")
     ap.add_argument("--P", type=int, default=1)
-    ap.add_argument("--mode", choices=["budget", "full"], default="budget")
+    ap.add_argument("--mode", choices=["budget", "full", "hier"], default="budget")
     ap.add_argument("--terms", type=int, help="budget mode: smaller term count T (and 2T)")
     ap.add_argument("--lib", choices=list(LIBS), default="nangate45")
     ap.add_argument("--dch", action="store_true", help="ABC dch before map (slower, better)")
@@ -248,6 +281,7 @@ def main(argv=None) -> int:
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch)
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
     print(f"[estimate] {spec.name}/{args.set_name} P={args.P} {args.mode} ({args.lib}): "
           f"delay {rep['delay_ps']:.0f} ps + ff {rep['ff']['total_ps']:.0f} ps -> "
