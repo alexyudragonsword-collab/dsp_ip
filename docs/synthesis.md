@@ -44,6 +44,11 @@ the real tables, widths and pipeline) and:
   (`area_per_term_um2` is recorded), which is accurate for a datapath that is literally
   N copies of one term plus a tree.
 
+**Memory budget.** ABC's `map` on the mapped netlist is the memory hog: the P = 4 points with
+28/32 terms (112/128 term instances, ~1.7 M cells before mapping) were OOM-killed at ~9 GB
+on a 15 GB machine, so the committed P = 4 points use 7/14 (DDR) and 8/16 (GMP) terms. Keep
+a budget point under ~60 term instances unless the machine has more memory.
+
 `--mode full` synthesizes the real term count and is meant for a manual or nightly run;
 when a full result exists it is listed next to the budget one in `docs/results.md` so the
 extrapolation can be judged.

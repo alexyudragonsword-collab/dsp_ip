@@ -8,7 +8,7 @@
   与 PA_DPD 文档最大差 0.05；本库整数参考 W16 −51.26（DDR）/ −50.09（GMP），差 ≤ 0.04；W12 −40.44/−46.46，W10 −29.66/−38.56；`w_pw=W+4` 时 W10 DDR −29.49、W12 GMP −46.57。
   NMSE 整数参考 vs 上游浮点：−59.6/−69.6 dB（W16），−35.6/−45.8（W12）。
 - **综合估计**（yosys 0.33 + NanGate45 typical，预算模式 N_TERMS=14/28，ABC fast map，无线载）：DDR W16 P=1 关键路径 1948 ps + DFF 154 ps → f_est 476 MHz → **P=2 达 640 MSPS**；
-  面积外推 1.86 mm²、1.64 M cells；559 s。GMP W16 P=1：1306 ps → f_est 685 MHz → **P=1 即达 640 MSPS**，面积外推 4.04 mm²（DDR 更慢是因为双因子项那一级：乘 + sat_shift 同级）。P=2/4 点见 `docs/results.md`。单项 `dpd_term`（双因子）1294 ps、16.8 k µm²。
+  面积外推 1.86 mm²、1.64 M cells；559 s。GMP W16 P=1：1306 ps → f_est 685 MHz → **P=1 即达 640 MSPS**，面积外推 4.04 mm²（DDR 更慢是因为双因子项那一级：乘 + sat_shift 同级）。P=2：DDR 2180 ps → 428 MHz（857 MSPS），GMP 1461 ps → 619 MHz（1238 MSPS）；关键路径随 P 变长（无线载下只剩扇出电容）。P=4 用 28/32 项时 ABC 在 ~9 GB 被 OOM 杀掉，改 7/8 项重跑（见 `docs/results.md`）。单项 `dpd_term`（双因子）1294 ps、16.8 k µm²。
 - **被推翻的判断**：① 上游 refvec 可当金标（否，浮点模拟）；② `a^k` 精确整数（W16 要 79 位）；③ `q_pair=W_PW` 固定（清零小包络，NMSE −59.6→−41.8）；
   ④ 每相位各自延迟线（改扁平窗）；⑤ 用 packed 总线汇总 N 项（Icarus O(N²)，0.9 s/样本 → 每节点一根线后 0.002 s/样本）；⑥ yosys 能读 `pkg::param` 端口（0.33 不能，dims 分两份 include）。
 - **上游导出**：本地两遍字节一致；`tools/check_upstream_export.py` 重新导出比对 OK（68 s）。
