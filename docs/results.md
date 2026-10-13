@@ -21,4 +21,12 @@ Max |upstream recomputed − PA_DPD doc| = 0.05 dB; max |int ref W16 (default) �
 
 ## Parallelism × frequency × area (rule 5)
 
-_results/synth/*.json not present — run tools/synth.py._
+**Estimates** — yosys (Yosys 0.33 (git sha1 2584903a060)) + ABC, NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7, no wire load; f_est = 1/(ABC critical path + DFF t_cq + t_setup); method per row in the JSON (see `docs/synthesis.md`).
+
+| set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
+|---|---|---|---|---|---|---|---|---|
+| ddr_r1_w16 | 1 | hier | 1837 | 502 | 502 | 1.896 | 1504496 | 2 |
+| gmp510_w16 | 1 | hier | 1883 | 491 | 491 | 3.341 | 2645488 | 2 |
+
+- **ddr_r1_w16**: f_est ≥ 502 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
+- **gmp510_w16**: f_est ≥ 491 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).

@@ -1,0 +1,44 @@
+{
+ "kind": "estimate",
+ "ip": "dpd_poly",
+ "set": "gmp510_w16",
+ "P": 1,
+ "mode": "hier",
+ "liberty": {
+  "name": "nangate45",
+  "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
+  "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+ },
+ "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+ "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p",
+ "target_ps": null,
+ "ff": {
+  "cell": "DFF_X1",
+  "t_cq_ps": 112.7,
+  "t_setup_ps": 41.2,
+  "total_ps": 153.9
+ },
+ "n_terms_full": 255,
+ "points": [
+  {
+   "label": "hier",
+   "params": {
+    "P": 1
+   },
+   "delay_ps": 1883.09,
+   "runtime_s": 1014.6,
+   "area_um2": 3340837.906,
+   "cells": 2645488,
+   "flops": 246596
+  }
+ ],
+ "delay_ps": 1883.09,
+ "period_ps": 2037.0,
+ "f_est_mhz": 490.9,
+ "throughput_est_msps": 490.9,
+ "p_for_640msps": 2,
+ "area_um2": 3340837.906,
+ "cells": 2645488,
+ "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
+ "runtime_s": 1014.6
+}
