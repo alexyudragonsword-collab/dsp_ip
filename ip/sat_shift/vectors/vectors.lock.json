@@ -1,0 +1,28 @@
+{
+ "sets": {
+  "signed_w16_s0_o12": {
+   "command": "python tools/lockstep.py sat_shift --set signed_w16_s0_o12 --update-lock",
+   "files": {
+    "dims.svh": "cd4a6cffa210fc52b84aa42f63649c99876874d805b3b1225a4ad1ae84d90f4c",
+    "x.txt": "ecc845372bdfbe435dc917f7df9daccab73727c7a4235d5da9821d951f9e5ac0",
+    "y.txt": "443d9065fdbc7d7da533da865c0984cee3d73c24ac7c14c2e656c51354edb16c"
+   }
+  },
+  "signed_w40_s12_o16": {
+   "command": "python tools/lockstep.py sat_shift --set signed_w40_s12_o16 --update-lock",
+   "files": {
+    "dims.svh": "d6989c29b246655cce8821f3fe6bda0c2572b2b5b241bdcee5439c1ee45ae798",
+    "x.txt": "06419fa8af8bbbf823787b27e4012f79a4988fa59a140f1c8e93a1c53d5faed5",
+    "y.txt": "0434d9f0ec5c080787b239c46c08097f0bd8421083e722de279ceddcc6581c87"
+   }
+  },
+  "unsigned_w32_s16_o16": {
+   "command": "python tools/lockstep.py sat_shift --set unsigned_w32_s16_o16 --update-lock",
+   "files": {
+    "dims.svh": "fd936f9813a6dd315073e734aa6468f1a92fe6ad128758668e2ebd7ea429cbe7",
+    "x.txt": "cb3c8a9b4171824f76a6eea0c86de5a847e3a5503acba760570449ec269f05a3",
+    "y.txt": "27baebefaa4749d4b920082eff40ec4762bac4b8d61c89472e06b6c8e5dc7894"
+   }
+  }
+ }
+}

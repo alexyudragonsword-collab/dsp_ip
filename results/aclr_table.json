@@ -1,0 +1,101 @@
+{
+ "_meta": {
+  "dataset": "DPA_160MHz",
+  "metric": "ACLR_AVG dBc via PA_DPD DGRU surrogate",
+  "upstream_doc": "PA_DPD@08b9725 docs/03_roadmap.md:108-117",
+  "upstream_table": {
+   "ddr_r1": {
+    "float": -51.6,
+    "16": -51.3,
+    "12": -40.4,
+    "10": -29.4
+   },
+   "gmp510": {
+    "float": -50.2,
+    "16": -50.1,
+    "12": -46.6,
+    "10": -38.5
+   }
+  }
+ },
+ "ddr_r1": {
+  "upstream_recomputed": {
+   "float": -51.60215187072754,
+   "16": -51.2479305267334,
+   "12": -40.39328956604004,
+   "10": -29.420201301574707
+  },
+  "int_ref": {
+   "16": {
+    "default": -51.25705337524414,
+    "pw+4": -51.2662467956543
+   },
+   "12": {
+    "default": -40.43881416320801,
+    "pw+4": -40.390472412109375
+   },
+   "10": {
+    "default": -29.663089752197266,
+    "pw+4": -29.490378379821777
+   }
+  },
+  "int_ref_cfg": {
+   "16": {
+    "default": "ddr_r1: 140 terms, W_IN=16 W_COEF=16 W_PHI=16 W_PW=16 F=0 W_ACC=41 W_OUT=16; e_in=-15 e_w=-11 e_c=[-16,-15] s_c=[0,15] al_max=1 S_OUT=12 lead=0 depth x/env=16/16",
+    "pw+4": "ddr_r1: 140 terms, W_IN=16 W_COEF=16 W_PHI=16 W_PW=20 F=0 W_ACC=41 W_OUT=16; e_in=-15 e_w=-11 e_c=[-16,-15] s_c=[0,19] al_max=1 S_OUT=12 lead=0 depth x/env=16/16"
+   },
+   "12": {
+    "default": "ddr_r1: 140 terms, W_IN=12 W_COEF=12 W_PHI=12 W_PW=12 F=0 W_ACC=33 W_OUT=12; e_in=-11 e_w=-7 e_c=[-12,-11] s_c=[0,11] al_max=1 S_OUT=8 lead=0 depth x/env=16/16",
+    "pw+4": "ddr_r1: 140 terms, W_IN=12 W_COEF=12 W_PHI=12 W_PW=16 F=0 W_ACC=33 W_OUT=12; e_in=-11 e_w=-7 e_c=[-12,-11] s_c=[0,15] al_max=1 S_OUT=8 lead=0 depth x/env=16/16"
+   },
+   "10": {
+    "default": "ddr_r1: 140 terms, W_IN=10 W_COEF=10 W_PHI=10 W_PW=10 F=0 W_ACC=29 W_OUT=10; e_in=-9 e_w=-5 e_c=[-10,-9] s_c=[0,9] al_max=1 S_OUT=6 lead=0 depth x/env=16/16",
+    "pw+4": "ddr_r1: 140 terms, W_IN=10 W_COEF=10 W_PHI=10 W_PW=14 F=0 W_ACC=29 W_OUT=10; e_in=-9 e_w=-5 e_c=[-10,-9] s_c=[0,13] al_max=1 S_OUT=6 lead=0 depth x/env=16/16"
+   }
+  },
+  "nmse_vs_upstream_db": {
+   "16": -59.63588439215322,
+   "12": -35.620594603032856
+  }
+ },
+ "gmp510": {
+  "upstream_recomputed": {
+   "float": -50.158447265625,
+   "16": -50.09796905517578,
+   "12": -46.573781967163086,
+   "10": -38.53555679321289
+  },
+  "int_ref": {
+   "16": {
+    "default": -50.09439659118652,
+    "pw+4": -50.095869064331055
+   },
+   "12": {
+    "default": -46.46282958984375,
+    "pw+4": -46.56933403015137
+   },
+   "10": {
+    "default": -38.55511283874512,
+    "pw+4": -38.546566009521484
+   }
+  },
+  "int_ref_cfg": {
+   "16": {
+    "default": "gmp510: 255 terms, W_IN=16 W_COEF=16 W_PHI=16 W_PW=16 F=0 W_ACC=40 W_OUT=16; e_in=-15 e_w=-13 e_c=[-15,-15] s_c=[0,15] al_max=0 S_OUT=13 lead=1 depth x/env=16/18",
+    "pw+4": "gmp510: 255 terms, W_IN=16 W_COEF=16 W_PHI=16 W_PW=20 F=0 W_ACC=40 W_OUT=16; e_in=-15 e_w=-13 e_c=[-15,-15] s_c=[0,19] al_max=0 S_OUT=13 lead=1 depth x/env=16/18"
+   },
+   "12": {
+    "default": "gmp510: 255 terms, W_IN=12 W_COEF=12 W_PHI=12 W_PW=12 F=0 W_ACC=32 W_OUT=12; e_in=-11 e_w=-9 e_c=[-11,-11] s_c=[0,11] al_max=0 S_OUT=9 lead=1 depth x/env=16/18",
+    "pw+4": "gmp510: 255 terms, W_IN=12 W_COEF=12 W_PHI=12 W_PW=16 F=0 W_ACC=32 W_OUT=12; e_in=-11 e_w=-9 e_c=[-11,-11] s_c=[0,15] al_max=0 S_OUT=9 lead=1 depth x/env=16/18"
+   },
+   "10": {
+    "default": "gmp510: 255 terms, W_IN=10 W_COEF=10 W_PHI=10 W_PW=10 F=0 W_ACC=28 W_OUT=10; e_in=-9 e_w=-7 e_c=[-9,-9] s_c=[0,9] al_max=0 S_OUT=7 lead=1 depth x/env=16/18",
+    "pw+4": "gmp510: 255 terms, W_IN=10 W_COEF=10 W_PHI=10 W_PW=14 F=0 W_ACC=28 W_OUT=10; e_in=-9 e_w=-7 e_c=[-9,-9] s_c=[0,13] al_max=0 S_OUT=7 lead=1 depth x/env=16/18"
+   }
+  },
+  "nmse_vs_upstream_db": {
+   "16": -69.64372711069811,
+   "12": -45.796668847801676
+  }
+ }
+}

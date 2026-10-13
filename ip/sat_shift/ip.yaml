@@ -1,0 +1,15 @@
+name: sat_shift
+top: sat_shift
+rtl:
+  - rtl/sat_shift.sv
+tb: rtl/tb_sat_shift.sv
+check: python
+params: {}
+generator: dspip.ip.sat_shift.ref:generate
+probe: dspip.ip.sat_shift.ref:probe
+vector_sets:
+  - {name: signed_w40_s12_o16, source: generated}
+  - {name: signed_w16_s0_o12, source: generated}
+  - {name: unsigned_w32_s16_o16, source: generated}
+compare:
+  - {golden: y.txt, rtl: rtl_y.txt}

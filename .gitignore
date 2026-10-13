@@ -2,7 +2,8 @@
 ip/*/vectors/*
 !ip/*/vectors/vectors.lock.json
 # simulation / synthesis outputs (CI uploads them as artifacts)
-results/
+results/lockstep/
+results/synth/logs/
 obj_dir/
 obj_*/
 *.vvp
