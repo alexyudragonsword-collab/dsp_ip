@@ -25,11 +25,11 @@
     "P": 1,
     "N_TERMS": 14
    },
-   "delay_ps": 1461.59,
-   "runtime_s": 184.3,
-   "area_um2": 252830.872001,
-   "cells": 240760,
-   "flops": 9060
+   "delay_ps": 1470.43,
+   "runtime_s": 154.3,
+   "area_um2": 253202.474,
+   "cells": 240583,
+   "flops": 9456
   },
   {
    "label": "terms28",
@@ -37,21 +37,21 @@
     "P": 1,
     "N_TERMS": 28
    },
-   "delay_ps": 1947.68,
-   "runtime_s": 374.3,
-   "area_um2": 431859.778002,
-   "cells": 395954,
-   "flops": 14808
+   "delay_ps": 1783.29,
+   "runtime_s": 293.6,
+   "area_um2": 442093.862002,
+   "cells": 410281,
+   "flops": 15470
   }
  ],
- "delay_ps": 1947.68,
- "period_ps": 2101.6,
- "f_est_mhz": 475.8,
- "throughput_est_msps": 475.8,
+ "delay_ps": 1783.29,
+ "period_ps": 1937.2,
+ "f_est_mhz": 516.2,
+ "throughput_est_msps": 516.2,
  "p_for_640msps": 2,
- "area_per_term_um2": 12787.8,
- "area_um2": 1864091.0,
- "cells": 1637506,
+ "area_per_term_um2": 13492.2,
+ "area_um2": 1953225.0,
+ "cells": 1767865,
  "method": "top synthesized with N_TERMS=14 and 28, flattened, fast ABC map; area extrapolated linearly to 140 terms; delay = max ABC stime over both points (no wire load) + liberty DFF t_cq + t_setup",
- "runtime_s": 558.6
+ "runtime_s": 447.9
 }

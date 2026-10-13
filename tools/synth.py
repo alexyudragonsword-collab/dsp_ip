@@ -60,6 +60,16 @@ ABC_FAST = "strash\nmap\ntopo\nstime -p\n"
 ABC_DCH = "strash\ndch -f\nmap\ntopo\nstime -p\n"
 
 
+def abc_script(dch: bool, target_ps: float | None) -> str:
+    """ABC script: ``map`` is area-oriented unless given a delay target ``-D <ps>``; the
+    mapper then trades area for delay toward the target, which removes most of the
+    run-to-run spread between flattened and per-module mapping of the same logic."""
+    s = ABC_DCH if dch else ABC_FAST
+    if target_ps:
+        s = s.replace("\nmap\n", f"\nmap -D {int(target_ps)}\n")
+    return s
+
+
 # --- liberty helpers -----------------------------------------------------------------------
 
 
@@ -188,7 +198,7 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
 
 
 def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: int | None,
-                dch: bool) -> dict:
+                dch: bool, target_ps: float | None = None) -> dict:
     lib = LIBS[lib_name]
     lib_path = lib["path"]
     if not lib_path.exists():
@@ -202,15 +212,17 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     if dp.exists():
         m = re.search(r"N_TERMS\s*=\s*(\d+)", dp.read_text())
         n_full = int(m.group(1)) if m else None
-    abc_script = ABC_DCH if dch else ABC_FAST
-    tag = f"{set_name}__P{P}__{mode}__{lib_name}" + ("_dch" if dch else "")
+    script = abc_script(dch, target_ps)
+    tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + ("_dch" if dch else "")
+           + (f"_D{int(target_ps)}" if target_ps else ""))
     work = RESULTS / "logs" / spec.name / tag
     base_params = {"P": P} if "P" in spec.params else {}
     ff = ff_overhead_ps(lib_path, lib["dff"])
     rep = {"kind": "estimate", "ip": spec.name, "set": set_name, "P": P, "mode": mode,
            "liberty": {"name": lib_name, "label": lib["label"],
                        "sha256": hashlib.sha256(lib_path.read_bytes()).hexdigest()},
-           "yosys": yosys_version(), "abc_script": abc_script.strip().replace("\n", "; "),
+           "yosys": yosys_version(), "abc_script": script.strip().replace("\n", "; "),
+           "target_ps": target_ps,
            "ff": ff, "n_terms_full": n_full, "points": []}
     points = []
     if mode in ("full", "hier") or n_full is None:
@@ -221,7 +233,7 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
         points.append((f"terms{2 * t}", {"N_TERMS": 2 * t}))
     for label, extra in points:
         log, dt = run_yosys(spec, set_dir, lib_path, {**base_params, **extra}, work / label,
-                            abc_script, flatten=(mode != "hier"))
+                            script, flatten=(mode != "hier"))
         delays = parse_abc_delay(log)
         st = parse_stat(log)
         pt = {"label": label, "params": {**base_params, **extra}, "delay_ps": max(delays) if delays else None,
@@ -272,15 +284,19 @@ def main(argv=None) -> int:
     ap.add_argument("--terms", type=int, help="budget mode: smaller term count T (and 2T)")
     ap.add_argument("--lib", choices=list(LIBS), default="nangate45")
     ap.add_argument("--dch", action="store_true", help="ABC dch before map (slower, better)")
+    ap.add_argument("--target-ps", type=float, default=None,
+                    help="ABC map -D delay target in ps (delay-oriented mapping)")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if shutil.which("yosys") is None:
         print("yosys not found; see ROADMAP 被外部阻塞", file=sys.stderr)
         return 2
     spec = load_ipspec(IP_ROOT / args.ip)
-    rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch)
+    rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,
+                      args.target_ps)
     RESULTS.mkdir(parents=True, exist_ok=True)
-    out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}.json"
+    suffix = ("_dch" if args.dch else "") + (f"_D{int(args.target_ps)}" if args.target_ps else "")
+    out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
     print(f"[estimate] {spec.name}/{args.set_name} P={args.P} {args.mode} ({args.lib}): "

@@ -86,6 +86,14 @@ def synth_section() -> str:
         tag = "hier, real term count" if hier is not rs else "budget extrapolation"
         lines.append(f"- **{basis}**: f_est ≥ {f:.0f} MHz ({tag}, estimate) ⇒ **P = {p}** reaches "
                      f"640 MSPS (throughput = f_clk × P).")
+        budget = [r for r in rs if r["mode"] == "budget"]
+        if hier is not rs and budget:
+            fb = min(r["f_est_mhz"] for r in budget)
+            pb = max(r["p_for_640msps"] for r in budget)
+            if pb != p:
+                lines.append(f"  - conservative reading: the flattened budget points map to f_est ≥ "
+                             f"{fb:.0f} MHz ⇒ P = {pb}; the two mappings disagree, see "
+                             f"`docs/synthesis.md`.")
         for h in [r for r in rs if r["mode"] == "hier"]:
             b = [r for r in rs if r["mode"] == "budget" and r["P"] == h["P"]]
             if b:
