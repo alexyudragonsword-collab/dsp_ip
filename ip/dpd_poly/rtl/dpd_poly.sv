@@ -37,7 +37,8 @@ module dpd_poly #(
     localparam int FE_LAT    = ENV_LAT + POW_LAT;      // front end: x must be delayed as much
     localparam int TERM_LAT  = 5;
     localparam int LV        = (N_TERMS <= 1) ? 1 : $clog2(N_TERMS);
-    localparam int ACC_LAT   = LV / 2 + 1;
+    localparam int ACC_REG   = 1;                       // tree register every ACC_REG levels
+    localparam int ACC_LAT   = LV / ACC_REG + 1;
     localparam int TOTAL_LAT = FE_LAT + 1 + TERM_LAT + ACC_LAT;   // +1: window register
     localparam int XW        = P + X_DEPTH - 1;        // x window entries
     localparam int EW        = P + ENV_DEPTH - 1;      // power window entries
@@ -163,9 +164,11 @@ module dpd_poly #(
                     .w_re(w_re_q), .w_im(w_im_q), .p_re(p_re), .p_im(p_im));
             end
 
-            // ---- accumulation tree: one wire per node, a register every 2 levels ----------
+            // ---- accumulation tree: one wire per node, a register every ACC_REG levels -----
             // (ri = 0: real, 1: imaginary). Reads each term's output by hierarchical name;
-            // see dpd_acc.sv for why there is no packed term bus. LATENCY = LV/2 (+1 in dpd_acc).
+            // see dpd_acc.sv for why there is no packed term bus. LATENCY = LV/ACC_REG (+1 in
+            // dpd_acc). One W_ACC adder per stage: with two, the GMP tree (510 live adders)
+            // mapped to a 29-gate path (1969 ps) and became the critical path.
             for (genvar ri = 0; ri < 2; ri++) begin : RI
                 for (genvar l = 0; l <= LV; l++) begin : L
                     localparam int NN = NP >> l;
@@ -181,7 +184,7 @@ module dpd_poly #(
                             end else begin : pad
                                 assign s = '0;
                             end
-                        end else if ((l % 2) == 0) begin : r
+                        end else if ((l % ACC_REG) == 0) begin : r
                             always_ff @(posedge clk) s <= L[l-1].gi[2*i].s + L[l-1].gi[2*i+1].s;
                         end else begin : c
                             assign s = L[l-1].gi[2*i].s + L[l-1].gi[2*i+1].s;

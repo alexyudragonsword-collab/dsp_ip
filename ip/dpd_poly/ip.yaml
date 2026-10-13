@@ -23,5 +23,5 @@ compare:
   - {golden: y_re.txt, rtl: rtl_y_re.txt}
   - {golden: y_im.txt, rtl: rtl_y_im.txt}
 latency_note: >
-  Fixed pipeline latency (W_ENV+1 envelope sqrt, 3 powers, 1 window, 5 term, clog2(N)/2+1
+  Fixed pipeline latency (W_ENV+1 envelope sqrt, 3 powers, 1 window, 5 term, clog2(N)+1
   accumulate) plus LEAD samples; the tb counts out_valid and drops the first LEAD outputs.

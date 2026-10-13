@@ -24,6 +24,11 @@ stat -liberty <lib>
   (`--lib sky130`) but every committed number is NanGate45.
 - **Critical path**: ABC `stime` after liberty mapping — the longest combinational path
   between registers with the library's cell delays, **no wire load**.
+- **Mapping**: the committed numbers use `dch -f` and `map -D 1000` (delay-oriented
+  mapping toward a 1 ns target). ABC's default `map` is area-oriented and its delay swung
+  by ±40 % with the size of the netlist it was handed (the same DDR RTL mapped to 1783 ps
+  flattened and 1278 ps per module; the GMP top module to 1129 vs 1751 ps); with a delay
+  target the two cuts agree to within a few percent.
 - **Frequency**: `f_est = 1 / (critical path + t_cq + t_setup)`, the flop terms read from
   the library's `DFF_X1` tables (median entries: 113 ps + 41 ps).
 - **Area**: `stat -liberty` total cell area (µm²), flops included.
