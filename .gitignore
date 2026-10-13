@@ -1,0 +1,21 @@
+# generated lockstep vectors: only vectors.lock.json (hashes + commands) is tracked
+ip/*/vectors/*
+!ip/*/vectors/vectors.lock.json
+# simulation / synthesis outputs (CI uploads them as artifacts)
+results/
+obj_dir/
+obj_*/
+*.vvp
+*.vcd
+*.fst
+# downloaded liberty files and sibling checkouts
+third_party/
+_siblings/
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/

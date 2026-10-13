@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dspip"
+version = "0.1.0"
+description = "Bit-true DSP IP library: Python fixed-point reference + SystemVerilog + per-sample lockstep in CI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+# running the vendored PA_DPD reference (ILA fit, ACLR) needs scipy
+upstream = ["scipy>=1.10"]
+# reproducing PA_DPD's neural-surrogate ACLR table needs torch + the PA_DPD package
+aclr = ["scipy>=1.10", "torch>=2.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["src/dspip/vendor"]
+
+[tool.ruff.lint]
+select = ["E9", "F"]

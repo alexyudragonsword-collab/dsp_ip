@@ -1,0 +1,13 @@
+version: 0.1
+project:
+  name: "dsp_ip"
+  summary: "bit-true 数字信号处理 IP 库：每个 IP 三份一致的东西——Python 定点参考、SystemVerilog 实现、CI 逐样本 lockstep。"
+cairn:
+  knowledge_dir: "cairn"
+  skill_spec_date: "2026-08-07"
+  git_policy: "track"
+  language: "zh"
+graduation:
+  provider: none
+history:
+  migration_mode: "start_fresh"
