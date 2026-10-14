@@ -1,5 +1,17 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-10-14 · 收尾：综合口径定为分层 + `&nf -D 1000`，两种基函数都按 P=2 达 640 MSPS（估计）
+
+- **RTL 改动**：`dpd_term` 双因子级拆两级（TERM_LAT 5）、累加树每级打拍（ACC_LAT clog2(N)+1）；lockstep 两仿真器 × 18 点仍全 0 不匹配。
+- **综合口径三次更换的原值**（同一 RTL，NanGate45，无线载，ps）：旧 `map` 分模块 DDR 1278 / GMP 1751；`dch; map -D 1000` 分模块 DDR 1339 / GMP 1969；
+  `&nf -D 1000`（yosys 自带流程）分模块 DDR 1837 / GMP 1883。打平预算子集（旧 map）DDR 1783。差距来自 ABC 对 40 位行波进位加法器的平衡好坏，不是逻辑级数。
+- **定稿数字**（`&nf -D 1000`，真实项数，`results/synth/*__hier.json`）：DDR W16 P=1 1837 ps + DFF 154 → f_est 502 MHz，1.90 mm²，1.50 M cells（36 min）；
+  GMP W16 P=1 1883 ps → 491 MHz，3.34 mm²，2.65 M cells（17 min）。**结论：两种基函数都需 P=2 才达 640 MSPS（≈1000 MSPS，estimate，见 `docs/results.md`）；P=1 只在乐观映射下成立。映射噪声 ±25 %。**
+- **被推翻的判断**：① "再切一级流水 DDR 就能 P=1"——瓶颈在加法器映射；② "预算模式外推与全项数一致"——面积差 +10 %、延迟差 ±40 %；③ "`dch`+`map -D` 能稳定延迟"——GMP 顶层仍 1969。
+- **过程事故**：P=4 打平在 ~9 GB OOM → 分层模式解决；一条以为已杀掉的旧综合链还在跑并写同名文件（已清）；容器重启一次，分离的综合链随之死亡（已用 `setsid nohup` 可续跑方式重启，P=2/4 点待补）。
+- GitHub CI：6/7 job 绿（lockstep 13 min、fixed-vs-float 3 min、vendor-drift 35 s）；`synth` job 的 `--out` 目录 bug 已修。
+- 下一步：ROADMAP"加法树的 40 位加法器"（并行前缀 `$lcu` techmap 或 CSA 树）；P=2/4 点补齐后重渲染 `docs/results.md`；里程碑 2。
+
 ## 2026-10-13 · 里程碑 1 完成：dpd_poly RTL 在两仿真器 × 5 向量集 × P=1/2/4 全部 0 不匹配
 
 - **lockstep**：verilator 18/18（dpd_poly 15 + sat_shift 3），iverilog 18/18；ddr_r1/gmp510 × W16/W12 各 4096 样本，rand_w16 2048 样本（含 `n_sat_phi>0`、`n_sat_out>0`）。
