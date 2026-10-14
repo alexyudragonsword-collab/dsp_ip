@@ -4,6 +4,7 @@
 
 - [ ] 加法树的 40 位加法器：yosys 0.33 把 `$add` 映射成行波进位（无 `choices/` 并行前缀加法器），ABC 能否把 40 级进位链平衡好决定了顶层的关键路径（GMP 顶层 `&nf` 下 1441 ps）。
       可选：手写一个 Kogge-Stone / Brent-Kung `$lcu` techmap 放进 `tools/`，或把累加树改成进位保留（CSA）结构。
+- [ ] 在能连续跑 3 小时以上的机器上补综合 P=2/4（hier，`&nf -D 1000`），替换 `docs/results.md` 里的 by-construction 行。
 - [ ] `env_frac`（F）/ `w_pw` 扫描做成 `examples/01` 的可选参数并入表（现在只有默认与 +4 两档）。
 
 ## 里程碑 2：Halo_Serdes 的 5 个模块进同一脚手架（本轮不做）

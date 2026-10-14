@@ -28,5 +28,14 @@ Max |upstream recomputed − PA_DPD doc| = 0.05 dB; max |int ref W16 (default) �
 | ddr_r1_w16 | 1 | hier | 1837 | 502 | 502 | 1.896 | 1504496 | 2 |
 | gmp510_w16 | 1 | hier | 1883 | 491 | 491 | 3.341 | 2645488 | 2 |
 
+P = 2 / 4 rows **by construction** (not synthesized — the user chose to stop after the P = 1 points): same stages, P copies of the term bank and tree, throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.
+
+| set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
+|---|---|---|---|---|---|---|---|---|
+| ddr_r1_w16 | 2 | by construction | 1837 | 502 | 1004 | ≈3.792 | ≈3008992 | 2 |
+| ddr_r1_w16 | 4 | by construction | 1837 | 502 | 2009 | ≈7.585 | ≈6017984 | 2 |
+| gmp510_w16 | 2 | by construction | 1883 | 491 | 982 | ≈6.682 | ≈5290976 | 2 |
+| gmp510_w16 | 4 | by construction | 1883 | 491 | 1964 | ≈13.363 | ≈10581952 | 2 |
+
 - **ddr_r1_w16**: f_est ≥ 502 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
 - **gmp510_w16**: f_est ≥ 491 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).

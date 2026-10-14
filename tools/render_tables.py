@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -78,6 +79,29 @@ def synth_section() -> str:
                      f"{r['f_est_mhz']:.0f} | {r['throughput_est_msps']:.0f} | "
                      f"{r['area_um2'] / 1e6:.3f} | {r['cells']} | {r['p_for_640msps']} |")
     lines.append("")
+    # P > 1 by construction: dpd_poly is P copies of (front end + term bank + tree) sharing one
+    # history window and the coefficient registers, so area scales ~linearly in P and the
+    # pipeline stages are identical; only the window fan-out grows (not modelled: no wire load).
+    constructed = []
+    for basis in sorted({r["set"] for r in reps}):
+        h1 = [r for r in reps if r["set"] == basis and r["mode"] == "hier" and r["P"] == 1]
+        have = {r["P"] for r in reps if r["set"] == basis and r["mode"] == "hier"}
+        for P in (2, 4):
+            if h1 and P not in have:
+                r = h1[0]
+                constructed.append(
+                    f"| {basis} | {P} | by construction | {r['delay_ps']:.0f} | {r['f_est_mhz']:.0f} | "
+                    f"{r['f_est_mhz'] * P:.0f} | ≈{r['area_um2'] * P / 1e6:.3f} | ≈{r['cells'] * P} | "
+                    f"{max(1, math.ceil(640 / r['f_est_mhz']))} |")
+    if constructed:
+        lines.append("P = 2 / 4 rows **by construction** (not synthesized — the user chose to stop "
+                     "after the P = 1 points): same stages, P copies of the term bank and tree, "
+                     "throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.")
+        lines.append("")
+        lines.append("| set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |")
+        lines.append("|---|---|---|---|---|---|---|---|---|")
+        lines += constructed
+        lines.append("")
     for basis in sorted({r["set"] for r in reps}):
         rs = [r for r in reps if r["set"] == basis]
         hier = [r for r in rs if r["mode"] == "hier"] or rs   # real term count when available

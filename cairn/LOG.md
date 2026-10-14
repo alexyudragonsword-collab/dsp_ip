@@ -10,7 +10,8 @@
 - **被推翻的判断**：① "再切一级流水 DDR 就能 P=1"——瓶颈在加法器映射；② "预算模式外推与全项数一致"——面积差 +10 %、延迟差 ±40 %；③ "`dch`+`map -D` 能稳定延迟"——GMP 顶层仍 1969。
 - **过程事故**：P=4 打平在 ~9 GB OOM → 分层模式解决；一条以为已杀掉的旧综合链还在跑并写同名文件（已清）；容器重启一次，分离的综合链随之死亡（已用 `setsid nohup` 可续跑方式重启，P=2/4 点待补）。
 - GitHub CI：6/7 job 绿（lockstep 13 min、fixed-vs-float 3 min、vendor-drift 35 s）；`synth` job 的 `--out` 目录 bug 已修。
-- 下一步：ROADMAP"加法树的 40 位加法器"（并行前缀 `$lcu` techmap 或 CSA 树）；P=2/4 点补齐后重渲染 `docs/results.md`；里程碑 2。
+- **P=2/4 不再综合，按构造说明**（用户决定）：容器空闲即回收，20–40 min 的综合点三次都没活过；P 份项阵列 + 树、共享窗口，吞吐 = f_est × P、面积 ≈ P × A(P=1)，`docs/results.md` 由 P=1 JSON 生成并标注 by construction（DDR P=2 ≈ 1004 MSPS、3.8 mm²；GMP P=2 ≈ 982 MSPS、6.7 mm²，estimate）。
+- 下一步：ROADMAP"加法树的 40 位加法器"（并行前缀 `$lcu` techmap 或 CSA 树）；有长时间机器时补综合 P=2/4；里程碑 2。
 
 ## 2026-10-13 · 里程碑 1 完成：dpd_poly RTL 在两仿真器 × 5 向量集 × P=1/2/4 全部 0 不匹配
 

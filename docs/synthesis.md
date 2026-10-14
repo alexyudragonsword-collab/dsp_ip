@@ -66,6 +66,17 @@ instead of one multi-million-cell netlist). Delay is the maximum over modules; a
 `stat -liberty` hierarchy total. A hier result is listed next to the budget one in
 `docs/results.md` so the extrapolation can be judged.
 
+## P = 2 / 4: by construction, not synthesized
+
+Only the P = 1 points were synthesized (each hier point takes 20–40 min and the session's
+container is reclaimed when idle, so the P = 2/4 runs never survived; the decision was to stop).
+`dpd_poly` at P > 1 is, by construction, P copies of the per-lane front end, term bank and
+adder tree sharing one history window and the coefficient registers; every pipeline stage is
+the same logic, so f_est is the P = 1 number, throughput = f_est × P and area ≈ P × area(P=1).
+What this does not capture is the extra fan-out of the shared window at larger P — which this
+flow would not model anyway (no wire load). `docs/results.md` prints those rows from the P = 1
+JSON and labels them "by construction".
+
 ## How to read `results/synth/*.json`
 
 Every file has `"kind": "estimate"`, the `method` string, the library name and sha256, the
