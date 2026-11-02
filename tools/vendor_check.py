@@ -173,11 +173,16 @@ class Siblings:
         return r.stdout.strip() if r.returncode == 0 else None
 
 
+_HEADER_LINE = re.compile(r"^(#|//) (Vendored from|Extracted from|Adapted-copy policy)")
+
+
 def _strip_header(lines: list[str], cmt: str) -> str:
-    """Drop the leading run of ``# ...`` / ``// ...`` attribution comment lines."""
+    """Drop the attribution header lines (``Vendored/Extracted from`` and the policy pointer)
+    and nothing else — an upstream .sv file's own leading ``//`` comments are part of the
+    body that must match."""
     n = 0
     for ln in lines:
-        if ln.startswith(cmt + " "):
+        if _HEADER_LINE.match(ln):
             n += 1
         else:
             break

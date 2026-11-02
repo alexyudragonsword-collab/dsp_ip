@@ -1,5 +1,12 @@
 # CHANGELOG（按里程碑）
 
+## 里程碑 2 试点 + 对外动作（2026-11-02）
+
+- **IP `halo_ffe_dfe`**：Halo_Serdes@6e79c4a 的 `ffe_dfe_datapath.sv` + `tb_ffe_dfe.sv` 一字不改 vendor（`// Vendored from` 头），向量 `source: committed`（Halo 已提交集，锁哈希），`check: tb`（`LOCKSTEP PASS` + `$fatal`）；两仿真器绿；mutation 测试扩到自检 tb（`ip.yaml: mutation_file`）。
+- `tools/vendor_check.py`：只剥离署名头行，保留上游 `.sv` 自己的头注释（否则 verbatim 被判 DRIFT）；`lockstep.py` 从自检 tb 的 PASS 行解析 `n=`。
+- CI：修掉自 10-13 起让 workflow 无法解析的一个未加引号的 step name（run 7–14 静默失败）；run 15 **7/7 绿**（synth hier job 36 min）。
+- 建 `main` 分支（与开发分支同一 commit）；上游 issue：PA_DPD#2、Halo_Serdes#136。
+
 ## 里程碑 1 之后的收尾（2026-10-13）
 
 ### 变更

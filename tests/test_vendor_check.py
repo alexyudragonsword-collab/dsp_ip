@@ -54,7 +54,7 @@ def test_every_vendored_file_has_header():
 def test_header_regex_accepts_sv_comment_prefix():
     m = vc.HEADER.match("// Vendored from Halo_Serdes@6e79c4a: rtl/ffe_dfe_datapath.sv")
     assert m and m["cmt"] == "//" and m["repo"] == "Halo_Serdes" and m["sha"] == "6e79c4a"
-    assert vc._strip_header(["// Vendored from X@1: a.sv", "// policy", "module m;"], "//") == "module m;"
+    assert vc._strip_header(["// Vendored from X@1: a.sv", "// Adapted-copy policy: see x", "// upstream comment", "module m;"], "//") == "// upstream comment\nmodule m;"
 
 
 def test_manifest_files_exist():

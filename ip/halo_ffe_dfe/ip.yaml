@@ -1,0 +1,15 @@
+name: halo_ffe_dfe
+top: ffe_dfe_datapath
+rtl:
+  - rtl/ffe_dfe_datapath.sv
+tb: rtl/tb_ffe_dfe.sv
+check: tb                              # Halo's tb self-checks: LOCKSTEP PASS/FAIL + $fatal
+pass_pattern: "LOCKSTEP PASS"
+params: {}
+vector_sets:
+  - {name: halo_ffe, source: committed, dir: vectors/halo_ffe}
+mutation_file: dec.txt                 # what tests/test_rtl_lockstep.py corrupts to prove non-vacuity
+note: >
+  Milestone-2 pilot: Halo_Serdes rtl/ffe_dfe_datapath.sv + tb_ffe_dfe.sv vendored verbatim
+  (// Vendored from header) with Halo's committed vectors. Whole-vector behavioural model
+  (no ports, always_comb over the block): lockstep only, not synthesizable.

@@ -6,6 +6,7 @@ on:
 
 env:
   PA_DPD_SHA: 08b9725595748b290c76d1b70355f7e6014a709e
+  HALO_SHA: 6e79c4a7e32b930a023aca6ee302ac3187eb9022
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
 
 jobs:
@@ -105,12 +106,18 @@ jobs:
           ref: ${{ env.PA_DPD_SHA }}
           path: _siblings/PA_DPD
           fetch-depth: 1
+      - uses: actions/checkout@v4
+        with:
+          repository: alexyudragonsword-collab/Halo_Serdes
+          ref: ${{ env.HALO_SHA }}
+          path: _siblings/Halo_Serdes
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e ".[test,upstream]"
       - name: Vendor drift (strict)
-        run: python tools/vendor_check.py --strict --siblings PA_DPD=$PWD/_siblings/PA_DPD
+        run: python tools/vendor_check.py --strict --siblings PA_DPD=$PWD/_siblings/PA_DPD Halo_Serdes=$PWD/_siblings/Halo_Serdes
       - name: OpenDPD dataset (sparse)
         run: |
           git clone --filter=blob:none --sparse --depth 1 https://github.com/lab-emi/OpenDPD _siblings/OpenDPD

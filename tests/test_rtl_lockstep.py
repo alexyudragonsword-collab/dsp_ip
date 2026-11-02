@@ -78,9 +78,12 @@ def test_lockstep_mutation_fails(ls, ip, tmp_path, monkeypatch):
     # a clean pass first (regenerates + verifies the lock)
     rep = ls.run_point(spec, vs.name, sim, params)
     assert rep["status"] == "PASS", ls.format_report(rep)
-    if spec.check != "python":
-        pytest.skip("tb self-check IPs are mutated by their own tb test")
-    golden = spec.set_dir(vs.name) / spec.compare[0].golden
+    if spec.check == "python":
+        golden = spec.set_dir(vs.name) / spec.compare[0].golden
+    else:
+        # a self-checking (Halo-style) tb: corrupt the golden file ip.yaml names
+        golden = spec.set_dir(vs.name) / spec.extra["mutation_file"]
+    original = golden.read_text()
     lines = V.read_ints(golden)
     k = len(lines) // 2
     lines[k] = lines[k] + 1 if lines[k] < 0 else lines[k] - 1
@@ -88,17 +91,20 @@ def test_lockstep_mutation_fails(ls, ip, tmp_path, monkeypatch):
     try:
         rep2 = ls.run_point(spec, vs.name, sim, params, generate=False, verify_lock=False)
     finally:
-        # restore by regenerating the set
-        ls.ensure_vectors(spec, vs.name, generate=True)
-    assert rep2["status"] == "FAIL"
-    assert rep2["mismatches"] == 1
-    assert rep2["first_mismatch"]["sample"] == k
-    if spec.probe:
-        assert rep2.get("probe"), "probe text missing"
+        golden.write_text(original)
+    assert rep2["status"] == "FAIL", ls.format_report(rep2)
+    if spec.check == "python":
+        assert rep2["mismatches"] == 1
+        assert rep2["first_mismatch"]["sample"] == k
+        if spec.probe:
+            assert rep2.get("probe"), "probe text missing"
+    else:
+        assert rep2["sim_rc"] != 0 and "FAIL" in rep2["sim_tail"]
     # and the lock catches the corruption too
     V.write_ints(golden, lines)
     try:
         rep3 = ls.run_point(spec, vs.name, sim, params, generate=False)
         assert rep3["status"] == "LOCK"
     finally:
-        ls.ensure_vectors(spec, vs.name, generate=True)
+        golden.write_text(original)
+    assert golden.read_text() == original

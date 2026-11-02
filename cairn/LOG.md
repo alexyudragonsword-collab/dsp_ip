@@ -1,5 +1,16 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-02 · CI 7/7 绿；建 main；上游 issue 已提；里程碑 2 试点 halo_ffe_dfe 两仿真器绿
+
+- **CI run 15 全绿**：lint / test×2 / lockstep 10 min / vendor-drift 50 s / fixed-vs-float 2.6 min / **synth 36 min**（hier，DDR+GMP P=1 都在 runner 上跑完）。
+- **main**：`git push origin ccr-7ab6764e-mhc0mx:main`，与开发分支同一 commit；GitHub 默认分支仍是开发分支，改默认要在仓库 Settings → Branches 里做（MCP 无此工具）。
+- **上游 issue**：PA_DPD#2（不 bit-true 4 点 + 非因果 + 2 处文档小错，附 `DpdPolyConfig.derive`）、Halo_Serdes#136（`$fscanf`、缺 `dfse_*`、写被跟踪目录 + Icarus O(N²) 观察）。
+- **里程碑 2 试点 `ip/halo_ffe_dfe`**：Halo@6e79c4a `ffe_dfe_datapath.sv` + `tb_ffe_dfe.sv` 一字不改（`// Vendored from` 头，`vendor_check --strict` 14 verbatim），
+  向量 `source: committed`（Halo 提交集 2000 码 / 1985 输出，锁哈希），`check: tb`：iverilog 1.2 s、verilator 7.3 s 均 `LOCKSTEP PASS n=1985`；mutation（改 `dec.txt` 一行）→ `LOCKSTEP FAIL` + `$fatal` rc≠0，锁也抓到。
+- **被推翻的判断**：`_strip_header` 剥掉所有前导注释行——上游 `.sv` 自己的头注释被剥掉后 verbatim 判成 DRIFT；改为只剥 `Vendored/Extracted from` + `Adapted-copy policy` 行。
+- 脚手架三条路径（`check: python`、`check: tb`、`source: committed`）现在都有真实 IP 走过。
+- 下一步：余 4 个 Halo 模块按同一模板（`adc_dsp_loop` 5 个向量目录、`sliding/viterbi`、`dfse` 要先生成向量）；默认分支改 main；等上游回应。
+
 ## 2026-11-02 · 体检：本地全绿，CI 自 10-13 起因 YAML 一个冒号静默失败 8 次，已修
 
 - **本地**：`python -m pytest` 109 passed（11 min 50 s，含两仿真器全部 lockstep）；ruff 绿；`vendor_check --strict` 12 verbatim 无漂移；

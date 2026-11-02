@@ -26,6 +26,7 @@ import argparse
 import itertools
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -165,6 +166,8 @@ def run_point(spec: IpSpec, set_name: str, sim: str, params: dict, *, generate: 
             ok = rc == 0 and spec.pass_pattern in out
             rep["status"] = "PASS" if ok else "FAIL"
             rep["mismatches"] = 0 if ok else None
+            m_n = re.search(r"\bn=(\d+)", out)
+            rep["n"] = int(m_n.group(1)) if m_n else None
             if not ok:
                 rep["detail"] = f"rc={rc}, pattern {spec.pass_pattern!r} {'found' if spec.pass_pattern in out else 'missing'}"
         else:

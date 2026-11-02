@@ -4,7 +4,7 @@ This library does not change upstream algorithms (AGENTS.md: 不做). What it fi
 implementing them is recorded here with a reproduction, to be raised as issues in the
 upstream repositories. Each item stays until upstream has answered.
 
-## PA_DPD @ 08b9725
+## PA_DPD @ 08b9725 — filed as alexyudragonsword-collab/PA_DPD#2 (2026-11-02)
 
 ### 1. `FixedPointPolyModel` is a float emulation, not an integer datapath
 
@@ -48,7 +48,7 @@ in both blocks, same `e_in`), but it should be stated.
 - `scripts/export_deploy.py` docstring pairs the `DPA_200MHz_tcn` checkpoint with the
   `DPA_160MHz` dataset.
 
-## Halo_Serdes @ 6e79c4a
+## Halo_Serdes @ 6e79c4a — filed as alexyudragonsword-collab/Halo_Serdes#136 (2026-11-02)
 
 - `rtl/tb_*.sv` never check the return value of `$fscanf`; a truncated vector file reads
   as zeros and the lockstep still passes or fails for the wrong reason. (dsp_ip's

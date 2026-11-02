@@ -22,6 +22,7 @@ Rules, reading order and the six iron rules: [`AGENTS.md`](AGENTS.md). Open item
 | IP | what | reference | vector sets | status |
 |---|---|---|---|---|
 | `sat_shift` | rounding right shift + saturation (the output stage every IP uses) | `dspip.ip.sat_shift.ref` | 3 (signed/unsigned, corner values) | lockstep green, both simulators |
+| `halo_ffe_dfe` | Halo_Serdes' FFE + DFE + slicer behavioural model, vendored verbatim with its own self-checking tb (milestone-2 pilot: `check: tb`, `source: committed`) | Halo's `fixed_datapath` (upstream) | 1 (Halo's committed set) | lockstep green, both simulators; not synthesizable |
 | `dpd_poly` | polynomial DPD datapath: DDR-Volterra r=1 (140 terms) and GMP-510 (255 terms), W16/W12/W10, P samples/clock | `dspip.ip.dpd_poly.ref` | `ddr_r1_w16 gmp510_w16 ddr_r1_w12 gmp510_w12 rand_w16` × P ∈ {1,2,4} | lockstep green, both simulators; ACLR and synthesis estimates in `docs/results.md` |
 
 ### dpd_poly in one paragraph
