@@ -1,5 +1,16 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-02 · 体检：本地全绿，CI 自 10-13 起因 YAML 一个冒号静默失败 8 次，已修
+
+- **本地**：`python -m pytest` 109 passed（11 min 50 s，含两仿真器全部 lockstep）；ruff 绿；`vendor_check --strict` 12 verbatim 无漂移；
+  `check_upstream_export` 重新导出一致（53 s）；`render_tables --check` 一致；指纹对 10-13 的记录 92 值逐位不变；工具链/liberty/torch/sibling 克隆都在。
+- **CI 事故**：`d673f02` 起 step name `Synthesize (hier mode: real term count, ...)` 未加引号，YAML 非法 → run 7–14 全部"0 job 即失败"，GitHub 把 workflow 名显示成文件路径就是信号。
+  修复 `5068ff9`；run 15：lint / test×2 / lockstep（10 min）/ vendor-drift（50 s）/ fixed-vs-float（2.6 min）绿，`synth`（hier，预计 ~1 h）跑中。
+  **教训**：CI 红要看 job 数，0 job 的"failure"是配置错不是测试错；本地加一条 `yaml.safe_load(ci.yml)` 测试（已记 ROADMAP 小项）。
+- **上游漂移**：PA_DPD 08b9725→6241112（7 commits，全是 GUI，vendored 文件无变化）；Halo 6e79c4a→34c3d8d（282 commits，`rtl/` 无变化）；OpenDPD、polar_tx 也前进。pin 不需要动。
+- **仓库结构**：GitHub 默认分支就是 `ccr-7ab6764e-mhc0mx`（没有 main）；15 个 commit 全在上面。
+- 下一步：等 synth job 结束确认 7/7；建 `main`（或把默认分支改名）；推回上游 issue；里程碑 2 试点。
+
 ## 2026-10-14 · 收尾：综合口径定为分层 + `&nf -D 1000`，两种基函数都按 P=2 达 640 MSPS（估计）
 
 - **RTL 改动**：`dpd_term` 双因子级拆两级（TERM_LAT 5）、累加树每级打拍（ACC_LAT clog2(N)+1）；lockstep 两仿真器 × 18 点仍全 0 不匹配。
