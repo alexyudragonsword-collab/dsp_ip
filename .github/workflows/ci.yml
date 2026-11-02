@@ -77,7 +77,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y yosys
       - run: pip install -e ".[test,upstream]"
       - run: tools/get_liberty.sh
-      - name: Synthesize (hier mode: real term count, ABC per module)
+      - name: "Synthesize (hier mode: real term count, ABC per module)"
         run: |
           python tools/synth.py --ip sat_shift --set signed_w40_s12_o16 --out results/synth-ci/sat_shift.json
           python tools/synth.py --ip dpd_poly --set ddr_r1_w16 --P 1 --mode hier --out results/synth-ci/ddr_r1_w16_P1.json
