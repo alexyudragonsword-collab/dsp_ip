@@ -79,6 +79,24 @@ def synth_section() -> str:
                      f"{r['f_est_mhz']:.0f} | {r['throughput_est_msps']:.0f} | "
                      f"{r['area_um2'] / 1e6:.3f} | {r['cells']} | {r['p_for_640msps']} |")
     lines.append("")
+    # which pipeline stage sets the critical path (hier JSONs written after 2026-11-03)
+    withmod = [r for r in reps if r.get("modules")]
+    if withmod:
+        mods = sorted({m for r in withmod for m in r["modules"]},
+                      key=lambda m: -max(r["modules"][m]["delay_ps"] for r in withmod if m in r["modules"]))
+        lines.append("Worst ABC delay per module (ps, hier rows; the largest one is the critical path, "
+                     "`×n` = parameterizations mapped):")
+        lines.append("")
+        lines.append("| set | P | " + " | ".join(f"`{m}`" for m in mods) + " |")
+        lines.append("|---|---|" + "---|" * len(mods))
+        for r in sorted(withmod, key=lambda r: (r["set"], r["P"])):
+            cells = []
+            for m in mods:
+                v = r["modules"].get(m)
+                cells.append("" if v is None else
+                             f"{v['delay_ps']:.0f}" + (f" ×{v['instances']}" if v["instances"] > 1 else ""))
+            lines.append(f"| {r['set']} | {r['P']} | " + " | ".join(cells) + " |")
+        lines.append("")
     # P > 1 by construction: dpd_poly is P copies of (front end + term bank + tree) sharing one
     # history window and the coefficient registers, so area scales ~linearly in P and the
     # pipeline stages are identical; only the window fan-out grows (not modelled: no wire load).
@@ -94,9 +112,9 @@ def synth_section() -> str:
                     f"{r['f_est_mhz'] * P:.0f} | ≈{r['area_um2'] * P / 1e6:.3f} | ≈{r['cells'] * P} | "
                     f"{max(1, math.ceil(640 / r['f_est_mhz']))} |")
     if constructed:
-        lines.append("P = 2 / 4 rows **by construction** (not synthesized — the user chose to stop "
-                     "after the P = 1 points): same stages, P copies of the term bank and tree, "
-                     "throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.")
+        lines.append("P = 2 / 4 rows **by construction** (not synthesized yet: the CI `synth-long` "
+                     "job produces the real points): same stages, P copies of the term bank and "
+                     "tree, throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.")
         lines.append("")
         lines.append("| set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |")
         lines.append("|---|---|---|---|---|---|---|---|---|")

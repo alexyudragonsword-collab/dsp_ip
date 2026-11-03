@@ -1,5 +1,20 @@
 # CHANGELOG（按里程碑）
 
+## 里程碑 1 收尾：乘法级重分级、综合看得见瓶颈、P=1/2/4 真实综合进 CI、脚手架收尾（2026-11-03）
+
+### 变更
+- **RTL 重分级（逐位不变，lockstep 两仿真器 × 15 点仍 0 不匹配）**：`dpd_pow` 不再有宽于 W×W 的乘法器——a²=h·2^W+l，a³=(h·a)<<W+l·a、a⁴=(h·h)<<2W+(h·l)<<(W+1)+l·l，五个 W×W 积一级、重组加法一级（LATENCY 3→4）；
+  `dpd_env` 平方与相加拆两级（W_ENV+1→W_ENV+2）；`dpd_term` 复乘的四个积与加减拆两级（TERM_LAT 5→6）。单模块探针（NanGate45，ps）：pow 1762→1515、env 1789→1337、term 1949→1488/1511。
+- `tools/synth.py`：hier JSON 带 `modules`（每个模块最差 ABC 延迟 + 参数化实例数），`docs/results.md` 多一张"每模块延迟"表；新 `--mode unit --module <m> [--param K=V]` 单叶模块秒级探针，写到 `results/synth/units/`，不进表。
+- CI 新 job **`synth-long`**（`workflow_dispatch`，矩阵 2 基 × P∈{1,2,4}，每 runner 6 h 上限，JSON 打印到日志 + artifact）；`tests/test_ci_yaml.py` 跟着改。
+- `tools/lockstep.py`：每个 IP 一把 `flock`（`vectors/.lockstep.lock`，跨进程也跨线程），生成、换入、改锁文件、校验都在锁内；生成先写临时目录，内容与活目录相同就丢弃（不碰正在被仿真器读的目录）；`vectors.save_lock` 原子写。4 线程并发测试 + 3 进程实测。
+- `examples/01_bitwidth_aclr.py --w-pw-plus 0 4 8 --env-frac 0 2`：`floatref.sweep_variants` 生成变体网格，`build_aclr_table(variants=)`；`results/aclr_table.json` 扩到 6 个变体。
+- `docs/synthesis.md` 改写 Flow（hier + `&nf`）、模式说明、P=1/2/4 一节；`docs/verilator-issue-draft.md`（本会话无 verilator/verilator 写权限，待用户手提）。
+
+### 被推翻的判断
+- "40 位行波进位加法器是关键路径"：yosys 0.33 的 `$alu→$lcu` 本来就是 Brent-Kung 前缀网络；加法树（顶层）1441 ps 有 ~400 ps 余量，关键路径是 `dpd_pow` 的 32×32 乘（1837/1883 ps），其次 `dpd_env` 1789、`dpd_term` 1734。
+- "a⁴ 用 a³·a（48×16）比 32×32 浅"：单模块探针 1988 ps 反而比 1762 差；两个 32×16 半积 1934、两个 48×8 半积 2283 也不行；只有全部拆成 W×W 积（1494）有效。
+
 ## 里程碑 2 完成 — Halo_Serdes 五个模块全部进脚手架（2026-11-03）
 
 - **IP `halo_adc_dsp_loop` / `halo_sliding_mlsd` / `halo_viterbi_mlsd` / `halo_dfse_mlsd`**：Halo@6e79c4a 的 `.sv` + `tb_*.sv` 一字不改 vendor（`vendor_check --strict` 22 verbatim），

@@ -88,3 +88,44 @@ def test_format_report_shows_probe(ls):
                                                "rtl": 6}, "probe": "acc=123\ny=5"}
     txt = ls.format_report(rep)
     assert "sample 17" in txt and "rtl=6 golden=5" in txt and "acc=123" in txt and "P=2" in txt
+
+
+def test_concurrent_regeneration_is_safe(ls, tmp_path):
+    """Two runs generating the same set at once (what `--all` sweeps and the two-simulator
+    CI job do) must both end with a complete, lock-clean directory and no leftovers; a
+    second run of an unchanged generator must not rewrite the live files at all."""
+    import shutil
+    import threading
+
+    from dspip.ipspec import load_ipspec
+
+    root = tmp_path / "sat_shift"
+    shutil.copytree(REPO / "ip" / "sat_shift", root, ignore=shutil.ignore_patterns("*.txt", "dims.svh"))
+    spec = load_ipspec(root)
+    name = spec.vector_sets[0].name
+    set_dir = spec.set_dir(name)
+    results, errors = [], []
+
+    def run():
+        try:
+            results.append(ls.ensure_vectors(spec, name))
+        except Exception as exc:  # noqa: BLE001
+            errors.append(exc)
+
+    ts = [threading.Thread(target=run) for _ in range(4)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert not errors, errors
+    assert all(r[1] == [] for r in results), results
+    leftovers = [p.name for p in set_dir.parent.iterdir()
+                 if p.name.startswith(".") and p.name != ".lockstep.lock"]
+    assert set_dir.is_dir() and not leftovers, leftovers
+    before = {p.name: p.stat().st_mtime_ns for p in set_dir.iterdir()}
+    ls.ensure_vectors(spec, name)              # unchanged generator: live files untouched
+    assert {p.name: p.stat().st_mtime_ns for p in set_dir.iterdir()} == before
+    # a changed golden is replaced (and the lock then flags the change)
+    (set_dir / "y.txt").write_text("1\n")
+    assert ls.ensure_vectors(spec, name)[1] == []
+    assert (set_dir / "y.txt").read_text() != "1\n"

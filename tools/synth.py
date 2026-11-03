@@ -17,6 +17,9 @@ Modes (``--mode``):
   hier    real N_TERMS, hierarchy kept for the IP's own modules (helpers such as sat_shift
           flattened into them): ABC maps each derived module on its own, so memory stays
           small and the real term count is synthesized; delay = max over modules.
+  unit    one leaf module alone (``--module dpd_pow``, ``--param K1=1``): a minutes-long
+          probe of a single pipeline stage, written to results/synth/units/, never a
+          datapath number (the hier report's ``modules`` field says which module to probe).
 
 Frequency: ABC ``stime`` reports the longest combinational path of the mapped netlist with
 the liberty's cell delays and no wire load; f_est = 1 / (delay + t_cq + t_setup) with the
@@ -137,6 +140,31 @@ def parse_abc_delay(log: str) -> list[float]:
     return [float(x) for x in re.findall(r"ABC:.*?Delay\s*=\s*([0-9.]+)\s*ps", log)]
 
 
+_EXTRACT = re.compile(r"Extracting gate netlist of module `([^']*)'")
+_DELAY = re.compile(r"ABC:.*?Delay\s*=\s*([0-9.]+)\s*ps")
+
+
+def parse_abc_modules(log: str) -> dict:
+    """Per-module worst ABC delay: ``{base module name: {"delay_ps", "instances"}}``.
+    Yosys names every parameterization ``$paramod$<hash>\\dpd_term``; the base name is what
+    a reader wants, the worst delay over all its parameterizations is what sets f_est.
+    Only ABC runs that report a delay count (the ``abc -fast`` inside ``synth`` does not)."""
+    out: dict = {}
+    cur = None
+    for ln in log.splitlines():
+        m = _EXTRACT.search(ln)
+        if m:
+            cur = m.group(1).rsplit("\\", 1)[-1].lstrip("\\$")
+            continue
+        m = _DELAY.search(ln)
+        if m and cur is not None:
+            d = float(m.group(1))
+            e = out.setdefault(cur, {"delay_ps": 0.0, "instances": 0})
+            e["delay_ps"] = max(e["delay_ps"], d)
+            e["instances"] += 1
+    return dict(sorted(out.items(), key=lambda kv: -kv[1]["delay_ps"]))
+
+
 def parse_stat(log: str) -> dict:
     """The last ``stat -liberty`` block: chip area, cell count, flop count."""
     area = re.findall(r"Chip area for (?:top )?module '\\?([^']+)':\s*([0-9.]+)", log)
@@ -171,20 +199,21 @@ def keep_modules(spec) -> list[str]:
 
 
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,
-              flatten: bool = True) -> tuple[str, float]:
+              flatten: bool = True, top: str | None = None) -> tuple[str, float]:
     work.mkdir(parents=True, exist_ok=True)
     (work / "abc.script").write_text(abc_script)
+    top = top or spec.top
     srcs = " ".join(str(p) for p in spec.rtl_paths())
     chp = " ".join(f"-chparam {k} {v}" for k, v in params.items())
-    lines = [f"read_verilog -sv -I {set_dir} {srcs}", f"hierarchy -top {spec.top} {chp}"]
+    lines = [f"read_verilog -sv -I {set_dir} {srcs}", f"hierarchy -top {top} {chp}"]
     if flatten:
-        lines.append(f"synth -top {spec.top} -flatten")
+        lines.append(f"synth -top {top} -flatten")
     else:
         keep = " ".join(f"*{m}*" for m in keep_modules(spec))
         lines += ["proc",
                   f"setattr -mod -set keep_hierarchy 1 {keep}" if keep else "",
                   "flatten",
-                  f"synth -top {spec.top}"]
+                  f"synth -top {top}"]
     lines += [
         f"dfflibmap -liberty {lib}",
         f"abc -liberty {lib} -script {work / 'abc.script'}",
@@ -205,7 +234,13 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
 
 
 def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: int | None,
-                dch: bool, target_ps: float | None = None, legacy: bool = False) -> dict:
+                dch: bool, target_ps: float | None = None, legacy: bool = False,
+                module: str | None = None, params: dict | None = None) -> dict:
+    """One estimate. ``mode == "unit"`` synthesizes ``module`` (one of the IP's own leaf
+    modules) alone as the top with its default parameters plus ``params`` (``-chparam``):
+    minutes instead of hours, for finding and fixing the stage that sets the critical path."""
+    if mode == "unit" and not module:
+        raise ValueError("--mode unit needs --module")
     lib = LIBS[lib_name]
     lib_path = lib["path"]
     if not lib_path.exists():
@@ -220,10 +255,14 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
         m = re.search(r"N_TERMS\s*=\s*(\d+)", dp.read_text())
         n_full = int(m.group(1)) if m else None
     script = abc_script(dch, target_ps, legacy)
-    tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + ("_legacy" if legacy else "")
+    ptag = "_".join(f"{k}{v}" for k, v in sorted((params or {}).items()))
+    tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + (f"__{module}" if module else "")
+           + (f"__{ptag}" if ptag else "") + ("_legacy" if legacy else "")
            + ("_dch" if dch else "") + (f"_D{int(target_ps)}" if target_ps else ""))
     work = RESULTS / "logs" / spec.name / tag
-    base_params = {"P": P} if "P" in spec.params else {}
+    base_params = {"P": P} if ("P" in spec.params and mode != "unit") else {}
+    if mode == "unit":
+        base_params.update(params or {})
     ff = ff_overhead_ps(lib_path, lib["dff"])
     rep = {"kind": "estimate", "ip": spec.name, "set": set_name, "P": P, "mode": mode,
            "liberty": {"name": lib_name, "label": lib["label"],
@@ -232,7 +271,11 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
            "target_ps": target_ps,
            "ff": ff, "n_terms_full": n_full, "points": []}
     points = []
-    if mode in ("full", "hier") or n_full is None:
+    if mode == "unit":
+        rep["module"] = module
+        rep["module_params"] = dict(params or {})
+        points.append(("unit", {}))
+    elif mode in ("full", "hier") or n_full is None:
         points.append((mode if n_full is not None else "full", {}))
     else:
         t = terms or 16
@@ -240,12 +283,14 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
         points.append((f"terms{2 * t}", {"N_TERMS": 2 * t}))
     for label, extra in points:
         log, dt = run_yosys(spec, set_dir, lib_path, {**base_params, **extra}, work / label,
-                            script, flatten=(mode != "hier"))
+                            script, flatten=(mode != "hier"), top=module if mode == "unit" else None)
         delays = parse_abc_delay(log)
         st = parse_stat(log)
         pt = {"label": label, "params": {**base_params, **extra}, "delay_ps": max(delays) if delays else None,
               "runtime_s": round(dt, 1), **st}
         rep["points"].append(pt)
+        if mode == "hier":
+            rep["modules"] = parse_abc_modules(log)   # which stage sets the critical path
     # frequency from the worst critical path over the points
     delay = max(p["delay_ps"] for p in rep["points"] if p["delay_ps"] is not None)
     period = delay + ff["total_ps"]
@@ -255,7 +300,14 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     rep["f_est_mhz"] = round(f_mhz, 1)
     rep["throughput_est_msps"] = round(f_mhz * P, 1)
     rep["p_for_640msps"] = math.ceil(640.0 / f_mhz)
-    if mode == "hier":
+    if mode == "unit":
+        rep["area_um2"] = rep["points"][0]["area_um2"]
+        rep["cells"] = rep["points"][0]["cells"]
+        rep["method"] = (f"leaf module {module} synthesized alone (default parameters"
+                         f"{' + ' + ptag if ptag else ''}), flattened; delay = ABC stime "
+                         "(no wire load) + liberty DFF t_cq + t_setup. A stage probe, not a "
+                         "datapath number: never enters docs/results.md")
+    elif mode == "hier":
         rep["area_um2"] = rep["points"][0]["area_um2"]
         rep["cells"] = rep["points"][0]["cells"]
         rep["method"] = ("whole design, real term count, hierarchy kept for "
@@ -287,8 +339,11 @@ def main(argv=None) -> int:
     ap.add_argument("--ip", required=True)
     ap.add_argument("--set", required=True, dest="set_name")
     ap.add_argument("--P", type=int, default=1)
-    ap.add_argument("--mode", choices=["budget", "full", "hier"], default="budget")
+    ap.add_argument("--mode", choices=["budget", "full", "hier", "unit"], default="budget")
     ap.add_argument("--terms", type=int, help="budget mode: smaller term count T (and 2T)")
+    ap.add_argument("--module", help="unit mode: the leaf module to synthesize alone")
+    ap.add_argument("--param", action="append", default=[], metavar="K=V",
+                    help="unit mode: -chparam override, e.g. --param K1=1 (repeatable)")
     ap.add_argument("--lib", choices=list(LIBS), default="nangate45")
     ap.add_argument("--legacy-map", action="store_true", dest="legacy",
                     help="old ABC 'map' flow instead of the default &nf flow (comparison)")
@@ -301,14 +356,24 @@ def main(argv=None) -> int:
         print("yosys not found; see ROADMAP 被外部阻塞", file=sys.stderr)
         return 2
     spec = load_ipspec(IP_ROOT / args.ip)
+    params = dict(kv.split("=", 1) for kv in args.param)
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,
-                      args.target_ps, args.legacy)
+                      args.target_ps, args.legacy, module=args.module, params=params)
     RESULTS.mkdir(parents=True, exist_ok=True)
     suffix = (("_legacy" if args.legacy else "") + ("_dch" if args.dch else "")
               + (f"_D{int(args.target_ps)}" if args.target_ps else ""))
-    out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}{suffix}.json"
+    if args.mode == "unit":
+        # stage probes live in units/: render_tables only reads results/synth/*.json
+        ptag = "_".join(f"{k}{v}" for k, v in sorted(params.items()))
+        out = args.out or RESULTS / "units" / f"{args.module}{'__' + ptag if ptag else ''}{suffix}.json"
+    else:
+        out = args.out or RESULTS / f"{spec.name}__{args.set_name}__P{args.P}__{args.mode}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
+    if rep.get("modules"):
+        print("  per-module worst ABC delay (ps): " + ", ".join(
+            f"{m} {v['delay_ps']:.0f}" + (f" x{v['instances']}" if v["instances"] > 1 else "")
+            for m, v in rep["modules"].items()))
     print(f"[estimate] {spec.name}/{args.set_name} P={args.P} {args.mode} ({args.lib}): "
           f"delay {rep['delay_ps']:.0f} ps + ff {rep['ff']['total_ps']:.0f} ps -> "
           f"f_est {rep['f_est_mhz']:.0f} MHz, {rep['throughput_est_msps']:.0f} MSPS, "

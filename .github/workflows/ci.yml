@@ -3,6 +3,7 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:   # runs the synth-long matrix (P = 1/2/4 real synthesis) on demand
 
 env:
   PA_DPD_SHA: 08b9725595748b290c76d1b70355f7e6014a709e
@@ -91,6 +92,39 @@ jobs:
           name: synth-estimates
           path: |
             results/synth-ci/*.json
+            results/synth/logs/**/yosys.log
+
+  synth-long:
+    # Rule 5, the full picture: P = 1 / 2 / 4 hier points of both bases from one RTL version.
+    # Manual trigger only (6 runners, up to a few hours each). The estimate JSON is printed
+    # to the log and uploaded; copy it into results/synth/ (default file name) and re-run
+    # tools/render_tables.py to publish it in docs/results.md.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        set: [ddr_r1_w16, gmp510_w16]
+        P: [1, 2, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y yosys
+      - run: pip install -e ".[test,upstream]"
+      - run: tools/get_liberty.sh
+      - name: "Synthesize ${{ matrix.set }} P=${{ matrix.P }} (hier, real term count)"
+        run: python tools/synth.py --ip dpd_poly --set ${{ matrix.set }} --P ${{ matrix.P }} --mode hier
+      - name: "Print the estimate (copy into results/synth/ to publish)"
+        run: cat results/synth/dpd_poly__${{ matrix.set }}__P${{ matrix.P }}__hier.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synth-long-${{ matrix.set }}-P${{ matrix.P }}
+          path: |
+            results/synth/dpd_poly__${{ matrix.set }}__P${{ matrix.P }}__hier.json
             results/synth/logs/**/yosys.log
 
   vendor-drift:

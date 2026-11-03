@@ -63,12 +63,18 @@ def nmse_only() -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--bits", type=int, nargs="+", default=[16, 12, 10])
+    ap.add_argument("--w-pw-plus", type=int, nargs="+", default=[0, 4], metavar="N",
+                    help="power word widths to sweep, as W+N (0 = the default W_PW = W)")
+    ap.add_argument("--env-frac", type=int, nargs="+", default=[0], metavar="F",
+                    help="envelope fractional bits to sweep (0 = default)")
     ap.add_argument("--out", type=Path, default=REPO / "results" / "aclr_table.json")
     args = ap.parse_args(argv)
     if not fr.surrogate_available():
         nmse_only()
         return 0
-    table = fr.build_aclr_table(tuple(args.bits), out=args.out)
+    variants = fr.sweep_variants(tuple(args.w_pw_plus), tuple(args.env_frac))
+    print(f"variants: {', '.join(variants)}")
+    table = fr.build_aclr_table(tuple(args.bits), out=args.out, variants=variants)
     print_table(table)
     print(f"\nwrote {args.out}")
     worst = max(abs(table[b]["upstream_recomputed"][str(k)] - v)

@@ -23,6 +23,8 @@ Exit status is non-zero if any point fails. A JSON report goes to results/lockst
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import itertools
 import json
 import os
@@ -30,6 +32,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -54,20 +57,63 @@ def detect_sim(pref: str = "auto") -> str | None:
 # --- vectors ----------------------------------------------------------------------------
 
 
+def _content(d: Path) -> dict:
+    """sha256 per file, the tb's own ``rtl_*`` outputs excluded (they may sit in a live
+    set dir when a tb was run without ``+outdir``)."""
+    return {k: v for k, v in V.hash_dir(d).items() if not k.startswith("rtl_")}
+
+
+@contextlib.contextmanager
+def vectors_lock(spec: IpSpec):
+    """Exclusive per-IP lock on its vectors/ directory (``flock``: across processes and
+    across threads, each holder opens its own file description). Held while a set is
+    (re)generated, swapped in, verified, and while the lock file is rewritten."""
+    spec.vectors_root.mkdir(parents=True, exist_ok=True)
+    with open(spec.vectors_root / ".lockstep.lock", "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def regenerate(spec: IpSpec, set_name: str, set_dir: Path) -> None:
+    """Run the generator into a temporary sibling and swap it in only if the live set
+    differs (caller holds ``vectors_lock``). Concurrent lockstep runs used to delete each
+    other's files mid-write; now an unchanged generator never touches the live directory,
+    so a simulator already reading it is never disturbed."""
+    gen = spec.load_callable(spec.generator)
+    tag = f"{os.getpid()}-{threading.get_ident()}"
+    tmp = set_dir.parent / f".{set_dir.name}.tmp-{tag}"
+    old = set_dir.parent / f".{set_dir.name}.old-{tag}"
+    shutil.rmtree(tmp, ignore_errors=True)
+    try:
+        gen(set_name, tmp)
+        if set_dir.exists() and _content(set_dir) == _content(tmp):
+            return
+        if set_dir.exists():
+            os.rename(set_dir, old)
+        os.rename(tmp, set_dir)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        shutil.rmtree(old, ignore_errors=True)
+
+
 def ensure_vectors(spec: IpSpec, set_name: str, *, generate: bool = True,
                    update_lock: bool = False) -> tuple[Path, list[str]]:
     """Generate (if the set is generated) and verify the set against the lock.
     Returns (set_dir, problems)."""
+    with vectors_lock(spec):
+        return _ensure_vectors(spec, set_name, generate=generate, update_lock=update_lock)
+
+
+def _ensure_vectors(spec: IpSpec, set_name: str, *, generate: bool,
+                    update_lock: bool) -> tuple[Path, list[str]]:
     vs = next(s for s in spec.vector_sets if s.name == set_name)
     set_dir = spec.root / vs.dir
     lock = V.load_lock(spec.lock_path)
     if vs.source == "generated" and generate:
-        gen = spec.load_callable(spec.generator)
-        if set_dir.exists():
-            for p in set_dir.iterdir():
-                if p.is_file() and not p.name.startswith("rtl_"):
-                    p.unlink()
-        gen(set_name, set_dir)
+        regenerate(spec, set_name, set_dir)
     if not set_dir.exists():
         return set_dir, [f"{set_name}: vector directory {set_dir} missing"]
     if update_lock:

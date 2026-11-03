@@ -10,7 +10,7 @@
 //
 // Bit-exact with dspip.ip.dpd_poly.datapath (env_product, term_phi, quantize_phi, cmul).
 // The tap selection (which window entry, which power) is done by the parent; this module
-// only sees the already-selected x and pw values. Five register stages (LATENCY = 5) so
+// only sees the already-selected x and pw values. Six register stages (LATENCY = 6) so
 // every term has the same latency whatever its K0/K1.
 module dpd_term #(
     parameter int W_IN   = 16,
@@ -82,11 +82,20 @@ module dpd_term #(
         code_im_q <= code_im_c;
     end
 
-    // ---- stage 4: complex multiply with the coefficient ---------------------------------
+    // ---- stage 4a: the four real products of the complex multiply ---------------------
+    // (products and the add/sub in one stage: 1734 ps; a bare 16x16 multiply ~1680 ps)
+    logic signed [W_PROD-1:0] ac_q, bd_q, ad_q, bc_q;
+    always_ff @(posedge clk) begin
+        ac_q <= (W_PROD)'(code_re_q * w_re);
+        bd_q <= (W_PROD)'(code_im_q * w_im);
+        ad_q <= (W_PROD)'(code_re_q * w_im);
+        bc_q <= (W_PROD)'(code_im_q * w_re);
+    end
+    // ---- stage 4b: combine ----------------------------------------------------------------
     logic signed [W_PROD-1:0] pr_q, pi_q;
     always_ff @(posedge clk) begin
-        pr_q <= (W_PROD)'(code_re_q * w_re) - (W_PROD)'(code_im_q * w_im);
-        pi_q <= (W_PROD)'(code_re_q * w_im) + (W_PROD)'(code_im_q * w_re);
+        pr_q <= ac_q - bd_q;
+        pi_q <= ad_q + bc_q;
     end
 
     // ---- alignment (wiring) -----------------------------------------------------------

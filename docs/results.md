@@ -28,7 +28,7 @@ Max |upstream recomputed − PA_DPD doc| = 0.05 dB; max |int ref W16 (default) �
 | ddr_r1_w16 | 1 | hier | 1837 | 502 | 502 | 1.896 | 1504496 | 2 |
 | gmp510_w16 | 1 | hier | 1883 | 491 | 491 | 3.341 | 2645488 | 2 |
 
-P = 2 / 4 rows **by construction** (not synthesized — the user chose to stop after the P = 1 points): same stages, P copies of the term bank and tree, throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.
+P = 2 / 4 rows **by construction** (not synthesized yet: the CI `synth-long` job produces the real points): same stages, P copies of the term bank and tree, throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.
 
 | set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
 |---|---|---|---|---|---|---|---|---|

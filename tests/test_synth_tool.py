@@ -94,3 +94,63 @@ def test_committed_results_are_estimates():
         r = json.loads(p.read_text())
         assert r.get("kind") == "estimate", p
         assert "method" in r and "sha256" in r["liberty"], p
+
+
+HIER_LOG = """
+13.1. Extracting gate netlist of module `$paramod$118576aab\\dpd_acc' to `<abc-temp-dir>/input.blif'..
+ABC: WireLoad = "none"  Gates =     92 (  9.8 %)   Area =      106.40 (100.0 %)   Delay =   853.69 ps  ( 42.4 %)
+13.2. Extracting gate netlist of module `$paramod$3182646cf\\dpd_term' to `<abc-temp-dir>/input.blif'..
+ABC: WireLoad = "none"  Gates =  11124 (  6.7 %)   Area =    12681.02 ( 99.8 %)   Delay =  1678.94 ps  (  2.5 %)
+13.3. Extracting gate netlist of module `$paramod$495377c69\\dpd_term' to `<abc-temp-dir>/input.blif'..
+ABC: WireLoad = "none"  Gates =   9837 (  6.9 %)   Area =    11184.50 ( 99.7 %)   Delay =  1733.54 ps  (  2.6 %)
+13.4. Extracting gate netlist of module `\\dpd_poly' to `<abc-temp-dir>/input.blif'..
+ABC: WireLoad = "none"  Gates =  54763 (  1.3 %)   Area =    71555.33 (100.0 %)   Delay =  1440.74 ps  ( 21.3 %)
+"""
+
+
+def test_parse_abc_modules_groups_parameterizations(sy):
+    """Per-module worst delay by base name, sorted worst first: the field that says which
+    pipeline stage sets f_est (the adder tree was blamed for a year on no evidence)."""
+    m = sy.parse_abc_modules(HIER_LOG)
+    assert list(m) == ["dpd_term", "dpd_poly", "dpd_acc"]
+    assert m["dpd_term"] == {"delay_ps": 1733.54, "instances": 2}
+    assert m["dpd_poly"]["instances"] == 1
+    assert sy.parse_abc_modules("ABC: Delay = 12.0 ps\n") == {}   # no module context: ignored
+
+
+def test_committed_hier_results_module_delays_consistent():
+    """When a hier JSON carries per-module delays, the headline delay is their max."""
+    for p in (REPO / "results" / "synth").glob("*__hier*.json"):
+        d = json.loads(p.read_text())
+        if "modules" not in d:
+            continue
+        worst = max(v["delay_ps"] for v in d["modules"].values())
+        assert abs(worst - d["delay_ps"]) < 1e-6, p.name
+        assert all(v["instances"] >= 1 for v in d["modules"].values())
+
+
+def test_unit_mode_needs_module(sy):
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "dpd_poly")
+    with pytest.raises(ValueError, match="--module"):
+        sy.synth_point(spec, "ddr_r1_w16", "nangate45", 1, "unit", None, False)
+
+
+@pytest.mark.skipif(not shutil.which("yosys"), reason="no yosys")
+def test_unit_probe_is_estimate_and_stays_out_of_results(sy, tmp_path):
+    """A stage probe (sat_shift alone is seconds) is labelled, carries its module, and the
+    default output path is results/synth/units/ which render_tables never reads."""
+    if not sy.LIBS["nangate45"]["path"].exists():
+        pytest.skip("liberty not fetched (tools/get_liberty.sh)")
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "sat_shift")
+    rep = sy.synth_point(spec, "signed_w40_s12_o16", "nangate45", 1, "unit", None, False,
+                         module="sat_shift", params={"W_IN": "24"})
+    assert rep["kind"] == "estimate" and rep["mode"] == "unit" and rep["module"] == "sat_shift"
+    assert rep["module_params"] == {"W_IN": "24"} and rep["delay_ps"] > 0
+    assert "never enters docs/results.md" in rep["method"]
+    rc = sy.main(["--ip", "sat_shift", "--set", "signed_w40_s12_o16", "--mode", "unit",
+                  "--module", "sat_shift", "--param", "W_IN=24", "--out", str(tmp_path / "u.json")])
+    assert rc == 0 and json.loads((tmp_path / "u.json").read_text())["module"] == "sat_shift"

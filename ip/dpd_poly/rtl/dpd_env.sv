@@ -2,7 +2,9 @@
 //
 // Bit-exact with dspip.ip.dpd_poly.datapath.envelope (truncating integer sqrt).
 // Pipelined restoring square root: one bit-pair of the radicand per stage, W_ENV stages,
-// plus one register for the squares. LATENCY = W_ENV + 1 cycles, one result per cycle.
+// plus one register for the two squares and one for their sum (both in one stage was
+// 1789 ps, NanGate45 estimate, a 16x16 multiply alone ~1680). LATENCY = W_ENV + 2 cycles,
+// one result per cycle.
 module dpd_env #(
     parameter int W_IN     = 16,
     parameter int ENV_FRAC = 0,
@@ -16,14 +18,14 @@ module dpd_env #(
     localparam int WR = 2 * W_ENV;     // radicand width: (2^(W_IN-1))^2 * 2 * 2^(2F) < 2^WR
     localparam int WM = W_ENV + 2;     // partial remainder width (see datapath notes)
 
-    // stage 0: radicand
+    // stage 0a: squares; 0b: radicand
     logic [WR-1:0] rad_q;
-    logic [2*W_IN:0] sq_re, sq_im, sq_sum;
-    always_comb begin
-        sq_re  = (2*W_IN+1)'(x_re * x_re);
-        sq_im  = (2*W_IN+1)'(x_im * x_im);
-        sq_sum = sq_re + sq_im;
+    logic [2*W_IN:0] sq_re_q, sq_im_q, sq_sum;
+    always_ff @(posedge clk) begin
+        sq_re_q <= (2*W_IN+1)'(x_re * x_re);
+        sq_im_q <= (2*W_IN+1)'(x_im * x_im);
     end
+    assign sq_sum = sq_re_q + sq_im_q;
     always_ff @(posedge clk) rad_q <= WR'(sq_sum) << (2 * ENV_FRAC);
 
     // stages 1..W_ENV: restoring sqrt, MSB pair first

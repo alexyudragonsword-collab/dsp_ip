@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -54,8 +55,11 @@ def load_lock(path: Path) -> dict:
 
 
 def save_lock(path: Path, lock: dict) -> None:
+    """Atomic: a reader (or a concurrent ``--update-lock``) never sees a half-written file."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(lock, indent=1, sort_keys=True) + "\n")
+    tmp = path.with_name(f".{path.name}.tmp-{os.getpid()}")
+    tmp.write_text(json.dumps(lock, indent=1, sort_keys=True) + "\n")
+    os.replace(tmp, path)
 
 
 def verify_set(lock: dict, set_name: str, d: Path) -> list[str]:

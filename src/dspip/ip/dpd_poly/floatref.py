@@ -73,10 +73,15 @@ def upstream_fixed_output(coeffs: dict, x: np.ndarray) -> np.ndarray:
     return FixedPointPolyModel(upstream_model(coeffs), w, w)(np.asarray(x, dtype=complex))
 
 
-def int_ref_output(cfg: DpdPolyConfig, x: np.ndarray, vec: bool = True) -> np.ndarray:
-    """Integer reference on float input ``x``, returned as float at scale 2^e_out."""
+def int_ref_output(cfg: DpdPolyConfig, x: np.ndarray, vec: bool | None = None) -> np.ndarray:
+    """Integer reference on float input ``x``, returned as float at scale 2^e_out.
+    ``vec=None`` uses the int64 twin when the config fits (``check_int64``) and the
+    unbounded pure-int reference otherwise (e.g. W16 with env_frac=2: a^4 needs ~70 bits);
+    the two are proven equal where both run (tests/test_ref.py)."""
     xi, xq = quantize_input(x, cfg.e_in, cfg.w_in)
     ref = DpdPolyRef(cfg)
+    if vec is None:
+        vec = cfg.check_int64()
     if vec:
         yr, yi = ref.run_vec(xi, xq)
     else:
@@ -208,19 +213,47 @@ class SurrogateEval:
                 "coeffs_real": cr.tolist(), "coeffs_imag": ci.tolist()}
 
 
-def build_aclr_table(bits=(16, 12, 10), out: Path | None = None) -> dict:
+DEFAULT_VARIANTS = {"default": {}, "pw+4": {"w_pw_plus": 4}}
+
+
+def sweep_variants(w_pw_plus=(0, 4), env_frac=(0,)) -> dict:
+    """Variant grid for ``build_aclr_table``: ``default`` first (the baseline the table and
+    tests key on), then ``pw+N`` (power word N bits wider than W) and ``F<f>`` (envelope with
+    f fractional bits), and ``pw+N_F<f>`` for the combinations. Keys are ``derive`` kwargs."""
+    out = {"default": {}}
+    for f in env_frac:
+        for n in w_pw_plus:
+            if n == 0 and f == 0:
+                continue
+            name = "_".join(x for x in ((f"pw+{n}" if n else ""), (f"F{f}" if f else "")) if x)
+            kw = {}
+            if n:
+                kw["w_pw_plus"] = n
+            if f:
+                kw["env_frac"] = f
+            out[name] = kw
+    return out
+
+
+def build_aclr_table(bits=(16, 12, 10), out: Path | None = None,
+                     variants: dict | None = None) -> dict:
     """The rule-2 table for dpd_poly (``examples/01_bitwidth_aclr.py`` writes it to
     ``results/aclr_table.json``): per basis, the upstream row recomputed with upstream's
-    code, the integer reference's ACLR per bit width and variant, and the torch-free NMSE
-    of the integer reference against the upstream export block."""
+    code, the integer reference's ACLR per bit width and variant (``variants``: name ->
+    ``DpdPolyConfig.derive`` kwargs, ``w_pw_plus`` meaning ``w_pw = W + n``; default
+    ``DEFAULT_VARIANTS``), and the torch-free NMSE of the integer reference against the
+    upstream export block."""
+    variants = dict(variants or DEFAULT_VARIANTS)
+    assert next(iter(variants)) == "default", "the first variant must be the 'default' baseline"
     table = {"_meta": {"dataset": "DPA_160MHz", "metric": "ACLR_AVG dBc via PA_DPD DGRU surrogate",
+                       "variants": {k: dict(v) for k, v in variants.items()},
                        "upstream_doc": "PA_DPD@08b9725 docs/03_roadmap.md:108-117",
                        "upstream_table": {b: {str(k): v for k, v in r.items()}
                                           for b, r in UPSTREAM_TABLE.items()}}}
     ev = SurrogateEval()
     for basis in BASES:
         row = ev.upstream_row(basis, bits)
-        rows = ev.int_ref_rows(basis, bits)
+        rows = ev.int_ref_rows(basis, bits, variants=variants)
         nmse = {}
         for w in (16, 12):
             up = load_upstream(basis, w)

@@ -1,5 +1,17 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-03 · 瓶颈归因纠错：是乘法级不是加法树；乘法级重分级后单模块 ~1500 ps；P=1/2/4 真实综合交给 CI
+
+- **更正 10-14 / 10-13 条目**：那两条把关键路径归给"40 位行波进位加法器 + ABC 平衡"。本机 hier 日志逐模块 ABC 延迟（ps，DDR/GMP）：`dpd_pow` **1837/1883**、`dpd_env` 1789/1738、`dpd_term` 最差 1734/1679、顶层（加法树）1441/1441、`dpd_acc` 854/981。
+  yosys 0.33 `synth` 的 `$alu→$lcu` 是 Brent-Kung（独立 40 位加 `ltp` 18）。1837/1883 这两个数字本身没错，归因错了；那时没有逐模块表，现在 hier JSON 带 `modules`。
+- **重分级**（RTL 逐位不变；verilator 15 点、iverilog 15 点 0 不匹配）：pow 全部拆成 W×W 积（a²=h·2^W+l 展开）、env 平方/相加拆级、term 积/加减拆级；总延迟 +3 拍（ENV_LAT W_ENV+2、POW_LAT 4、TERM_LAT 6）。
+  单模块探针 `synth.py --mode unit`（NanGate45，默认参数，ps）：pow 1762→1515（中间试过 a³·a 48×16 **1988**、两个 32×16 半积 1934、两个 48×8 半积 2283，都更差）、env 1789→1337、term(K1=1) 1949→1488、term(默认) 1949→1511。
+  同一 RTL 在 situ 与单独综合差 ±10 %（老 term 单独 1949、在 situ 1734），ABC 映射噪声照旧。
+- **CI `synth-long`**：workflow_dispatch，2 基 × P∈{1,2,4} 六个 runner，JSON 打印到日志。结果（f_est、面积、耗时）见本条目下方追加 / `docs/results.md`。
+- **脚手架收尾**：lockstep 每 IP 一把 `flock` + 临时目录生成、内容相同不碰活目录。第一版只靠两次 rename，4 线程测试 8 次挂 5 次（rename 间隙活目录消失，别的线程校验看到缺文件）→ 加锁后 8/8；锁文件原子写；`examples/01` 变体网格 `default, pw+4, pw+8, F2, pw+4_F2, pw+8_F2`；Verilator issue 文稿（`add_repo verilator/verilator` 被权限层拒绝，待用户手提）。
+- **被推翻的判断**：① 加法树是瓶颈（见上）；② "48×16 比 32×32 浅"（否，见探针）；③ "重分级后 f_est 约 540 MHz"——探针给 ~1515 ps → 约 600 MHz，但要等 in situ 数字。
+- 下一步：等 `synth-long` 六个点，JSON 入库、重渲表、更新本条；若 P=1 仍不到 640，ROADMAP 的"两级乘法器"是下一个可选项。
+
 ## 2026-11-03 · 里程碑 2 完成：Halo 余 4 个模块进脚手架；抓到 Verilator 5.020 一个常量折叠 bug
 
 - **4 个 IP**（Halo@6e79c4a 一字不改，`check: tb`、`source: committed`，锁哈希）：`halo_adc_dsp_loop` 5 集各 n=3000（iverilog 5/5 PASS）、`halo_sliding_mlsd` n=4000、`halo_viterbi_mlsd` n=3000、`halo_dfse_mlsd` n=3000（后三者两仿真器 PASS，verilator 仿真本身 0.1 s）。

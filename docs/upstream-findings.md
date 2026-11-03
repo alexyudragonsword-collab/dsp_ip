@@ -97,3 +97,7 @@ installed), and `tests/test_sim_quirks.py` fails the day Verilator returns 16384
 restriction gets lifted. The vendored tb is not edited (rule 3). Halo only runs Icarus,
 so nothing is broken upstream today; the note is on Halo_Serdes#136 because a
 `localparam int` for shift amounts in `*_dims.svh` would sidestep it for Verilator users.
+
+Upstream report: a ready-to-paste issue is in `docs/verilator-issue-draft.md` (this
+repository's tooling has no write access to verilator/verilator); once filed, record the
+number here and in `ROADMAP.md`.

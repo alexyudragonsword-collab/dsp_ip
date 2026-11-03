@@ -32,10 +32,10 @@ module dpd_poly #(
 );
     `include "dims.svh"     // ENV_FRAC S_OUT Q_PW1..4 TF_BITS T_XD T_ED0 T_K0 T_ED1 T_K1 T_QP T_SH T_AL
 
-    localparam int ENV_LAT   = W_ENV + 1;
-    localparam int POW_LAT   = 3;
+    localparam int ENV_LAT   = W_ENV + 2;
+    localparam int POW_LAT   = 4;
     localparam int FE_LAT    = ENV_LAT + POW_LAT;      // front end: x must be delayed as much
-    localparam int TERM_LAT  = 5;
+    localparam int TERM_LAT  = 6;
     localparam int LV        = (N_TERMS <= 1) ? 1 : $clog2(N_TERMS);
     localparam int ACC_REG   = 1;                       // tree register every ACC_REG levels
     localparam int ACC_LAT   = LV / ACC_REG + 1;
