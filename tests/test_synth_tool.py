@@ -154,3 +154,14 @@ def test_unit_probe_is_estimate_and_stays_out_of_results(sy, tmp_path):
     rc = sy.main(["--ip", "sat_shift", "--set", "signed_w40_s12_o16", "--mode", "unit",
                   "--module", "sat_shift", "--param", "W_IN=24", "--out", str(tmp_path / "u.json")])
     assert rc == 0 and json.loads((tmp_path / "u.json").read_text())["module"] == "sat_shift"
+
+
+def test_committed_dpd_poly_results_share_one_toolchain():
+    """docs/results.md prints one yosys version in its header and compares rows with each
+    other, so every committed dpd_poly estimate must come from the same yosys and liberty.
+    (The GitHub runner's apt moved from 0.33 to 0.52 under us; mixing them would credit the
+    tool upgrade to the RTL.) Same-RTL cross-version points live in results/synth/yosys033/."""
+    reps = [json.loads(p.read_text()) for p in (REPO / "results" / "synth").glob("dpd_poly__*.json")]
+    assert reps
+    assert len({r["yosys"] for r in reps}) == 1, sorted({r["yosys"] for r in reps})
+    assert len({r["liberty"]["sha256"] for r in reps}) == 1

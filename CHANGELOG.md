@@ -7,6 +7,8 @@
   `dpd_env` 平方与相加拆两级（W_ENV+1→W_ENV+2）；`dpd_term` 复乘的四个积与加减拆两级（TERM_LAT 5→6）。单模块探针（NanGate45，ps）：pow 1762→1515、env 1789→1337、term 1949→1488/1511。
 - `tools/synth.py`：hier JSON 带 `modules`（每个模块最差 ABC 延迟 + 参数化实例数），`docs/results.md` 多一张"每模块延迟"表；新 `--mode unit --module <m> [--param K=V]` 单叶模块秒级探针，写到 `results/synth/units/`，不进表。
 - CI 新 job **`synth-long`**（`workflow_dispatch`，矩阵 2 基 × P∈{1,2,4}，每 runner 6 h 上限，JSON 打印到日志 + artifact）；`tests/test_ci_yaml.py` 跟着改。
+- **P=1/2/4 实测入表**（CI dispatch run 26，yosys 0.52，estimate）：`results/synth/` 六个 hier JSON（`source` 字段记 job），`docs/results.md` 的 by-construction 行消失；两基 f_est 537–558 MHz，结论仍是 P=2 达 640 MSPS；面积随 P 线性（1.98×、3.94×）。
+  同版本对照（本机 0.33，`results/synth/yosys033/`）：P=1 关键路径 1837/1883 → 1554/1554 ps，f_est 502/491 → 586/586 MHz，面积 +4.5/+4.9 %。新守卫：表内 dpd_poly 结果必须同一 yosys + liberty。
 - `tools/lockstep.py`：每个 IP 一把 `flock`（`vectors/.lockstep.lock`，跨进程也跨线程），生成、换入、改锁文件、校验都在锁内；生成先写临时目录，内容与活目录相同就丢弃（不碰正在被仿真器读的目录）；`vectors.save_lock` 原子写。4 线程并发测试 + 3 进程实测。
 - `examples/01_bitwidth_aclr.py --w-pw-plus 0 4 8 --env-frac 0 2`：`floatref.sweep_variants` 生成变体网格，`build_aclr_table(variants=)`；`results/aclr_table.json` 扩到 6 个变体。
 - `docs/synthesis.md` 改写 Flow（hier + `&nf`）、模式说明、P=1/2/4 一节；`docs/verilator-issue-draft.md`（本会话无 verilator/verilator 写权限，待用户手提）。

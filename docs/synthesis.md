@@ -21,7 +21,11 @@ opt_clean
 stat -liberty <lib>
 ```
 
-- **Tools**: yosys 0.33 (Ubuntu 24.04 apt) with its bundled ABC.
+- **Tools**: yosys from the runner's apt with its bundled ABC; every JSON records the exact
+  version. The committed table is **yosys 0.52** (GitHub `ubuntu-latest`, Nov 2026); the
+  development container has 0.33. All rows of `docs/results.md` must come from one version
+  (`tests/test_synth_tool.py` checks it); same-RTL 0.33 points are kept in
+  `results/synth/yosys033/` for comparison with the older 0.33 numbers in the LOG.
 - **Library**: NanGate45 (FreePDK45) typical corner, `NangateOpenCellLibrary_typical.lib`
   from OpenROAD-flow-scripts @ `e5cc6e7`, sha256 `8d540a4d…` (fetched by
   `tools/get_liberty.sh`, pinned and verified). sky130_fd_sc_hd is wired as an alternative
@@ -95,7 +99,14 @@ JSON is printed in the job log and uploaded as an artifact, then committed to
 basis come from the same RTL version. The push-time `synth` job keeps synthesizing the two
 P = 1 points as a regression guard. Earlier versions of this table carried P = 2/4 rows
 "by construction" (throughput = P × f_est, area ≈ P × area(P=1)) because the development
-container could not run long enough; those rows are gone.
+container could not run long enough; those rows are gone. The measured points confirmed the
+assumption: area grows linearly in P within a few percent and the critical path does not
+depend on P (the stages are the same; only mapping noise moves it). On the runner a hier
+point takes 6–24 min, not hours: identically parameterized modules are mapped once.
+
+**Tool version matters.** The same RTL at P = 1 maps to a ~9 % longer critical path with
+yosys 0.52 than with 0.33 (`results/synth/yosys033/` vs `results/synth/`; numbers in
+`cairn/LOG.md`). Compare rows only within one version.
 
 ## How to read `results/synth/*.json`
 

@@ -7,13 +7,18 @@
 - **重分级**（RTL 逐位不变；verilator 15 点、iverilog 15 点 0 不匹配）：pow 全部拆成 W×W 积（a²=h·2^W+l 展开）、env 平方/相加拆级、term 积/加减拆级；总延迟 +3 拍（ENV_LAT W_ENV+2、POW_LAT 4、TERM_LAT 6）。
   单模块探针 `synth.py --mode unit`（NanGate45，默认参数，ps）：pow 1762→1515（中间试过 a³·a 48×16 **1988**、两个 32×16 半积 1934、两个 48×8 半积 2283，都更差）、env 1789→1337、term(K1=1) 1949→1488、term(默认) 1949→1511。
   同一 RTL 在 situ 与单独综合差 ±10 %（老 term 单独 1949、在 situ 1734），ABC 映射噪声照旧。
-- **CI `synth-long`**：workflow_dispatch，2 基 × P∈{1,2,4} 六个 runner，JSON 打印到日志。结果（f_est、面积、耗时）见本条目下方追加 / `docs/results.md`。
+- **CI `synth-long`**（dispatch run 26，81b31fc，**yosys 0.52**，estimate，见 `docs/results.md`）：DDR P=1/2/4 关键路径 1696/1668/1707 ps → f_est 541/549/537 MHz，面积 1.977/3.917/7.793 mm²，runner 14/19/24 min；
+  GMP 1697/1639/1639 ps → 540/558/558 MHz，3.493/6.924/13.777 mm²，6/8/10 min。**两基都是 P=2 达 640 MSPS（estimate）**；面积 P=2 是 P=1 的 1.98 倍、P=4 是 3.94 倍（by-construction 假设成立）；关键路径不随 P 变（±4 % 噪声）。
+  in situ 关键路径现在是 `dpd_term` 的乘法级（1639–1707），`dpd_pow` 1548–1627、`dpd_env` 1426–1555、加法树 1443–1475。
+- **同版本前后对比**（本机 yosys 0.33，P=1，`results/synth/yosys033/`，estimate）：DDR 1837→1554 ps（502→586 MHz，面积 1.896→1.981 mm²，+4.5 %），GMP 1883→1554 ps（491→586 MHz，3.341→3.504 mm²，+4.9 %）。
+  同一 RTL 在 0.52 上是 1696/1697 ps：**工具版本差 ~140 ps（9 %），0.52 更差**。表用 0.52（与 CI 一致），0.33 点只作对照。
 - **脚手架收尾**：lockstep 每 IP 一把 `flock` + 临时目录生成、内容相同不碰活目录。第一版只靠两次 rename，4 线程测试 8 次挂 5 次（rename 间隙活目录消失，别的线程校验看到缺文件）→ 加锁后 8/8；锁文件原子写；`examples/01` 变体网格 `default, pw+4, pw+8, F2, pw+4_F2, pw+8_F2`；Verilator issue 文稿（`add_repo verilator/verilator` 被权限层拒绝，待用户手提）。
 - **ACLR 变体扫描**（`examples/01 --w-pw-plus 0 4 8 --env-frac 0 2`，dBc，W16/W12/W10）：DDR default −51.26/−40.44/−29.66、pw+4 −51.27/−40.39/−29.49、pw+8 −51.26/−40.40/−29.52、F2 −51.26/−40.45/−29.68；
   GMP default −50.09/−46.46/−38.56、pw+4 −50.10/−46.57/−38.55、pw+8 −50.09/−46.57/−38.56、F2 −50.10/−46.46/−38.50。default/pw+4 与 10-13 逐位相同。**F=2 和 pw+8 都没有可测收益**（≤0.06 dB），pw+4 仍是 W12 GMP / W10 DDR 唯一值得的档；W16+F2 的 a⁴ 约 70 位，超出 int64，自动退回纯整数参考（每变体 <1 min）。
-- **被推翻的判断**：① 加法树是瓶颈（见上）；② "48×16 比 32×32 浅"（否，见探针）；③ "重分级后 f_est 约 540 MHz"——探针给 ~1515 ps → 约 600 MHz，但要等 in situ 数字。
+- **被推翻的判断**：① 加法树是瓶颈（见上）；② "48×16 比 32×32 浅"（否，见探针）；③ "单模块探针 ~1500 ps 就是 in situ 数字"——in situ 0.33 是 1554、0.52 是 1639–1707；
+  ④ "CI apt 的 yosys 与本机同为 0.33"（runner 已是 0.52，10-13 的 CI 数字与本机同版本是当时成立）；⑤ "P=4 GMP 要 1–3 h"——hier 下 runner 10 min（DDR P=4 最慢 24 min）；⑥ "P=2/4 面积 ≈ P×A(P=1)" 现在有实测，误差 ≤3 %。
 - 测试：`python -m pytest` 143 passed / 5 skipped（9 min 32 s）；ruff 绿。CI dispatch run 26 在 81b31fc 上跑 `synth-long`。
-- 下一步：等 `synth-long` 六个点，JSON 入库、重渲表、更新本条；若 P=1 仍不到 640，ROADMAP 的"两级乘法器"是下一个可选项。
+- 下一步：P=1 达 640 要关键路径 ≤ ~1409 ps，即乘法器本身拆两拍（ROADMAP，可选）；CI yosys 版本漂移（ROADMAP）；Verilator issue 待用户手提。
 
 ## 2026-11-03 · 里程碑 2 完成：Halo 余 4 个模块进脚手架；抓到 Verilator 5.020 一个常量折叠 bug
 

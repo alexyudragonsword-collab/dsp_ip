@@ -1,0 +1,67 @@
+{
+ "kind": "estimate",
+ "ip": "dpd_poly",
+ "set": "gmp510_w16",
+ "P": 4,
+ "mode": "hier",
+ "liberty": {
+  "name": "nangate45",
+  "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
+  "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
+ },
+ "yosys": "Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)",
+ "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p",
+ "target_ps": null,
+ "ff": {
+  "cell": "DFF_X1",
+  "t_cq_ps": 112.7,
+  "t_setup_ps": 41.2,
+  "total_ps": 153.9
+ },
+ "n_terms_full": 255,
+ "points": [
+  {
+   "label": "hier",
+   "params": {
+    "P": 4
+   },
+   "delay_ps": 1638.95,
+   "runtime_s": 583.9,
+   "area_um2": 13776694.078002,
+   "cells": 10753924,
+   "flops": 1123716
+  }
+ ],
+ "modules": {
+  "dpd_term": {
+   "delay_ps": 1638.95,
+   "instances": 5
+  },
+  "dpd_env": {
+   "delay_ps": 1555.35,
+   "instances": 1
+  },
+  "dpd_pow": {
+   "delay_ps": 1548.09,
+   "instances": 1
+  },
+  "dpd_poly": {
+   "delay_ps": 1448.63,
+   "instances": 1
+  },
+  "dpd_acc": {
+   "delay_ps": 581.56,
+   "instances": 1
+  }
+ },
+ "delay_ps": 1638.95,
+ "period_ps": 1792.9,
+ "f_est_mhz": 557.8,
+ "throughput_est_msps": 2231.1,
+ "p_for_640msps": 2,
+ "area_um2": 13776694.078002,
+ "cells": 10753924,
+ "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
+ "runtime_s": 583.9,
+ "source": "CI synth-long, run 41653037335 job 125975951614 (commit 81b31fc), copied from the job log"
+}

@@ -2,8 +2,9 @@
 
 ## 里程碑 1 收尾（可选、不阻塞验收）
 
-- [ ] 在 CI `synth-long`（workflow_dispatch）上补综合 P=1/2/4（hier，`&nf -D 1000`，同一版 RTL），JSON 入 `results/synth/`，替换 `docs/results.md` 里的 by-construction 行。
-- [ ] 两级乘法器冲 P=1（可选，用户未选）：乘法级重分级后关键路径是裸 W×W 乘法器（单模块探针 ~1500 ps），再往下要把乘法器本身拆两拍。
+- [ ] 两级乘法器冲 P=1（可选，用户未选）：重分级后 in situ 关键路径是 `dpd_term` 的乘法级（yosys 0.52：1639–1707 ps），`dpd_pow`/`dpd_env` 紧随（1548–1627 / 1426–1555）。
+      P=1 达 640 MSPS 要求关键路径 ≤ 1e6/640 − 154 ≈ 1409 ps，即每个乘法器都要拆两拍（部分积分两组相加），加法树（顶层 ~1450）也要再切。复现：`python tools/synth.py --ip dpd_poly --set ddr_r1_w16 --mode unit --module dpd_term`。
+- [ ] CI 的 yosys 跟着 runner 的 apt 走（10-13 是 0.33，11-03 已是 0.52）：要么在 `tools/toolchain.sh` 里 pin 一个版本（OSS CAD Suite 带日期的 tarball），要么接受漂移并靠 `test_committed_dpd_poly_results_share_one_toolchain` 防止混表。
 
 ## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
