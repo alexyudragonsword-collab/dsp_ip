@@ -1,0 +1,12 @@
+name: halo_viterbi_mlsd
+top: viterbi_mlsd
+rtl:
+  - rtl/viterbi_mlsd.sv
+tb: rtl/tb_viterbi_mlsd.sv
+check: tb
+pass_pattern: "VITERBI LOCKSTEP PASS"
+params: {}
+vector_sets:
+  - {name: vit, source: committed, dir: vectors/vit}
+mutation_file: vit_dec.txt
+note: Halo_Serdes Viterbi MLSD (1 + 0.6D + 0.2D^2, 16 states), vendored verbatim; lockstep only.

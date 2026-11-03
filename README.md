@@ -23,6 +23,10 @@ Rules, reading order and the six iron rules: [`AGENTS.md`](AGENTS.md). Open item
 |---|---|---|---|---|
 | `sat_shift` | rounding right shift + saturation (the output stage every IP uses) | `dspip.ip.sat_shift.ref` | 3 (signed/unsigned, corner values) | lockstep green, both simulators |
 | `halo_ffe_dfe` | Halo_Serdes' FFE + DFE + slicer behavioural model, vendored verbatim with its own self-checking tb (milestone-2 pilot: `check: tb`, `source: committed`) | Halo's `fixed_datapath` (upstream) | 1 (Halo's committed set) | lockstep green, both simulators; not synthesizable |
+| `halo_adc_dsp_loop` | Halo's closed-loop ADC back end (fixed-point CDR + integer LMS FFE/DFE + partial response + ADC calibration), verbatim with its tb | Halo's `fixed_datapath` (upstream) | 5 (Halo's committed `delta pr pr4 pre cal`) | lockstep green on iverilog; `sims: [iverilog]` because of a Verilator 5.020 constant-folding bug (`docs/upstream-findings.md`); not synthesizable |
+| `halo_sliding_mlsd` | Halo's sliding-window MLSD, verbatim with its tb | Halo's `fixed_datapath` (upstream) | 1 (Halo's committed set) | lockstep green, both simulators; not synthesizable |
+| `halo_viterbi_mlsd` | Halo's Viterbi MLSD, verbatim with its tb | Halo's `fixed_datapath` (upstream) | 1 (Halo's committed set) | lockstep green, both simulators; not synthesizable |
+| `halo_dfse_mlsd` | Halo's DFSE MLSD, verbatim with its tb | Halo's `fixed_datapath` (upstream) | 1 (generated once with Halo's `gen_vectors.py` at the pin — Halo does not commit it) | lockstep green, both simulators; not synthesizable |
 | `dpd_poly` | polynomial DPD datapath: DDR-Volterra r=1 (140 terms) and GMP-510 (255 terms), W16/W12/W10, P samples/clock | `dspip.ip.dpd_poly.ref` | `ddr_r1_w16 gmp510_w16 ddr_r1_w12 gmp510_w12 rand_w16` × P ∈ {1,2,4} | lockstep green, both simulators; ACLR and synthesis estimates in `docs/results.md` |
 
 ### dpd_poly in one paragraph
@@ -64,5 +68,7 @@ python tools/vendor_check.py --strict   # needs a PA_DPD checkout next to this r
 2. `ip/<name>/rtl/*.sv` + a testbench that reads `+vecdir` and writes `rtl_*.txt` to `+outdir`
    (or self-checks Halo-style with `check: tb` and a `pass_pattern`).
 3. `ip/<name>/ip.yaml` — that is all the scaffold needs (schema in `src/dspip/ipspec.py`).
+   `sims: [iverilog]` + `sims_reason` restricts an IP to one simulator — only for a documented
+   simulator bug (probe under `tools/quirks/`, `tests/test_sim_quirks.py`), never for a mismatch.
 4. `python tools/lockstep.py <name> --update-lock` pins the vectors; `tests/test_rtl_lockstep.py`
    picks the IP up automatically, mutation test included.

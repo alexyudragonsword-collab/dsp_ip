@@ -1,0 +1,15 @@
+name: halo_dfse_mlsd
+top: dfse_mlsd
+rtl:
+  - rtl/dfse_mlsd.sv
+tb: rtl/tb_dfse_mlsd.sv
+check: tb
+pass_pattern: "DFSE LOCKSTEP PASS"
+params: {}
+vector_sets:
+  - {name: dfse, source: committed, dir: vectors/dfse}
+mutation_file: dfse_dec.txt
+note: >
+  Halo_Serdes reduced-state (DFSE) Viterbi, vendored verbatim; lockstep only. Halo does not
+  commit this vector set (Halo_Serdes#136); it is generated once at the pin with Halo's own
+  rtl/gen_vectors.py and committed here (vectors/dfse/SOURCE.md).

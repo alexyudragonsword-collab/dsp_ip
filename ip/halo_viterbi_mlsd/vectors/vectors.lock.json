@@ -1,0 +1,14 @@
+{
+ "sets": {
+  "vit": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "b208221e3bb7b5795ba4263a643c817be2e62009bf2402481f868e99a547a365",
+    "vit_dec.txt": "761a234b6034667d0dae25465bd8baab75eac9aaccc56e864a2771580eda97fa",
+    "vit_dims.svh": "873fd2655536d33abeba1a4ffafc9045d12689d829d3bab987a6be3220c18b5f",
+    "vit_expected.txt": "6c4ee9990775f6052917e65667b13c14064a5ad2dd7f91dd803c96aa4c930c54",
+    "vit_y.txt": "5735f499beedb5c02069a8aeda00615789c0c1bb178bc7071bd0dd045ed5b773"
+   }
+  }
+ }
+}

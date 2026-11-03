@@ -73,3 +73,14 @@ def test_every_ip_in_tree_loads():
         assert s.tb_path.exists(), s.tb
         for r in s.rtl_paths():
             assert r.exists(), r
+
+
+def test_sims_default_both_and_subset_validated(tmp_path):
+    s = load_ipspec(_write(tmp_path, GOOD))
+    assert s.sims == ("verilator", "iverilog")
+    s = load_ipspec(_write(tmp_path, GOOD + "    sims: [iverilog]\n"))
+    assert s.sims == ("iverilog",) and "sims" not in s.extra
+    with pytest.raises(ValueError, match="sims must be"):
+        load_ipspec(_write(tmp_path, GOOD + "    sims: [vcs]\n"))
+    with pytest.raises(ValueError, match="sims must be"):
+        load_ipspec(_write(tmp_path, GOOD + "    sims: []\n"))

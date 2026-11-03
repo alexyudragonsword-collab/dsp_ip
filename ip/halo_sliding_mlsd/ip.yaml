@@ -1,0 +1,12 @@
+name: halo_sliding_mlsd
+top: sliding_mlsd
+rtl:
+  - rtl/sliding_mlsd.sv
+tb: rtl/tb_sliding_mlsd.sv
+check: tb
+pass_pattern: "MLSD LOCKSTEP PASS"
+params: {}
+vector_sets:
+  - {name: mlsd, source: committed, dir: vectors/mlsd}
+mutation_file: mlsd_dec.txt
+note: Halo_Serdes sliding-detector MLSD, vendored verbatim; lockstep only.

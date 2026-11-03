@@ -62,3 +62,38 @@ in both blocks, same `e_in`), but it should be stated.
   is re-resolved on every driver change (O(N²) events per cycle). dsp_ip hit this at 140
   terms (0.9 s/sample → 0.002 s/sample after moving to one wire per node); Halo's
   whole-vector behavioural models are not affected, but a streaming rewrite would be.
+
+## Verilator 5.020 (Debian/Ubuntu apt) — `longint >>> <longint localparam>` folds to 0
+
+Found on 2026-11-03 while bringing Halo's `tb_adc_dsp_loop.sv` into the scaffold: four of the
+five vector sets failed under Verilator with `LOOP LOCKSTEP FAIL errors=1` although the
+printed values were equal (`offset 0/0 gain 16384/16384`); Icarus 12 passed all five.
+Bisected by rewriting the compare (parenthesised, `!=`, split, temp variable, literal
+constants): the only change that passes replaces the *shift amount* `LANE_SHIFT`
+(`localparam longint`) with a literal. Standalone reproducer
+`tools/quirks/verilator_longint_shift.sv` (run by `tests/test_sim_quirks.py`):
+
+| expression (`a = 16 <<< 14`, `longint`) | Verilator 5.020 | Icarus 12 | expected |
+|---|---|---|---|
+| `a >>> SH_longint` (`localparam longint SH = 4`) | **0** | 16384 | 16384 |
+| `a >>> SH_int` (`localparam int`) | 16384 | 16384 | 16384 |
+| `a >> SH_longint` (logical) | 16384 | 16384 | 16384 |
+| `a >>> 4` | 16384 | 16384 | 16384 |
+| `a >>> SH_longint` with `a` from `$value$plusargs` (not constant) | 16384 | 16384 | 16384 |
+
+So it is the constant folder: an arithmetic right shift whose amount is a 64-bit constant
+is folded as if the amount were ≥ the operand width. In Halo's tb the affected term is
+`dut.cgsum >>> LANE_SHIFT` in the final-calibration check; with `CAL_ON = 0` the DUT never
+changes `cgsum`, Verilator propagates it as a constant, and the folded 0 makes the compare
+fire (the `$display` evaluates the same expression at run time and prints the right value).
+The `cal` set (`CAL_ON = 1`) keeps `cgsum` live and passes. The DUT itself uses the same
+construct in its datapath (`ctsum >>> LANE_SHIFT`, `cgsum >>> LANE_SHIFT`), so any Halo
+module compiled with Verilator at a configuration where such a sum is constant is at risk.
+
+dsp_ip's handling: `ip/halo_adc_dsp_loop/ip.yaml` carries `sims: [iverilog]` with a
+`sims_reason`; `tools/lockstep.py` prints `[SKIP ]` for the excluded simulator,
+`tests/test_rtl_lockstep.py` skips those points (and insists the other simulator is
+installed), and `tests/test_sim_quirks.py` fails the day Verilator returns 16384 so the
+restriction gets lifted. The vendored tb is not edited (rule 3). Halo only runs Icarus,
+so nothing is broken upstream today; the note is on Halo_Serdes#136 because a
+`localparam int` for shift amounts in `*_dims.svh` would sidestep it for Verilator users.

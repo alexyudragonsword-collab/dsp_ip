@@ -218,6 +218,13 @@ def param_points(spec: IpSpec, overrides: dict | None) -> list[dict]:
 def run_ip(spec: IpSpec, sim: str, sets: list[str] | None = None, overrides: dict | None = None,
            **kw) -> list[dict]:
     reports = []
+    if sim not in spec.sims:
+        # ip.yaml `sims:` excludes this simulator (a documented simulator bug, never a
+        # numeric difference); the other simulator still has to prove every vector set.
+        print(f"[SKIP ] {spec.name} ({sim}): ip.yaml sims={list(spec.sims)}"
+              f"{' — ' + str(spec.extra['sims_reason']) if spec.extra.get('sims_reason') else ''}",
+              flush=True)
+        return reports
     for vs in spec.vector_sets:
         if sets and vs.name not in sets:
             continue
@@ -274,9 +281,15 @@ def main(argv=None) -> int:
         overrides[k] = [x.strip() for x in v.split(",")]
 
     specs = all_ips() if args.all else [load_ipspec(IP_ROOT / args.ip)]
+    if args.sim == "auto" and not args.all:
+        # one IP: auto means the preferred *installed* simulator this IP runs under
+        sim = next((s for s in SIM_PREF if shutil.which(s) and s in specs[0].sims), None) or sim
     reports = []
     for spec in specs:
         reports += run_ip(spec, sim, args.sets, overrides, update_lock=args.update_lock)
+    if not reports:
+        print(f"nothing ran: {[s.name for s in specs]} exclude {sim} (ip.yaml sims:)", file=sys.stderr)
+        return 2
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = args.json or RESULTS / ("report_all.json" if args.all else f"report_{specs[0].name}.json")
     out.write_text(json.dumps(reports, indent=1))

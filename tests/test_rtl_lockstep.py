@@ -49,6 +49,14 @@ def _points():
     return pts
 
 
+def _ip_sims(spec):
+    """Installed simulators this IP runs under (ip.yaml ``sims:``); at least one must be
+    installed, otherwise the IP would be silently unverified."""
+    sims = [s for s in _sims() if s in spec.sims]
+    assert sims, f"{spec.name}: none of its simulators {list(spec.sims)} is installed"
+    return sims
+
+
 @pytest.mark.parametrize("sim", _sims())
 @pytest.mark.parametrize("ip,vset", _points())
 def test_rtl_lockstep(ls, ip, vset, sim):
@@ -56,6 +64,9 @@ def test_rtl_lockstep(ls, ip, vset, sim):
     from dspip.ipspec import load_ipspec
 
     spec = load_ipspec(IP_ROOT / ip)
+    if sim not in spec.sims:
+        _ip_sims(spec)  # the other simulator must be there to cover this IP
+        pytest.skip(f"{ip}: ip.yaml sims={list(spec.sims)} ({spec.extra.get('sims_reason', '')})")
     reps = ls.run_ip(spec, sim, sets=[vset])
     assert reps, "no points ran"
     for rep in reps:
@@ -72,7 +83,7 @@ def test_lockstep_mutation_fails(ls, ip, tmp_path, monkeypatch):
 
     spec = load_ipspec(IP_ROOT / ip)
     vs = spec.vector_sets[0]
-    sim = _sims()[-1]  # the cheaper one to compile (iverilog if present)
+    sim = _ip_sims(spec)[-1]  # the cheaper one to compile (iverilog if present)
     params = ls.param_points(spec, None)[0]
     monkeypatch.setattr(ls, "RESULTS", tmp_path)
     # a clean pass first (regenerates + verifies the lock)

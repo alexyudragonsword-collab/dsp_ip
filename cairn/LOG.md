@@ -1,5 +1,21 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-03 · 里程碑 2 完成：Halo 余 4 个模块进脚手架；抓到 Verilator 5.020 一个常量折叠 bug
+
+- **4 个 IP**（Halo@6e79c4a 一字不改，`check: tb`、`source: committed`，锁哈希）：`halo_adc_dsp_loop` 5 集各 n=3000（iverilog 5/5 PASS）、`halo_sliding_mlsd` n=4000、`halo_viterbi_mlsd` n=3000、`halo_dfse_mlsd` n=3000（后三者两仿真器 PASS，verilator 仿真本身 0.1 s）。
+  `vendor_check --strict` 22 verbatim；mutation（各 IP 第一个集改一行 `*_pi/*_dec.txt`）→ FAIL + rc≠0 + LOCK。
+- **dfse 向量**：Halo 没提交，用 `PYTHONPATH=<halo>/src HALO_NO_JIT=1 python3 rtl/gen_vectors.py <out>`（需 `pip install scikit-rf matplotlib`）在 pin 上生成（N=3000, NS=4, K=1, T=2）；
+  同一次重生成的 ffe/loop/mlsd/vit 文件与 Halo 提交集逐字节一致——提交集只缺 dfse，其余不是陈旧快照。
+- **Verilator 5.020 bug**：loop 的 delta/pr/pr4/pre 在 verilator 下 `LOOP LOCKSTEP FAIL errors=1` 而打印值相等（`offset 0/0 gain 16384/16384`），cal 集过。
+  14 个 tb 改写变体二分：括号/`!=`/拆条件/临时变量都不行，**只有把移位量 `LANE_SHIFT`（`localparam longint`）换成字面量才过**。20 行独立复现：`a=16<<<14; a >>> SH_longint` → 0（`int` 移位量、逻辑 `>>`、非常量 `a` 都对 16384）；iverilog 全对。
+  结论：常量折叠把 64 位移位量当成 ≥ 位宽处理；`CAL_ON=0` 时 `cgsum` 是传播常量所以中招，cal 集 `cgsum` 活着所以过。
+- **处理**：`ip.yaml` 加 `sims:`/`sims_reason`（`halo_adc_dsp_loop: [iverilog]`），lockstep `[SKIP ]`、pytest skip + 要求另一仿真器在、`tests/test_sim_quirks.py` 在 bug 修好时变红；tb 不改（铁律 3）；`docs/upstream-findings.md` 新节；追加到 Halo_Serdes#136。
+- **事故：试点提交 90a2cc5 的 CI run 18/19 `lockstep` 红**（其余 6 job 绿）——`.gitignore` 的 `ip/*/vectors/*` 把 `source: committed` 的 Halo 向量集也吞了，试点只推了锁文件没推向量，runner 上 `LOCK`。
+  本地没发现是因为文件就在工作区。修复：`.gitignore` 加 `!ip/halo_*/vectors/*`；新守卫 `test_vectors_lock.py::test_committed_sets_are_tracked`（锁里每个文件必须 `git ls-files` 可见）。
+- **被推翻的判断**：⓪ "试点 CI 已绿"（LOG 11-02 写的 7/7 是 run 15/16/17，试点 commit 自己的 run 18 红了，当时没等它跑完就记了）；① "`!==` 与 `||` 的求值顺序/位宽是 Verilator 的问题"（操作符无关，是常量折叠）；② "只有 lane 0 失败说明是循环首次迭代问题"（独立复现无循环也失败，lane 0 是因为 `errors` 后面没再变）。
+- 测试：`python -m pytest` 137 passed / 5 skipped（14 min 39 s；skip = loop 5 集 × verilator）；ruff 绿；`render_tables --check` 一致。
+- 下一步：里程碑 2 结束；默认分支改 main（仓库 Settings）；等上游回应；候选：Verilator 报 bug、ROADMAP 里程碑 1 收尾项。
+
 ## 2026-11-02 · CI 7/7 绿；建 main；上游 issue 已提；里程碑 2 试点 halo_ffe_dfe 两仿真器绿
 
 - **CI run 15 全绿**：lint / test×2 / lockstep 10 min / vendor-drift 50 s / fixed-vs-float 2.6 min / **synth 36 min**（hier，DDR+GMP P=1 都在 runner 上跑完）。

@@ -8,13 +8,11 @@
 - [ ] `lockstep.py` 并发时互删向量目录改为临时目录原子替换。
 - [ ] `env_frac`（F）/ `w_pw` 扫描做成 `examples/01` 的可选参数并入表（现在只有默认与 +4 两档）。
 
-## 里程碑 2：Halo_Serdes 的 5 个模块进同一脚手架（试点已完成，余 4 个）
+## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
-试点 `ip/halo_ffe_dfe`（`ffe_dfe_datapath.sv` + `tb_ffe_dfe.sv` 一字不改，`check: tb`、`source: committed`）两仿真器已绿，mutation 测试覆盖。余下按同一模板：
-- [ ] `adc_dsp_loop` + `tb_adc_dsp_loop`（5 个向量目录：`.`、`pr`、`pr4`、`pre`、`cal`，各自 `loop_dims.svh`）
-- [ ] `sliding_mlsd`、`viterbi_mlsd`（向量 `mlsd_*`、`vit_*` 已在 Halo 提交集里）
-- [ ] `dfse_mlsd`：Halo 已提交集缺 `dfse_*`，要用 Halo 的 `gen_vectors.py` 生成一次并记命令（已在 Halo_Serdes#136 提出）
-**只做 lockstep；yosys 估计要等这些整块向量的行为模型改成流式后**（`always_comb`/`task run()` 风格，不可综合）。发现的问题推回 Halo，本库不分叉。
+- [ ] **yosys 估计要等这些整块向量的行为模型改成流式后**（`always_comb`/`task run()` 风格，不可综合）。发现的问题推回 Halo，本库不分叉。
+- [ ] `halo_adc_dsp_loop` 的 `sims: [iverilog]`：等 Verilator 修掉 `longint >>> longint-localparam` 常量折叠 bug（`tests/test_sim_quirks.py` 会变红提醒），或 Halo 把 `*_dims.svh` 的移位量改成 `localparam int`（已在 Halo_Serdes#136 提出）后去掉。
+  可选：向 Verilator 报 bug（复现 `tools/quirks/verilator_longint_shift.sv`，本会话无该仓库权限，未提）。
 
 ## 候选 IP（未排期）
 
@@ -23,7 +21,7 @@
 ## 推回上游（已提交，等上游回应；详情与复现见 `docs/upstream-findings.md`）
 
 - PA_DPD#2：`FixedPointPolyModel` 不是整数 bit-true（scale 未导出、float64 高阶项、无输出量化、refvec 浮点）+ 块自适应非因果 + 2 处文档小错。
-- Halo_Serdes#136：`$fscanf` 返回值不检查；已提交向量缺 `dfse_*`；`run_lockstep.sh` 写进被跟踪目录。
+- Halo_Serdes#136：`$fscanf` 返回值不检查；已提交向量缺 `dfse_*`；`run_lockstep.sh` 写进被跟踪目录；移位量 `localparam longint` 触发 Verilator 5.020 折叠 bug。
 - 上游修了之后：重新 pin、重新导出、`vendor_check --update`。
 
 ## 被外部阻塞

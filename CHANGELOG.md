@@ -1,5 +1,17 @@
 # CHANGELOG（按里程碑）
 
+## 里程碑 2 完成 — Halo_Serdes 五个模块全部进脚手架（2026-11-03）
+
+- **IP `halo_adc_dsp_loop` / `halo_sliding_mlsd` / `halo_viterbi_mlsd` / `halo_dfse_mlsd`**：Halo@6e79c4a 的 `.sv` + `tb_*.sv` 一字不改 vendor（`vendor_check --strict` 22 verbatim），
+  `check: tb`、`source: committed`；loop 用 Halo 的 5 个向量目录（`delta pr pr4 pre cal`），mlsd/vit 用 Halo 提交集，dfse 的向量 Halo 没提交，本库在 pin 上用上游 `gen_vectors.py` 生成一次（命令在 `SOURCE.md`）。
+  iverilog 全绿（loop 5/5、mlsd、vit、dfse）；verilator mlsd/vit/dfse 绿。
+- **`ip.yaml` 新字段 `sims:`（+ `sims_reason`）**：把一个 IP 限制到某个仿真器，只允许用于有探针证明的仿真器 bug；`lockstep.py` 打 `[SKIP ]`、单 IP `auto` 选该 IP 允许的仿真器、
+  `test_rtl_lockstep` 跳过并要求另一个仿真器在；`tests/test_sim_quirks.py` 在 bug 修好那天变红提醒去掉限制。
+- **发现 Verilator 5.020 bug**：`longint >>> <longint localparam>` 被常量折叠成 0（`tools/quirks/verilator_longint_shift.sv`，`docs/upstream-findings.md`）；
+  Halo `tb_adc_dsp_loop` 的终值校准比对在 `CAL_ON=0` 的 4 个集上因此误报。`halo_adc_dsp_loop` 标 `sims: [iverilog]`，tb 不改，已追加到 Halo_Serdes#136。
+- 重新生成的 ffe/loop/mlsd/vit 向量与 Halo 提交集逐字节一致（提交集只缺 dfse）。
+- **修复**：`.gitignore` 曾把 `source: committed` 的向量集和生成集一起忽略，试点 commit 只推了锁没推向量（CI run 18 `lockstep` 红）；现在 `!ip/halo_*/vectors/*` 再纳入，`test_committed_sets_are_tracked` 守着。
+
 ## 里程碑 2 试点 + 对外动作（2026-11-02）
 
 - **IP `halo_ffe_dfe`**：Halo_Serdes@6e79c4a 的 `ffe_dfe_datapath.sv` + `tb_ffe_dfe.sv` 一字不改 vendor（`// Vendored from` 头），向量 `source: committed`（Halo 已提交集，锁哈希），`check: tb`（`LOCKSTEP PASS` + `$fatal`）；两仿真器绿；mutation 测试扩到自检 tb（`ip.yaml: mutation_file`）。

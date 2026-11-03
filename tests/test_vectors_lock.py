@@ -47,6 +47,30 @@ def test_vectors_lock_regenerates_identical(ip, tmp_path):
         assert lock["sets"][vs.name]["command"]
 
 
+def test_committed_sets_are_tracked():
+    """A `source: committed` set is only worth its lock if git carries the files: the
+    .gitignore rule for generated sets must not swallow it (the milestone-2 pilot shipped
+    its lock without its vectors for a day)."""
+    import subprocess
+
+    tracked = set(subprocess.run(["git", "ls-files", "ip"], capture_output=True, text=True,
+                                 cwd=REPO, check=True).stdout.split())
+    if not tracked:
+        pytest.skip("not a git checkout")
+    missing = []
+    for spec in all_ips(IP_ROOT):
+        lock = V.load_lock(spec.lock_path)
+        for vs in spec.vector_sets:
+            if vs.source != "committed":
+                continue
+            assert vs.name in lock["sets"], f"{spec.name}/{vs.name}: not in the lock"
+            for name in lock["sets"][vs.name]["files"]:
+                rel = (spec.root / vs.dir / name).relative_to(REPO).as_posix()
+                if rel not in tracked:
+                    missing.append(rel)
+    assert not missing, "committed vector files not tracked by git (check .gitignore):\n" + "\n".join(missing)
+
+
 @pytest.fixture(scope="module")
 def chk():
     spec = importlib.util.spec_from_file_location(

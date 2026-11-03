@@ -1,6 +1,10 @@
-# generated lockstep vectors: only vectors.lock.json (hashes + commands) is tracked
+# generated lockstep vectors: only vectors.lock.json (hashes + commands) is tracked ...
 ip/*/vectors/*
 !ip/*/vectors/vectors.lock.json
+# ... but `source: committed` sets (the consumer's export, rule 3) are tracked; every
+# ip.yaml with committed sets must re-include its set directories here
+# (tests/test_vectors_lock.py::test_committed_sets_are_tracked checks it).
+!ip/halo_*/vectors/*
 # simulation / synthesis outputs (CI uploads them as artifacts)
 results/lockstep/
 results/synth/logs/

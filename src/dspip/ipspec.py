@@ -36,6 +36,9 @@ REPO = Path(__file__).resolve().parents[2]
 IP_ROOT = REPO / "ip"
 
 
+SIMS = ("verilator", "iverilog")
+
+
 @dataclass(frozen=True)
 class VectorSet:
     name: str
@@ -63,6 +66,7 @@ class IpSpec:
     probe: str | None
     vector_sets: tuple[VectorSet, ...]
     compare: tuple[ComparePair, ...]
+    sims: tuple[str, ...] = SIMS  # simulators this IP runs under (default: all)
     extra: dict = field(default_factory=dict)
 
     @property
@@ -122,7 +126,11 @@ def load_ipspec(path: Path | str) -> IpSpec:
                               s.get("dir", f"vectors/{s['name']}")))
     if any(s.source == "generated" for s in sets) and not raw.get("generator"):
         raise ValueError(f"{path}: generated vector sets need a generator")
-    known = set(REQUIRED) | {"pass_pattern", "params", "generator", "probe", "compare"}
+    sims = SIMS if raw.get("sims") is None else tuple(raw["sims"])
+    bad = [x for x in sims if x not in SIMS]
+    if bad or not sims:
+        raise ValueError(f"{path}: sims must be a non-empty subset of {list(SIMS)}, got {raw.get('sims')!r}")
+    known = set(REQUIRED) | {"pass_pattern", "params", "generator", "probe", "compare", "sims"}
     extra = {k: v for k, v in raw.items() if k not in known}
     return IpSpec(
         name=raw["name"], root=path.parent, top=raw["top"], rtl=tuple(raw["rtl"]), tb=raw["tb"],
@@ -130,7 +138,7 @@ def load_ipspec(path: Path | str) -> IpSpec:
         params={k: list(v) for k, v in (raw.get("params") or {}).items()},
         generator=raw.get("generator"), probe=raw.get("probe"), vector_sets=tuple(sets),
         compare=tuple(ComparePair(c["golden"], c["rtl"]) for c in raw.get("compare") or []),
-        extra=extra)
+        sims=sims, extra=extra)
 
 
 def all_ips(root: Path = IP_ROOT) -> list[IpSpec]:
