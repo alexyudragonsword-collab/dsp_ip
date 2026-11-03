@@ -14,7 +14,8 @@
   本地没发现是因为文件就在工作区。修复：`.gitignore` 加 `!ip/halo_*/vectors/*`；新守卫 `test_vectors_lock.py::test_committed_sets_are_tracked`（锁里每个文件必须 `git ls-files` 可见）。
 - **被推翻的判断**：⓪ "试点 CI 已绿"（LOG 11-02 写的 7/7 是 run 15/16/17，试点 commit 自己的 run 18 红了，当时没等它跑完就记了）；① "`!==` 与 `||` 的求值顺序/位宽是 Verilator 的问题"（操作符无关，是常量折叠）；② "只有 lane 0 失败说明是循环首次迭代问题"（独立复现无循环也失败，lane 0 是因为 `errors` 后面没再变）。
 - 测试：`python -m pytest` 137 passed / 5 skipped（14 min 39 s；skip = loop 5 集 × verilator）；ruff 绿；`render_tables --check` 一致。
-- 下一步：里程碑 2 结束；默认分支改 main（仓库 Settings）；等上游回应；候选：Verilator 报 bug、ROADMAP 里程碑 1 收尾项。
+- GitHub 默认分支已改为 `main`（用户在 Settings 里改的，`git ls-remote --symref origin HEAD` 确认）；CI run 20：6/7 绿（lockstep 16 min 含 mutation），synth 跑中。
+- 下一步：里程碑 2 结束；等上游回应；候选：Verilator 报 bug、ROADMAP 里程碑 1 收尾项。
 
 ## 2026-11-02 · CI 7/7 绿；建 main；上游 issue 已提；里程碑 2 试点 halo_ffe_dfe 两仿真器绿
 
