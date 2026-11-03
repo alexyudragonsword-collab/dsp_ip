@@ -9,7 +9,10 @@
   同一 RTL 在 situ 与单独综合差 ±10 %（老 term 单独 1949、在 situ 1734），ABC 映射噪声照旧。
 - **CI `synth-long`**：workflow_dispatch，2 基 × P∈{1,2,4} 六个 runner，JSON 打印到日志。结果（f_est、面积、耗时）见本条目下方追加 / `docs/results.md`。
 - **脚手架收尾**：lockstep 每 IP 一把 `flock` + 临时目录生成、内容相同不碰活目录。第一版只靠两次 rename，4 线程测试 8 次挂 5 次（rename 间隙活目录消失，别的线程校验看到缺文件）→ 加锁后 8/8；锁文件原子写；`examples/01` 变体网格 `default, pw+4, pw+8, F2, pw+4_F2, pw+8_F2`；Verilator issue 文稿（`add_repo verilator/verilator` 被权限层拒绝，待用户手提）。
+- **ACLR 变体扫描**（`examples/01 --w-pw-plus 0 4 8 --env-frac 0 2`，dBc，W16/W12/W10）：DDR default −51.26/−40.44/−29.66、pw+4 −51.27/−40.39/−29.49、pw+8 −51.26/−40.40/−29.52、F2 −51.26/−40.45/−29.68；
+  GMP default −50.09/−46.46/−38.56、pw+4 −50.10/−46.57/−38.55、pw+8 −50.09/−46.57/−38.56、F2 −50.10/−46.46/−38.50。default/pw+4 与 10-13 逐位相同。**F=2 和 pw+8 都没有可测收益**（≤0.06 dB），pw+4 仍是 W12 GMP / W10 DDR 唯一值得的档；W16+F2 的 a⁴ 约 70 位，超出 int64，自动退回纯整数参考（每变体 <1 min）。
 - **被推翻的判断**：① 加法树是瓶颈（见上）；② "48×16 比 32×32 浅"（否，见探针）；③ "重分级后 f_est 约 540 MHz"——探针给 ~1515 ps → 约 600 MHz，但要等 in situ 数字。
+- 测试：`python -m pytest` 143 passed / 5 skipped（9 min 32 s）；ruff 绿。CI dispatch run 26 在 81b31fc 上跑 `synth-long`。
 - 下一步：等 `synth-long` 六个点，JSON 入库、重渲表、更新本条；若 P=1 仍不到 640，ROADMAP 的"两级乘法器"是下一个可选项。
 
 ## 2026-11-03 · 里程碑 2 完成：Halo 余 4 个模块进脚手架；抓到 Verilator 5.020 一个常量折叠 bug
