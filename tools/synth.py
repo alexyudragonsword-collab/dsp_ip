@@ -160,22 +160,32 @@ _EXTRACT = re.compile(r"Extracting gate netlist of module `([^']*)'")
 _DELAY = re.compile(r"ABC:.*?Delay\s*=\s*([0-9.]+)\s*ps")
 
 
+_ABC_PASS = re.compile(r"^[\d.]+ Executing ABC pass", re.M)
+
+
 def parse_abc_modules(log: str) -> dict:
     """Per-module worst ABC delay: ``{base module name: {"delay_ps", "instances"}}``.
     Yosys names every parameterization ``$paramod$<hash>\\dpd_term``; the base name is what
     a reader wants, the worst delay over all its parameterizations is what sets f_est.
-    Only ABC runs that report a delay count (the ``abc -fast`` inside ``synth`` does not)."""
+
+    Within one ``abc`` pass the n-th reported delay belongs to the n-th extracted module.
+    yosys 0.33 interleaves "Extracting gate netlist of module X" with X's ABC output;
+    yosys 0.70 logs all extractions first and the ABC outputs after them, in the same
+    order. Pairing by position inside each pass that reports delays (``synth``'s own
+    ``abc -fast`` does not) works for both; a pass whose counts disagree is reported
+    under ``"?"`` rather than guessed."""
     out: dict = {}
-    cur = None
-    for ln in log.splitlines():
-        m = _EXTRACT.search(ln)
-        if m:
-            cur = m.group(1).rsplit("\\", 1)[-1].lstrip("\\$")
+    cuts = [m.start() for m in _ABC_PASS.finditer(log)] + [len(log)]
+    for a, b in zip(cuts, cuts[1:]):
+        blk = log[a:b]
+        names = [m.group(1).rsplit("\\", 1)[-1].lstrip("\\$") for m in _EXTRACT.finditer(blk)]
+        delays = [float(x) for x in _DELAY.findall(blk)]
+        if not delays:
             continue
-        m = _DELAY.search(ln)
-        if m and cur is not None:
-            d = float(m.group(1))
-            e = out.setdefault(cur, {"delay_ps": 0.0, "instances": 0})
+        if len(names) != len(delays):
+            names = ["?"] * len(delays)
+        for name, d in zip(names, delays):
+            e = out.setdefault(name, {"delay_ps": 0.0, "instances": 0})
             e["delay_ps"] = max(e["delay_ps"], d)
             e["instances"] += 1
     return dict(sorted(out.items(), key=lambda kv: -kv[1]["delay_ps"]))

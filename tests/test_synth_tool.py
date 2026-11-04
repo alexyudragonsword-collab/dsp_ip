@@ -97,6 +97,7 @@ def test_committed_results_are_estimates():
 
 
 HIER_LOG = """
+13. Executing ABC pass (technology mapping using ABC).
 13.1. Extracting gate netlist of module `$paramod$118576aab\\dpd_acc' to `<abc-temp-dir>/input.blif'..
 ABC: WireLoad = "none"  Gates =     92 (  9.8 %)   Area =      106.40 (100.0 %)   Delay =   853.69 ps  ( 42.4 %)
 13.2. Extracting gate netlist of module `$paramod$3182646cf\\dpd_term' to `<abc-temp-dir>/input.blif'..
@@ -212,3 +213,33 @@ def test_parse_stat_yosys_070_table(sy):
     st = sy.parse_stat(STAT_LOG_070)
     assert st == {"area_um2": 883.12, "cells": 680, "flops": 36}
 
+
+
+HIER_LOG_070 = """
+5.22. Executing ABC pass (technology mapping using ABC).
+5.22.1. Extracting gate netlist of module `\\leafb' to `<abc-temp-dir>/input.blif'..
+5.22.2. Extracting gate netlist of module `\\leafa' to `<abc-temp-dir>/input.blif'..
+7. Executing ABC pass (technology mapping using ABC).
+7.2. Extracting gate netlist of module `$paramod$aa\\dpd_term' to `<abc-temp-dir>/input.blif'..
+7.4. Extracting gate netlist of module `$paramod$bb\\dpd_pow' to `<abc-temp-dir>/input.blif'..
+7.6. Extracting gate netlist of module `\\dpd_poly' to `<abc-temp-dir>/input.blif'..
+7.6.1. Executed ABC.
+ABC: WireLoad = "none"  Gates =   1456 (  6.0 %)   Area =     1608.77 (100.0 %)   Delay =  1637.37 ps  (  9.2 %)
+7.6.1. Executed ABC.
+ABC: WireLoad = "none"  Gates =    308 (  6.5 %)   Area =      348.99 (100.0 %)   Delay =   858.33 ps  ( 22.1 %)
+7.6.1. Executed ABC.
+ABC: WireLoad = "none"  Gates =    152 (  1.3 %)   Area =      186.47 (100.0 %)   Delay =  1142.67 ps  ( 25.7 %)
+"""
+
+
+def test_parse_abc_modules_yosys_070_layout(sy):
+    """yosys 0.70 logs every extraction of a pass before the ABC outputs (same order);
+    `synth`'s own `abc -fast` pass reports no delay and is skipped. The pinned build's first
+    CI run attributed every delay to the last extracted module before this was handled."""
+    m = sy.parse_abc_modules(HIER_LOG_070)
+    assert m == {"dpd_term": {"delay_ps": 1637.37, "instances": 1},
+                 "dpd_poly": {"delay_ps": 1142.67, "instances": 1},
+                 "dpd_pow": {"delay_ps": 858.33, "instances": 1}}
+    broken = "\n".join(ln for ln in HIER_LOG_070.splitlines()
+                        if not ("Extracting" in ln and "dpd_pow" in ln))
+    assert set(sy.parse_abc_modules(broken)) == {"?"}           # never guess on a mismatch
