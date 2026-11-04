@@ -9,7 +9,8 @@
   "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
   "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
  },
- "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+ "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
+ "yosys_pin": "oss-cad-suite 2026-10-25",
  "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p",
  "target_ps": null,
  "ff": {
@@ -23,22 +24,22 @@
   {
    "label": "unit",
    "params": {},
-   "delay_ps": 1337.49,
-   "runtime_s": 7.8,
-   "area_um2": 8201.312,
-   "cells": 5181,
-   "flops": 1374
+   "delay_ps": 1579.95,
+   "runtime_s": 5.7,
+   "area_um2": 7254.884,
+   "cells": null,
+   "flops": null
   }
  ],
  "module": "dpd_env",
  "module_params": {},
- "delay_ps": 1337.49,
- "period_ps": 1491.4,
- "f_est_mhz": 670.5,
- "throughput_est_msps": 670.5,
- "p_for_640msps": 1,
- "area_um2": 8201.312,
- "cells": 5181,
+ "delay_ps": 1579.95,
+ "period_ps": 1733.9,
+ "f_est_mhz": 576.8,
+ "throughput_est_msps": 576.8,
+ "p_for_640msps": 2,
+ "area_um2": 7254.884,
+ "cells": null,
  "method": "leaf module dpd_env synthesized alone (default parameters), flattened; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup. A stage probe, not a datapath number: never enters docs/results.md",
- "runtime_s": 7.8
+ "runtime_s": 5.7
 }

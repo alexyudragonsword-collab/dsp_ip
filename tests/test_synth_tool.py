@@ -174,3 +174,41 @@ def test_get_yosys_script_matches_pin(sy):
     sh = (REPO / "tools" / "get_yosys.sh").read_text()
     assert f'VERSION="{sy.YOSYS_PIN_VERSION}"' in sh
     assert "DATE=" + sy.YOSYS_PIN.split()[-1] in sh
+
+
+STAT_LOG_070 = """
+11. Printing statistics.
+
+=== leaf ===
+
+        +----------Local Count, excluding submodules.
+        |        +-Local Area, excluding submodules.
+        |        |
+      340   441.56 cells
+       16   72.352   DFF_X1
+      324  369.208   NAND2_X1
+
+=== design hierarchy ===
+
+        +----------Count including submodules.
+        |        +-Area including submodules.
+        |        |
+      680   883.12 cells
+       32  144.704   DFF_X1
+        4   21.28    DFFR_X1
+      644  717.136   NAND2_X1
+        2   883.12 submodules
+        2   883.12   leaf
+
+   Chip area for top module '\\top': 883.120000
+     of which used for sequential elements: 144.704000 (16.39%)
+"""
+
+
+def test_parse_stat_yosys_070_table(sy):
+    """yosys 0.70 prints a count/area table; the design totals (cells incl. submodules,
+    flops of every DFF cell type) are what the estimate must report — the pinned build
+    left `cells` empty until the parser learned this layout."""
+    st = sy.parse_stat(STAT_LOG_070)
+    assert st == {"area_um2": 883.12, "cells": 680, "flops": 36}
+

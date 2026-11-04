@@ -181,15 +181,35 @@ def parse_abc_modules(log: str) -> dict:
     return dict(sorted(out.items(), key=lambda kv: -kv[1]["delay_ps"]))
 
 
+_CELLS_OLD = re.compile(r"^\s*Number of cells:\s+(\d+)\s*$", re.M)
+_CELLS_NEW = re.compile(r"^\s*(\d+)\s+\S+\s+cells\s*$", re.M)      # yosys >= ~0.40 table
+_DFF_OLD = re.compile(r"^\s+(\S*(?:DFF|dfxtp)\S*)\s+(\d+)\s*$", re.M)
+_DFF_NEW = re.compile(r"^\s*(\d+)\s+\S+\s+(\S*(?:DFF|dfxtp)\S*)\s*$", re.M)
+
+
 def parse_stat(log: str) -> dict:
-    """The last ``stat -liberty`` block: chip area, cell count, flop count."""
-    area = re.findall(r"Chip area for (?:top )?module '\\?([^']+)':\s*([0-9.]+)", log)
-    cells = re.findall(r"Number of cells:\s+(\d+)", log)
-    dff = re.findall(r"^\s+(\S*DFF\S*|\S*dfxtp\S*)\s+(\d+)\s*$", log, re.M)
-    out = {"area_um2": float(area[-1][1]) if area else None,
-           "cells": int(cells[-1]) if cells else None,
-           "flops": sum(int(n) for _, n in dff[-40:]) if dff else None}
-    return out
+    """The last ``stat -liberty`` block: chip area, cell count, flop count.
+
+    Two layouts: yosys 0.33 prints ``Number of cells: N`` then ``CELL  N`` lines;
+    yosys 0.70 prints a table ``N  AREA cells`` then ``N  AREA  CELL`` lines. Either
+    way the design totals are the last cell-count line of the block (per-module
+    sections come first in hierarchical runs) and the flop lines that follow it."""
+    blk = log[log.rfind("Printing statistics"):] if "Printing statistics" in log else log
+    area = re.findall(r"Chip area for (?:top )?module '\\?([^']+)':\s*([0-9.]+)", blk)
+    last = None
+    for rx in (_CELLS_OLD, _CELLS_NEW):
+        for m in rx.finditer(blk):
+            if last is None or m.start() > last.start():
+                last = m
+    flops = None
+    if last is not None:
+        tail = blk[last.end():]
+        tail = tail[:tail.find("Chip area")] if "Chip area" in tail else tail
+        n = [int(c) for _, c in _DFF_OLD.findall(tail)] + [int(c) for c, _ in _DFF_NEW.findall(tail)]
+        flops = sum(n) if n else None
+    return {"area_um2": float(area[-1][1]) if area else None,
+            "cells": int(last.group(1)) if last else None,
+            "flops": flops}
 
 
 # --- flow ----------------------------------------------------------------------------------
