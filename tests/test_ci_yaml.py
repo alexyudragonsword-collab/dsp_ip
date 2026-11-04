@@ -15,6 +15,10 @@ def test_ci_workflow_parses_and_has_every_job():
     assert d["jobs"]["synth-long"]["if"] == "github.event_name == 'workflow_dispatch'"
     assert d["jobs"]["synth-long"]["strategy"]["matrix"] == {"set": ["ddr_r1_w16", "gmp510_w16"], "P": [1, 2, 4]}
     assert d[True].get("workflow_dispatch", "missing") is None or isinstance(d[True]["workflow_dispatch"], dict)
+    for name in ("synth", "synth-long"):   # pinned yosys, never the runner's apt one
+        runs = [st.get("run", "") for st in d["jobs"][name]["steps"]]
+        assert "tools/get_yosys.sh" in runs, name
+        assert not any("install -y yosys" in r for r in runs), name
     for job in d["jobs"].values():
         for step in job["steps"]:
             assert isinstance(step, dict) and ("run" in step or "uses" in step), step

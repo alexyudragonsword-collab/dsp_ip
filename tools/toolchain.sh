@@ -12,21 +12,28 @@ if [ "${1:-}" = "--install" ]; then
     SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO=sudo
     export DEBIAN_FRONTEND=noninteractive
     $SUDO apt-get update -qq
-    $SUDO apt-get install -y -qq iverilog verilator yosys
+    $SUDO apt-get install -y -qq iverilog verilator
+    "$(dirname "$0")/get_yosys.sh" >/dev/null   # pinned yosys (docs/synthesis.md)
   else
     echo "no apt-get: install verilator/iverilog/yosys manually" >&2
     exit 2
   fi
 fi
 
+# Only yosys comes from the pinned OSS CAD Suite (tools/synth.py looks there first); its
+# bin/ also holds verilator and iverilog, which must NOT shadow the simulators below.
+PINNED_YOSYS="$(cd "$(dirname "$0")/.." && pwd)/third_party/oss-cad-suite/bin/yosys"
+
 echo "== dsp_ip toolchain =="
 for t in verilator iverilog vvp yosys python3; do
-  if have "$t"; then
+  if [ "$t" = yosys ] && [ -x "$PINNED_YOSYS" ]; then
+    printf "  %-10s %s [pinned: tools/get_yosys.sh]\n" yosys "$("$PINNED_YOSYS" -V)"
+  elif have "$t"; then
     case $t in
-      verilator) v=$(verilator --version | head -1);;
-      iverilog)  v=$(iverilog -V 2>&1 | head -1);;
-      vvp)       v=$(vvp -V 2>&1 | head -1);;
-      yosys)     v=$(yosys -V);;
+      verilator) v=$(verilator --version 2>&1 | sed -n 1p);;
+      iverilog)  v=$(iverilog -V 2>&1 | sed -n 1p);;
+      vvp)       v=$(vvp -V 2>&1 | sed -n 1p);;
+      yosys)     v="$(yosys -V) [NOT the pinned build: run tools/get_yosys.sh]";;
       python3)   v=$(python3 --version);;
     esac
     printf "  %-10s %s\n" "$t" "$v"

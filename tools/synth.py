@@ -47,6 +47,22 @@ sys.path.insert(0, str(REPO / "src"))
 from dspip.ipspec import IP_ROOT, load_ipspec  # noqa: E402
 
 RESULTS = REPO / "results" / "synth"
+
+# The pinned yosys (tools/get_yosys.sh). Committed estimates must come from exactly this
+# build (tests/test_synth_tool.py); an unpinned yosys still runs, for exploration.
+YOSYS_PIN = "oss-cad-suite 2026-10-25"
+YOSYS_PIN_VERSION = "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)"
+_PINNED_BIN = REPO / "third_party" / "oss-cad-suite" / "bin" / "yosys"
+
+
+def yosys_bin() -> str | None:
+    """$DSPIP_YOSYS, else the pinned build under third_party/, else yosys on PATH."""
+    env = os.environ.get("DSPIP_YOSYS")
+    if env:
+        return env
+    if _PINNED_BIN.exists():
+        return str(_PINNED_BIN)
+    return shutil.which("yosys")
 LIBS = {
     "nangate45": {
         "path": REPO / "third_party/orfs/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib",
@@ -180,7 +196,7 @@ def parse_stat(log: str) -> dict:
 
 
 def yosys_version() -> str:
-    r = subprocess.run(["yosys", "-V"], capture_output=True, text=True)
+    r = subprocess.run([yosys_bin(), "-V"], capture_output=True, text=True)
     return r.stdout.strip()
 
 
@@ -223,7 +239,7 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
     ys = "\n".join(ln for ln in lines if ln) + "\n"
     (work / "synth.ys").write_text(ys)
     t0 = time.time()
-    r = subprocess.run(["yosys", "-q", "-l", str(work / "yosys.log"), str(work / "synth.ys")],
+    r = subprocess.run([yosys_bin(), "-q", "-l", str(work / "yosys.log"), str(work / "synth.ys")],
                        capture_output=True, text=True)
     dt = time.time() - t0
     log = (work / "yosys.log").read_text() if (work / "yosys.log").exists() else ""
@@ -267,7 +283,8 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     rep = {"kind": "estimate", "ip": spec.name, "set": set_name, "P": P, "mode": mode,
            "liberty": {"name": lib_name, "label": lib["label"],
                        "sha256": hashlib.sha256(lib_path.read_bytes()).hexdigest()},
-           "yosys": yosys_version(), "abc_script": script.strip().replace("\n", "; "),
+           "yosys": yosys_version(), "yosys_pin": YOSYS_PIN if yosys_version() == YOSYS_PIN_VERSION else None,
+           "abc_script": script.strip().replace("\n", "; "),
            "target_ps": target_ps,
            "ff": ff, "n_terms_full": n_full, "points": []}
     points = []
@@ -352,9 +369,12 @@ def main(argv=None) -> int:
                     help=f"ABC delay target in ps (default {DEFAULT_TARGET_PS:.0f} for the &nf flow)")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
-    if shutil.which("yosys") is None:
-        print("yosys not found; see ROADMAP 被外部阻塞", file=sys.stderr)
+    if yosys_bin() is None:
+        print("yosys not found: run tools/get_yosys.sh", file=sys.stderr)
         return 2
+    if yosys_version() != YOSYS_PIN_VERSION:
+        print(f"warning: {yosys_version()!r} is not the pinned {YOSYS_PIN} build "
+              "(tools/get_yosys.sh); do not commit these numbers", file=sys.stderr)
     spec = load_ipspec(IP_ROOT / args.ip)
     params = dict(kv.split("=", 1) for kv in args.param)
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,

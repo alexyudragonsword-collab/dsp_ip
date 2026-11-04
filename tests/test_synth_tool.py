@@ -156,12 +156,21 @@ def test_unit_probe_is_estimate_and_stays_out_of_results(sy, tmp_path):
     assert rc == 0 and json.loads((tmp_path / "u.json").read_text())["module"] == "sat_shift"
 
 
-def test_committed_dpd_poly_results_share_one_toolchain():
-    """docs/results.md prints one yosys version in its header and compares rows with each
-    other, so every committed dpd_poly estimate must come from the same yosys and liberty.
-    (The GitHub runner's apt moved from 0.33 to 0.52 under us; mixing them would credit the
-    tool upgrade to the RTL.) Same-RTL cross-version points live in results/synth/yosys033/."""
-    reps = [json.loads(p.read_text()) for p in (REPO / "results" / "synth").glob("dpd_poly__*.json")]
+def test_committed_results_use_the_pinned_yosys(sy):
+    """Every estimate docs/results.md is rendered from comes from the one pinned yosys build
+    (tools/get_yosys.sh) and one liberty. The runner's apt yosys moved 0.33 -> 0.52 under us
+    and the same RTL mapped ~9 % slower; with a pin, a number can be reproduced bit for bit.
+    Historical cross-version points live in results/synth/yosys033/ (not rendered)."""
+    reps = {p.name: json.loads(p.read_text()) for p in (REPO / "results" / "synth").glob("*.json")}
     assert reps
-    assert len({r["yosys"] for r in reps}) == 1, sorted({r["yosys"] for r in reps})
-    assert len({r["liberty"]["sha256"] for r in reps}) == 1
+    bad = {n: r["yosys"] for n, r in reps.items() if r["yosys"] != sy.YOSYS_PIN_VERSION}
+    assert not bad, bad
+    assert all(r.get("yosys_pin") == sy.YOSYS_PIN for r in reps.values())
+    assert len({r["liberty"]["sha256"] for r in reps.values()}) == 1
+
+
+def test_get_yosys_script_matches_pin(sy):
+    """tools/get_yosys.sh and tools/synth.py name the same build."""
+    sh = (REPO / "tools" / "get_yosys.sh").read_text()
+    assert f'VERSION="{sy.YOSYS_PIN_VERSION}"' in sh
+    assert "DATE=" + sy.YOSYS_PIN.split()[-1] in sh
