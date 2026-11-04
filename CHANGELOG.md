@@ -5,7 +5,7 @@
 ### 上游（本库发现、在上游修、合并后重新 pin）
 - **PA_DPD#3**（合并 `5718b83`，关 PA_DPD#2）：导出 JSON 带 `fixed_point`（输入 / 逐列指数、累加器 LSB），参考 CSV 追加整数输入码两列，docstring 改为"浮点模拟、输出不量化"，两处文档小错修掉；算法与 ACLR 不变。
   本库：12 个 vendored 文件重新拷贝，导出重新生成（旧键与前四列逐字节不变），`check_upstream_export` 按表头取列并精确比对新字段；新测试 `DpdPolyConfig.derive` 推出的 e_in / 逐列 e_c / 输入码与导出值 4/4 文件全等。
-- **Halo_Serdes#142**（合并 `19d104f` (PR head; merge pending)，关 #136）：`*_dims.svh` 移位量为 `localparam int`、tb 读文件失败 `$fatal`、`run_lockstep.sh` 不写提交集、`rtl/vectors` 刷新并补 `dfse_*`。
+- **Halo_Serdes#142**（合并 `aca6123`，关 #136）：`*_dims.svh` 移位量为 `localparam int`、tb 读文件失败 `$fatal`、`run_lockstep.sh` 不写提交集、`rtl/vectors` 刷新并补 `dfse_*`。
   本库：10 个 `.sv` 与 9 个向量集重新拷贝、重锁；`halo_adc_dsp_loop` 去掉 `sims: [iverilog]`，Verilator 5.020 下 5/5 集通过；`dfse` 集改用 Halo 提交集。
 
 ### 综合

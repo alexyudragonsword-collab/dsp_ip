@@ -58,7 +58,7 @@ in both blocks, same `e_in`), but it should be stated.
 
 ## Halo_Serdes @ 6e79c4a — filed as alexyudragonsword-collab/Halo_Serdes#136 (2026-11-02)
 
-**Fixed upstream by Halo_Serdes#142, merged 2026-11-04 as `19d104f` (PR head; merge pending); dsp_ip is pinned
+**Fixed upstream by Halo_Serdes#142, merged 2026-11-04 as `aca6123`; dsp_ip is pinned
 there.** Every testbench `$fatal`s on a missing file or short read; `rtl/vectors/` carries
 `dfse_*` and was refreshed (it had gone stale on Halo's `main` too: 54 files differed from a
 regeneration at 82ee2c4); `run_lockstep.sh` builds in a temp dir; shift amounts are

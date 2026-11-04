@@ -3,7 +3,7 @@
   "vit": {
    "command": "committed (see ip.yaml / EXPORT.md)",
    "files": {
-    "SOURCE.md": "3bd56a2f1de06c779be4bf3deee20fca4bfa1324fa738f44a6f9ee6b2d1be03e",
+    "SOURCE.md": "915b1f11f737b2ac8f1ee5cb5c6098f4c6085461c0f091c7e0ee7b113c2519bc",
     "vit_dec.txt": "761a234b6034667d0dae25465bd8baab75eac9aaccc56e864a2771580eda97fa",
     "vit_dims.svh": "ce25833798f6b7b6c7d5bc8aa5f4662379fdca7cd3cde882c0c10ed764d534c0",
     "vit_expected.txt": "6c4ee9990775f6052917e65667b13c14064a5ad2dd7f91dd803c96aa4c930c54",
