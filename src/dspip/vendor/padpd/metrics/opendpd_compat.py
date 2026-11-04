@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@08b9725: src/padpd/metrics/opendpd_compat.py
+# Vendored from PA_DPD@5718b83: src/padpd/metrics/opendpd_compat.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Metrics replicating OpenDPD's conventions (utils/metrics.py there).
 

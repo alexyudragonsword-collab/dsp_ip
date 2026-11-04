@@ -25,10 +25,10 @@
    "label": "unit",
    "params": {},
    "delay_ps": 1695.12,
-   "runtime_s": 5.9,
+   "runtime_s": 4.9,
    "area_um2": 9868.068,
-   "cells": null,
-   "flops": null
+   "cells": 7806,
+   "flops": 334
   }
  ],
  "module": "dpd_pow",
@@ -39,7 +39,7 @@
  "throughput_est_msps": 540.8,
  "p_for_640msps": 2,
  "area_um2": 9868.068,
- "cells": null,
+ "cells": 7806,
  "method": "leaf module dpd_pow synthesized alone (default parameters), flattened; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup. A stage probe, not a datapath number: never enters docs/results.md",
- "runtime_s": 5.9
+ "runtime_s": 4.9
 }

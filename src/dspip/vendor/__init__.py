@@ -16,7 +16,7 @@ re-derives this against a sibling checkout and fails CI on any undeclared
 edit; the same tool scans ``ip/*/rtl/*.sv`` for ``// Vendored from`` headers
 so milestone 2 can vendor Halo_Serdes' RTL under the same policy).
 
-``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 08b9725 (the commit
+``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 5718b83 (the commit
 whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 
 - ``pa/{base,memory_polynomial,ddr,gmp,presets}.py``: the DDR-Volterra and

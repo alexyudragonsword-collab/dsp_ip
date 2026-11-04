@@ -27,10 +27,10 @@
     "K1": "1"
    },
    "delay_ps": 1713.77,
-   "runtime_s": 6.3,
+   "runtime_s": 5.7,
    "area_um2": 14583.982,
-   "cells": null,
-   "flops": null
+   "cells": 11903,
+   "flops": 402
   }
  ],
  "module": "dpd_term",
@@ -43,7 +43,7 @@
  "throughput_est_msps": 535.4,
  "p_for_640msps": 2,
  "area_um2": 14583.982,
- "cells": null,
+ "cells": 11903,
  "method": "leaf module dpd_term synthesized alone (default parameters + K11), flattened; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup. A stage probe, not a datapath number: never enters docs/results.md",
- "runtime_s": 6.3
+ "runtime_s": 5.7
 }

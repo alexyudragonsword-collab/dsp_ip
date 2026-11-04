@@ -25,9 +25,9 @@
    "label": "full",
    "params": {},
    "delay_ps": 673.02,
-   "runtime_s": 0.5,
+   "runtime_s": 0.3,
    "area_um2": 79.268,
-   "cells": null,
+   "cells": 73,
    "flops": null
   }
  ],
@@ -37,7 +37,7 @@
  "throughput_est_msps": 1209.3,
  "p_for_640msps": 1,
  "area_um2": 79.268,
- "cells": null,
+ "cells": 73,
  "method": "whole design synthesized with the real term count; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup",
- "runtime_s": 0.5
+ "runtime_s": 0.3
 }

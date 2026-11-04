@@ -6,6 +6,14 @@ upstream repositories. Each item stays until upstream has answered.
 
 ## PA_DPD @ 08b9725 — filed as alexyudragonsword-collab/PA_DPD#2 (2026-11-02)
 
+**Fixed upstream by PA_DPD#3, merged 2026-11-04 as `5718b83`; dsp_ip is pinned there.**
+The export now carries the input / per-column exponents (`fixed_point` in the JSON) and the
+integer input codes (two CSV columns appended), the docstrings say "float emulation,
+output not quantized", and both doc nits are fixed. The algorithm and the ACLR numbers did
+not change. dsp_ip's `DpdPolyConfig.derive` reproduces every exported exponent
+(`tests/test_config.py`). Points 1–2 below remain true of the *model* (it is still a float
+emulation, still block-adaptive); they are now documented upstream instead of hidden.
+
 ### 1. `FixedPointPolyModel` is a float emulation, not an integer datapath
 
 `src/padpd/deploy/fixed_point.py` — the "bit-true" model that `scripts/export_deploy.py`

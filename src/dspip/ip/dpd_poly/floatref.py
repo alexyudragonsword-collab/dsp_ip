@@ -32,7 +32,7 @@ UPSTREAM_DIR = REPO / "ip" / "dpd_poly" / "upstream" / "DPA_160MHz"
 BASES = {"ddr_r1": ddr_volterra_default, "gmp510": gmp_opendpd_510}
 WARMUP = 200  # PA_DPD scripts/quantize_dpd.py
 
-# PA_DPD docs/03_roadmap.md lines 108-117 (@08b9725): ACLR_AVG dBc, DPA_160MHz, neural surrogate
+# PA_DPD docs/03_roadmap.md lines 112-121 (@5718b83; 108-117 @08b9725): ACLR_AVG dBc, DPA_160MHz, neural surrogate
 UPSTREAM_TABLE = {
     "ddr_r1": {"float": -51.6, 16: -51.3, 12: -40.4, 10: -29.4},
     "gmp510": {"float": -50.2, 16: -50.1, 12: -46.6, 10: -38.5},
@@ -52,6 +52,16 @@ def load_upstream(basis: str, w_bits: int, root: Path = UPSTREAM_DIR) -> Upstrea
     coeffs = json.loads((root / f"{basis}_w{w_bits}_coeffs.json").read_text())
     d = np.loadtxt(root / f"{basis}_w{w_bits}_refvec.csv", delimiter=",", skiprows=1)
     return UpstreamExport(basis, w_bits, coeffs, d[:, 0] + 1j * d[:, 1], d[:, 2] + 1j * d[:, 3])
+
+
+def read_upstream_codes(basis: str, w_bits: int, root: Path = UPSTREAM_DIR):
+    """The integer input codes PA_DPD's export appends to the reference CSV since PA_DPD#3
+    (``i_in_code,q_in_code``, value = code · 2^in_scale_exp), looked up by header name."""
+    path = root / f"{basis}_w{w_bits}_refvec.csv"
+    names = path.read_text().splitlines()[0].strip().split(",")
+    d = np.loadtxt(path, delimiter=",", skiprows=1)
+    return (d[:, names.index("i_in_code")].astype(np.int64),
+            d[:, names.index("q_in_code")].astype(np.int64))
 
 
 def upstream_model(coeffs: dict):
@@ -247,7 +257,7 @@ def build_aclr_table(bits=(16, 12, 10), out: Path | None = None,
     assert next(iter(variants)) == "default", "the first variant must be the 'default' baseline"
     table = {"_meta": {"dataset": "DPA_160MHz", "metric": "ACLR_AVG dBc via PA_DPD DGRU surrogate",
                        "variants": {k: dict(v) for k, v in variants.items()},
-                       "upstream_doc": "PA_DPD@08b9725 docs/03_roadmap.md:108-117",
+                       "upstream_doc": "PA_DPD@5718b83 docs/03_roadmap.md:112-121",
                        "upstream_table": {b: {str(k): v for k, v in r.items()}
                                           for b, r in UPSTREAM_TABLE.items()}}}
     ev = SurrogateEval()

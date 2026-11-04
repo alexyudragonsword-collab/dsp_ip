@@ -77,16 +77,16 @@
   }
  },
  "upstream": {
-  "command": "see ip/dpd_poly/upstream/DPA_160MHz/EXPORT.md (PA_DPD@08b9725 scripts/export_deploy.py)",
+  "command": "see ip/dpd_poly/upstream/DPA_160MHz/EXPORT.md (PA_DPD@5718b83 scripts/export_deploy.py)",
   "files": {
-   "ddr_r1_w12_coeffs.json": "8a2fb8ddedf3fea5565bb5808879916f1e1d49f4fbfd6afb1d336a7433ae0ba9",
-   "ddr_r1_w12_refvec.csv": "fd13c372cd96bb0f600d97f4b02c9fae1eca56c26bbd31cd40dfced976b5c7ca",
-   "ddr_r1_w16_coeffs.json": "f3a243a3e32b832b7275dc8df8a6855ec0c7aab6547f0696b679f14fcd1fd771",
-   "ddr_r1_w16_refvec.csv": "5918698c02ce267a6b5d5174f24c0fd4ff59feea961a2191bb4c8ab511a5740f",
-   "gmp510_w12_coeffs.json": "0840f5d2b5fff42d6ea2162b4088e6278bac3a5b1eb9d7964b9725039bd10175",
-   "gmp510_w12_refvec.csv": "1b6f4a3f906da500d427ec7efeac57d06059638be23cb175a70a2549881e2c8d",
-   "gmp510_w16_coeffs.json": "af44012105ed5c794044a8a7815166de0abcc6feeb021d3eca2c5fa1b9bbb3b4",
-   "gmp510_w16_refvec.csv": "587a23af8dc358890448e48987b0a36d67d2fc6093ec0e378d89f9cee29617bb"
+   "ddr_r1_w12_coeffs.json": "3fd777e2f8b5815a73167fb999d23bc02767251b9852c7234ace0b5efe6eb497",
+   "ddr_r1_w12_refvec.csv": "a716acef48b610864b0836e5f2618ff48ac9b45270cb34ed8a348f384e0c56b6",
+   "ddr_r1_w16_coeffs.json": "631491ec93c1da9b9362e35c047ca67be04f13367ccaa6e4fe0b2bb7ccc84aef",
+   "ddr_r1_w16_refvec.csv": "933c36c7ee020d4a6553c8262d2388a548371649c3847ca875b49eb1679aeca0",
+   "gmp510_w12_coeffs.json": "1a8cec7cd3d875e1a3e7b68d5b26955f86a267699d4ff91d859250b0cbd81995",
+   "gmp510_w12_refvec.csv": "9a9a18e32e7d356c57e377716787570b82e4624597496fa268c8367d3044b377",
+   "gmp510_w16_coeffs.json": "7609a8de5fced2ee1f06febd3da8704744252f16f00a307dc42125b5fef24865",
+   "gmp510_w16_refvec.csv": "8d15f8d57239a7b1dacd0a9974d162909557838f58ed8877e10ad89df7513a5a"
   }
  }
 }

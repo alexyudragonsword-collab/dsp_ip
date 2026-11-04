@@ -30,6 +30,25 @@ def test_upstream_files_present():
             assert (UPSTREAM_DIR / f"{b}_w{w}_refvec.csv").exists()
 
 
+@pytest.mark.parametrize("basis", ["ddr_r1", "gmp510"])
+@pytest.mark.parametrize("w", [16, 12])
+def test_exported_exponents_and_codes_equal_derived(basis, w):
+    """PA_DPD#2 closed by PA_DPD#3: the export now states the exponents and input codes its
+    FixedPointPolyModel used; dsp_ip's integer-path derivation must land on exactly the same
+    ones (input exponent, every column exponent, every input code) in all four files."""
+    from dspip.ip.dpd_poly.floatref import read_upstream_codes
+
+    up = load_upstream(basis, w)
+    fp = up.coeffs["fixed_point"]
+    cfg = DpdPolyConfig.derive(up.coeffs, up.x, basis=basis)
+    assert fp["sig_bits"] == w and fp["n_samples"] == up.x.size
+    assert cfg.e_in == fp["in_scale_exp"]
+    assert list(cfg.e_c) == fp["col_scale_exp"]
+    xi, xq = quantize_input(up.x, cfg.e_in, cfg.w_in)
+    ci, cq = read_upstream_codes(basis, w)
+    assert np.array_equal(xi, ci) and np.array_equal(xq, cq)
+
+
 @pytest.mark.parametrize("peak,qmax", [(1, 32767), (32767, 32767), (32768, 32767),
                                        (65534, 32767), (65535, 32767), (100, 2047), (5, 7)])
 def test_ceil_log2_ratio_matches_float_rule(peak, qmax):

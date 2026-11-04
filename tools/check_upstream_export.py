@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Rule 3 drift gate: re-run the consumer's export and compare with the committed copy.
 
-    python tools/check_upstream_export.py --pa-dpd <PA_DPD checkout @08b9725> \
+    python tools/check_upstream_export.py --pa-dpd <PA_DPD checkout @5718b83> \
         --dataset <OpenDPD>/datasets/DPA_160MHz [--out <scratch dir>]
 
 Re-runs ``scripts/export_deploy.py`` (W16 and W12) from the pinned PA_DPD checkout against
 the pinned OpenDPD dataset and compares with ``ip/dpd_poly/upstream/DPA_160MHz/``:
 
-- exact: the input columns ``i_in/q_in``, ``model_class``, ``config``, ``n_coeffs``,
-  ``coeff_scale_exp``;
+- exact: the input columns ``i_in/q_in`` and integer input codes ``i_in_code/q_in_code``,
+  ``model_class``, ``config``, ``n_coeffs``, ``coeff_scale_exp``, and the ``fixed_point``
+  exponents (they follow from the exact input block, so they cannot wobble);
 - tolerant: coefficient codes within ±1 LSB, ``i_out/q_out`` within 1e-9 relative
   (the ILA fit goes through LAPACK, which is not bit-repeatable across machines).
 
@@ -36,7 +37,7 @@ BITS = (16, 12)
 
 def compare_coeffs(a: dict, b: dict, max_lsb: int = 1) -> list[str]:
     probs = []
-    for k in ("model_class", "config", "n_coeffs", "coeff_scale_exp", "w_bits"):
+    for k in ("model_class", "config", "n_coeffs", "coeff_scale_exp", "w_bits", "fixed_point"):
         if a.get(k) != b.get(k):
             probs.append(f"{k}: committed {a.get(k)!r} != re-export {b.get(k)!r}")
     for k in ("coeffs_real", "coeffs_imag"):
@@ -50,14 +51,31 @@ def compare_coeffs(a: dict, b: dict, max_lsb: int = 1) -> list[str]:
     return probs
 
 
-def compare_refvec(a: np.ndarray, b: np.ndarray, rtol: float = 1e-9) -> list[str]:
+REFVEC_COLS = ("i_in", "q_in", "i_out", "q_out")        # + "i_in_code", "q_in_code" (#3)
+
+
+def read_refvec(path: Path) -> tuple[np.ndarray, tuple[str, ...]]:
+    """The reference CSV and its column names from the header (PA_DPD@08b9725 wrote four
+    float columns; from PA_DPD#3 on, two integer input-code columns follow them)."""
+    names = tuple(path.read_text().splitlines()[0].strip().split(","))
+    return np.loadtxt(path, delimiter=",", skiprows=1, ndmin=2), names
+
+
+def compare_refvec(a: np.ndarray, b: np.ndarray, rtol: float = 1e-9,
+                   names: tuple[str, ...] = REFVEC_COLS) -> list[str]:
+    """Inputs and input codes exact, outputs within ``rtol`` of the output scale."""
     probs = []
     if a.shape != b.shape:
         return [f"refvec shape {a.shape} != {b.shape}"]
-    if not np.array_equal(a[:, :2], b[:, :2]):
+    col = {n: i for i, n in enumerate(names)}
+    exact = [col[n] for n in ("i_in", "q_in", "i_in_code", "q_in_code") if n in col]
+    if not np.array_equal(a[:, exact[:2]], b[:, exact[:2]]):
         probs.append("i_in/q_in differ (must be exact)")
-    scale = np.abs(a[:, 2:]).max()
-    d = np.abs(a[:, 2:] - b[:, 2:]).max() / scale if scale else 0
+    if len(exact) > 2 and not np.array_equal(a[:, exact[2:]], b[:, exact[2:]]):
+        probs.append("i_in_code/q_in_code differ (must be exact)")
+    out = [col["i_out"], col["q_out"]]
+    scale = np.abs(a[:, out]).max()
+    d = np.abs(a[:, out] - b[:, out]).max() / scale if scale else 0
     if d > rtol:
         probs.append(f"i_out/q_out relative difference {d:.2e} > {rtol}")
     return probs
@@ -74,9 +92,12 @@ def check_dir(committed: Path, fresh: Path) -> list[str]:
                 continue
             probs += [f"{cj.name}: {p}" for p in compare_coeffs(json.loads(cj.read_text()),
                                                                json.loads(fj.read_text()))]
-            cv = np.loadtxt(committed / f"{basis}_w{w}_refvec.csv", delimiter=",", skiprows=1)
-            fv = np.loadtxt(fresh / f"{basis}_w{w}_refvec.csv", delimiter=",", skiprows=1)
-            probs += [f"{basis}_w{w}_refvec.csv: {p}" for p in compare_refvec(cv, fv)]
+            cv, cn = read_refvec(committed / f"{basis}_w{w}_refvec.csv")
+            fv, fn = read_refvec(fresh / f"{basis}_w{w}_refvec.csv")
+            if cn != fn:
+                probs.append(f"{basis}_w{w}_refvec.csv: columns {cn} != re-export {fn}")
+                continue
+            probs += [f"{basis}_w{w}_refvec.csv: {p}" for p in compare_refvec(cv, fv, names=cn)]
     return probs
 
 

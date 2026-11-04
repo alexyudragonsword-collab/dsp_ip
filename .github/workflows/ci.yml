@@ -6,7 +6,7 @@ on:
   workflow_dispatch:   # runs the synth-long matrix (P = 1/2/4 real synthesis) on demand
 
 env:
-  PA_DPD_SHA: 08b9725595748b290c76d1b70355f7e6014a709e
+  PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
   HALO_SHA: 6e79c4a7e32b930a023aca6ee302ac3187eb9022
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
 

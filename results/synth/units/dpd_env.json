@@ -25,10 +25,10 @@
    "label": "unit",
    "params": {},
    "delay_ps": 1579.95,
-   "runtime_s": 5.7,
+   "runtime_s": 5.2,
    "area_um2": 7254.884,
-   "cells": null,
-   "flops": null
+   "cells": 4379,
+   "flops": 678
   }
  ],
  "module": "dpd_env",
@@ -39,7 +39,7 @@
  "throughput_est_msps": 576.8,
  "p_for_640msps": 2,
  "area_um2": 7254.884,
- "cells": null,
+ "cells": 4379,
  "method": "leaf module dpd_env synthesized alone (default parameters), flattened; delay = ABC stime (no wire load) + liberty DFF t_cq + t_setup. A stage probe, not a datapath number: never enters docs/results.md",
- "runtime_s": 5.7
+ "runtime_s": 5.2
 }

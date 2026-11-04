@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@08b9725: src/padpd/dpd/ila.py
+# Vendored from PA_DPD@5718b83: src/padpd/dpd/ila.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Indirect Learning Architecture (ILA) digital predistortion.
 

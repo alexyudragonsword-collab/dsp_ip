@@ -31,7 +31,7 @@ Rules, reading order and the six iron rules: [`AGENTS.md`](AGENTS.md). Open item
 
 ### dpd_poly in one paragraph
 
-The consumer (PA_DPD @ `08b9725`) exports integer coefficients and an input block
+The consumer (PA_DPD @ `5718b83`) exports integer coefficients and an input block
 (`ip/dpd_poly/upstream/`, pinned by SHA and sha256). `DpdPolyConfig.derive` turns them into
 a frozen configuration — input scale, per-column shifts with upstream's power-of-two rule,
 accumulator width, output shift — and emits the `dims*.svh` the RTL is built with

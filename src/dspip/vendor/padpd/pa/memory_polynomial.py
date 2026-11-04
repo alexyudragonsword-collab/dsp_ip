@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@08b9725: src/padpd/pa/memory_polynomial.py
+# Vendored from PA_DPD@5718b83: src/padpd/pa/memory_polynomial.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Memory Polynomial (MP) model with least-squares fitting.
 
