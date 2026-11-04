@@ -9,7 +9,8 @@
   "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
   "sha256": "8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1"
  },
- "yosys": "Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)",
+ "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
+ "yosys_pin": "oss-cad-suite 2026-10-25",
  "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p",
  "target_ps": null,
  "ff": {
@@ -25,43 +26,43 @@
    "params": {
     "P": 2
    },
-   "delay_ps": 1638.95,
-   "runtime_s": 458.5,
-   "area_um2": 6923509.978,
-   "cells": 5386983,
-   "flops": 584028
+   "delay_ps": 1693.17,
+   "runtime_s": 835.3,
+   "area_um2": 6811937.608,
+   "cells": 5367302,
+   "flops": 236244
   }
  ],
  "modules": {
-  "dpd_term": {
-   "delay_ps": 1638.95,
-   "instances": 5
-  },
   "dpd_pow": {
-   "delay_ps": 1627.36,
-   "instances": 1
-  },
-  "dpd_env": {
-   "delay_ps": 1549.17,
+   "delay_ps": 1693.17,
    "instances": 1
   },
   "dpd_poly": {
-   "delay_ps": 1459.74,
+   "delay_ps": 1655.33,
+   "instances": 1
+  },
+  "dpd_term": {
+   "delay_ps": 1648.75,
+   "instances": 5
+  },
+  "dpd_env": {
+   "delay_ps": 1579.95,
    "instances": 1
   },
   "dpd_acc": {
-   "delay_ps": 581.56,
+   "delay_ps": 669.5,
    "instances": 1
   }
  },
- "delay_ps": 1638.95,
- "period_ps": 1792.9,
- "f_est_mhz": 557.8,
- "throughput_est_msps": 1115.5,
+ "delay_ps": 1693.17,
+ "period_ps": 1847.1,
+ "f_est_mhz": 541.4,
+ "throughput_est_msps": 1082.8,
  "p_for_640msps": 2,
- "area_um2": 6923509.978,
- "cells": 5386983,
+ "area_um2": 6811937.608,
+ "cells": 5367302,
  "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
- "runtime_s": 458.5,
- "source": "CI synth-long, run 41653037335 job 125975951841 (commit 81b31fc), copied from the job log"
+ "runtime_s": 835.3,
+ "source": "local run with the pinned yosys; module delays and stat totals re-derived from its yosys.log with the fixed parsers"
 }

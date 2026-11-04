@@ -197,7 +197,7 @@ STAT_LOG_070 = """
       680   883.12 cells
        32  144.704   DFF_X1
         4   21.28    DFFR_X1
-      644  717.136   NAND2_X1
+      642  714.910   NAND2_X1
         2   883.12 submodules
         2   883.12   leaf
 
@@ -211,7 +211,7 @@ def test_parse_stat_yosys_070_table(sy):
     flops of every DFF cell type) are what the estimate must report — the pinned build
     left `cells` empty until the parser learned this layout."""
     st = sy.parse_stat(STAT_LOG_070)
-    assert st == {"area_um2": 883.12, "cells": 680, "flops": 36}
+    assert st == {"area_um2": 883.12, "cells": 678, "flops": 36}   # 680 minus 2 submodule instances
 
 
 
@@ -243,3 +243,16 @@ def test_parse_abc_modules_yosys_070_layout(sy):
     broken = "\n".join(ln for ln in HIER_LOG_070.splitlines()
                         if not ("Extracting" in ln and "dpd_pow" in ln))
     assert set(sy.parse_abc_modules(broken)) == {"?"}           # never guess on a mismatch
+
+
+def test_parse_stat_json_exact_totals(sy, tmp_path):
+    """The text table of yosys 0.70 prints counts >= 1e7 as e.g. 1.08E+07, which made the
+    GMP P=4 estimate report one submodule's 10110 cells; the JSON is exact. Submodule
+    instances (0.70 lists them by module name) are not cells."""
+    j = tmp_path / "stat.json"
+    j.write_text(json.dumps({"modules": {"\\leaf": {}, "\\top": {}}, "design": {
+        "area": 13776694.078, "num_cells": 10753926,
+        "num_cells_by_type": {"NAND2_X1": 10000000, "DFF_X1": 700000, "DFFR_X1": 53924,
+                              "\\leaf": 2}}}))
+    assert sy.parse_stat_json(j) == {"area_um2": 13776694.078, "cells": 10753924, "flops": 753924}
+    assert sy.parse_stat_json(tmp_path / "missing.json") is None

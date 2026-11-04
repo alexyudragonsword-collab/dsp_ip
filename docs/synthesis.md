@@ -21,11 +21,18 @@ opt_clean
 stat -liberty <lib>
 ```
 
-- **Tools**: yosys from the runner's apt with its bundled ABC; every JSON records the exact
-  version. The committed table is **yosys 0.52** (GitHub `ubuntu-latest`, Nov 2026); the
-  development container has 0.33. All rows of `docs/results.md` must come from one version
-  (`tests/test_synth_tool.py` checks it); same-RTL 0.33 points are kept in
-  `results/synth/yosys033/` for comparison with the older 0.33 numbers in the LOG.
+- **Tools**: **pinned** yosys + its bundled ABC from OSS CAD Suite `2026-10-25`
+  (`Yosys 0.70+219 (git sha1 5053d0e26)`), fetched by `tools/get_yosys.sh` (tarball sha256
+  checked) and used by `tools/synth.py` before anything on PATH, locally and in CI. Every
+  JSON records the version string and `yosys_pin`; `tests/test_synth_tool.py` refuses a
+  committed estimate from any other build. Why: the runner's apt yosys moved 0.33 → 0.52
+  between two runs and the same RTL mapped ~9 % slower. With the pin, the same point gives
+  the same critical path on a laptop and on the runner (6/6 points), and the same area and
+  cell count on 5 of 6 (GMP P = 1 differs by 0.024 % in area, run-to-run stable on each
+  machine). Same-RTL points from 0.33 stay in `results/synth/yosys033/` for comparison.
+  yosys 0.70 also changed two report formats the tool reads: the `stat` table (counts ≥ 1e7
+  in E-notation, so totals come from `stat -json` now) and the order of per-module ABC
+  output (all extractions first, then the ABC runs in the same order).
 - **Library**: NanGate45 (FreePDK45) typical corner, `NangateOpenCellLibrary_typical.lib`
   from OpenROAD-flow-scripts @ `e5cc6e7`, sha256 `8d540a4d…` (fetched by
   `tools/get_liberty.sh`, pinned and verified). sky130_fd_sc_hd is wired as an alternative
@@ -104,9 +111,10 @@ assumption: area grows linearly in P within a few percent and the critical path 
 depend on P (the stages are the same; only mapping noise moves it). On the runner a hier
 point takes 6–24 min, not hours: identically parameterized modules are mapped once.
 
-**Tool version matters.** The same RTL at P = 1 maps to a ~9 % longer critical path with
-yosys 0.52 than with 0.33 (`results/synth/yosys033/` vs `results/synth/`; numbers in
-`cairn/LOG.md`). Compare rows only within one version.
+**Tool version matters.** The same RTL at P = 1 maps to a longer critical path with newer
+yosys: DDR 1554 ps (0.33) → 1696 (0.52) → 1720 (0.70, pinned); GMP 1554 → 1697 → 1693
+(`results/synth/yosys033/`, `cairn/LOG.md`). Area moves by under 2 %. Compare rows only
+within one version — which is why the version is now pinned.
 
 ## How to read `results/synth/*.json`
 

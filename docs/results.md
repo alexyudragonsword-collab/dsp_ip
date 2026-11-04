@@ -29,27 +29,27 @@ Max |upstream recomputed − PA_DPD doc| = 0.05 dB; max |int ref W16 (default) �
 
 ## Parallelism × frequency × area (rule 5)
 
-**Estimates** — yosys (Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)) + ABC, NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7, no wire load; f_est = 1/(ABC critical path + DFF t_cq + t_setup); method per row in the JSON (see `docs/synthesis.md`).
+**Estimates** — yosys (Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)) + ABC, NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7, no wire load; f_est = 1/(ABC critical path + DFF t_cq + t_setup); method per row in the JSON (see `docs/synthesis.md`).
 
 | set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
 |---|---|---|---|---|---|---|---|---|
-| ddr_r1_w16 | 1 | hier | 1696 | 541 | 541 | 1.977 | 1531474 | 2 |
-| ddr_r1_w16 | 2 | hier | 1668 | 549 | 1098 | 3.917 | 3052887 | 2 |
-| ddr_r1_w16 | 4 | hier | 1707 | 537 | 2150 | 7.793 | 6090637 | 2 |
-| gmp510_w16 | 1 | hier | 1697 | 540 | 540 | 3.493 | 2700301 | 2 |
-| gmp510_w16 | 2 | hier | 1639 | 558 | 1116 | 6.924 | 5386983 | 2 |
-| gmp510_w16 | 4 | hier | 1639 | 558 | 2231 | 13.777 | 10753924 | 2 |
+| ddr_r1_w16 | 1 | hier | 1720 | 534 | 534 | 1.947 | 1529529 | 2 |
+| ddr_r1_w16 | 2 | hier | 1720 | 534 | 1067 | 3.856 | 3048384 | 2 |
+| ddr_r1_w16 | 4 | hier | 1720 | 534 | 2135 | 7.674 | 6086152 | 2 |
+| gmp510_w16 | 1 | hier | 1693 | 541 | 541 | 3.441 | 2693550 | 2 |
+| gmp510_w16 | 2 | hier | 1693 | 541 | 1083 | 6.812 | 5367302 | 2 |
+| gmp510_w16 | 4 | hier | 1693 | 541 | 2166 | 13.551 | 10709666 | 2 |
 
 Worst ABC delay per module (ps, hier rows; the largest one is the critical path, `×n` = parameterizations mapped):
 
-| set | P | `dpd_term` | `dpd_pow` | `dpd_env` | `dpd_poly` | `dpd_acc` |
+| set | P | `dpd_term` | `dpd_pow` | `dpd_poly` | `dpd_env` | `dpd_acc` |
 |---|---|---|---|---|---|---|
-| ddr_r1_w16 | 1 | 1696 ×15 | 1614 | 1426 | 1443 | 1041 |
-| ddr_r1_w16 | 2 | 1668 ×15 | 1627 | 1435 | 1443 | 556 |
-| ddr_r1_w16 | 4 | 1707 ×15 | 1627 | 1477 | 1446 | 1041 |
-| gmp510_w16 | 1 | 1697 ×5 | 1623 | 1488 | 1475 | 582 |
-| gmp510_w16 | 2 | 1639 ×5 | 1627 | 1549 | 1460 | 582 |
-| gmp510_w16 | 4 | 1639 ×5 | 1548 | 1555 | 1449 | 582 |
+| ddr_r1_w16 | 1 | 1720 ×15 | 1693 | 1682 | 1580 | 532 |
+| ddr_r1_w16 | 2 | 1720 ×15 | 1693 | 1682 | 1580 | 532 |
+| ddr_r1_w16 | 4 | 1720 ×15 | 1693 | 1682 | 1580 | 532 |
+| gmp510_w16 | 1 | 1643 ×5 | 1693 | 1633 | 1580 | 670 |
+| gmp510_w16 | 2 | 1649 ×5 | 1693 | 1655 | 1580 | 670 |
+| gmp510_w16 | 4 | 1670 ×5 | 1693 | 1684 | 1580 | 670 |
 
-- **ddr_r1_w16**: f_est ≥ 537 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
-- **gmp510_w16**: f_est ≥ 540 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
+- **ddr_r1_w16**: f_est ≥ 534 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
+- **gmp510_w16**: f_est ≥ 541 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).

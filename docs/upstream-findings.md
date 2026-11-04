@@ -106,6 +106,9 @@ restriction gets lifted. The vendored tb is not edited (rule 3). Halo only runs 
 so nothing is broken upstream today; the note is on Halo_Serdes#136 because a
 `localparam int` for shift amounts in `*_dims.svh` would sidestep it for Verilator users.
 
-Upstream report: a ready-to-paste issue is in `docs/verilator-issue-draft.md` (this
-repository's tooling has no write access to verilator/verilator); once filed, record the
-number here and in `ROADMAP.md`.
+Upstream status (2026-11-04): **already fixed in Verilator.** The 5.053 development build
+shipped in OSS CAD Suite 2026-10-25 (the bundle dsp_ip now pins for yosys) prints 16384 for
+all four probe expressions, so no issue was filed (the draft was dropped). The Debian/Ubuntu
+apt package is still 5.020; `tests/test_sim_quirks.py` keeps probing the installed Verilator.
+Halo_Serdes's fix for #136 (shift amounts emitted as `localparam int`) sidesteps it for
+every Verilator version.

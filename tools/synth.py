@@ -197,6 +197,24 @@ _DFF_OLD = re.compile(r"^\s+(\S*(?:DFF|dfxtp)\S*)\s+(\d+)\s*$", re.M)
 _DFF_NEW = re.compile(r"^\s*(\d+)\s+\S+\s+(\S*(?:DFF|dfxtp)\S*)\s*$", re.M)
 
 
+def parse_stat_json(path: Path) -> dict | None:
+    """Design totals from ``stat -json -liberty`` (yosys 0.33 and 0.70 both write it).
+    Cells = library cells only (0.70's ``num_cells`` also counts submodule instances);
+    flops = every DFF-type cell. Exact, unlike the text table at >= 1e7 cells."""
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())
+    des = d.get("design") or {}
+    mods = set(d.get("modules") or {})
+    by_type = {k: v for k, v in (des.get("num_cells_by_type") or {}).items()
+               if not k.startswith(("$", "\\")) and k not in mods}
+    if not by_type:
+        return None
+    return {"area_um2": des.get("area"),
+            "cells": int(sum(by_type.values())),
+            "flops": int(sum(v for k, v in by_type.items() if "DFF" in k or "dfxtp" in k))}
+
+
 def parse_stat(log: str) -> dict:
     """The last ``stat -liberty`` block: chip area, cell count, flop count.
 
@@ -217,9 +235,20 @@ def parse_stat(log: str) -> dict:
         tail = tail[:tail.find("Chip area")] if "Chip area" in tail else tail
         n = [int(c) for _, c in _DFF_OLD.findall(tail)] + [int(c) for c, _ in _DFF_NEW.findall(tail)]
         flops = sum(n) if n else None
-    return {"area_um2": float(area[-1][1]) if area else None,
-            "cells": int(last.group(1)) if last else None,
-            "flops": flops}
+    cells = int(last.group(1)) if last else None
+    if last is not None and last.re is _CELLS_NEW:
+        # yosys 0.70's total line also counts submodule instances and $scopeinfo; report
+        # library cells only (what stat -json's per-type counts give): sum the cell-type
+        # rows of the totals, skipping $-types, module names and the submodules line
+        mods = set(re.findall(r"^=== (\S+) ===", blk, re.M))
+        tail = blk[last.end():]
+        tail = tail[:tail.find("Chip area")] if "Chip area" in tail else tail
+        rows = re.findall(r"^\s*(\d+)\s+\S+\s+(\S+)\s*$", tail, re.M)
+        lib = [int(c) for c, name in rows
+               if not name.startswith(("$", "\\")) and name not in mods and name != "submodules"]
+        if lib:
+            cells = sum(lib)
+    return {"area_um2": float(area[-1][1]) if area else None, "cells": cells, "flops": flops}
 
 
 # --- flow ----------------------------------------------------------------------------------
@@ -265,6 +294,8 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
         f"abc -liberty {lib} -script {work / 'abc.script'}",
         "opt_clean",
         f"stat -liberty {lib}",
+        # exact numbers for the report: the text table rounds counts >= 1e7 to E-notation
+        f"tee -q -o {work / 'stat.json'} stat -json -liberty {lib}",
     ]
     ys = "\n".join(ln for ln in lines if ln) + "\n"
     (work / "synth.ys").write_text(ys)
@@ -333,6 +364,9 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
                             script, flatten=(mode != "hier"), top=module if mode == "unit" else None)
         delays = parse_abc_delay(log)
         st = parse_stat(log)
+        sj = parse_stat_json(work / label / "stat.json")
+        if sj is not None:
+            st = {**st, **{k: v for k, v in sj.items() if v is not None}}
         pt = {"label": label, "params": {**base_params, **extra}, "delay_ps": max(delays) if delays else None,
               "runtime_s": round(dt, 1), **st}
         rep["points"].append(pt)
