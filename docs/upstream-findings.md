@@ -58,6 +58,13 @@ in both blocks, same `e_in`), but it should be stated.
 
 ## Halo_Serdes @ 6e79c4a — filed as alexyudragonsword-collab/Halo_Serdes#136 (2026-11-02)
 
+**Fixed upstream by Halo_Serdes#142, merged 2026-11-04 as `19d104f` (PR head; merge pending); dsp_ip is pinned
+there.** Every testbench `$fatal`s on a missing file or short read; `rtl/vectors/` carries
+`dfse_*` and was refreshed (it had gone stale on Halo's `main` too: 54 files differed from a
+regeneration at 82ee2c4); `run_lockstep.sh` builds in a temp dir; shift amounts are
+`localparam int`, so `halo_adc_dsp_loop` passes on Verilator 5.020 and its `sims:`
+restriction is gone. The Icarus O(N²) note below is an observation, not a Halo bug.
+
 - `rtl/tb_*.sv` never check the return value of `$fscanf`; a truncated vector file reads
   as zeros and the lockstep still passes or fails for the wrong reason. (dsp_ip's
   testbenches `$fatal` on a short read.)

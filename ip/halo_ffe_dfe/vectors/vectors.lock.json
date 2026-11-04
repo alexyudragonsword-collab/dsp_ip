@@ -3,14 +3,14 @@
   "halo_ffe": {
    "command": "committed (see ip.yaml / EXPORT.md)",
    "files": {
-    "SOURCE.md": "ce26dcc843e302554cdf3831d031b6336e55305109d301c7a7406ef65b73f07c",
-    "codes.txt": "410106634810f5076546d2b31da82295c916f407c88e9e0b6fefa0216ca24e7d",
+    "SOURCE.md": "da222b7ca22f8e068f1047bacb3d6f995fd618d462761fbe1349d31db3762b4c",
+    "codes.txt": "29ac3e7c263cc170c6cd0ace6d4c1c1387ade1bd16d76aeea53e3de24cbffd67",
     "dec.txt": "baa0b4bf4e8bb289a768ef450a6f74a7c492e1014dba4556b383b7246d84411b",
     "dims.svh": "aba4d0cb45dcfdd2c6a1031f3cad4da515e73a8985fdb961c77daf45abf84075",
-    "levels_out.txt": "314083059e0bd0a4863393243fb4c44fc6b91cf1886fe1e6ee967f99e481fd8e",
-    "v_out.txt": "75735e6dd2ad7dc59e575f200df88ded4d63f44c3491ff9561508084ead1ac25",
-    "w_dfe_int.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
-    "w_ffe_int.txt": "f0715086cace5d530a8958d9762bd1cfbfa39e47cdabfc49bb5b60e7b4ecd647"
+    "levels_out.txt": "70ed012f355a40de9e5840731d84d5eefe8030a5b32b5dfdbfc0b28819667d0e",
+    "v_out.txt": "986379ab91bec73f906b18422bbc2e55a45c308b4205f9630021f9076c8ac129",
+    "w_dfe_int.txt": "0b05feae0bc8448241c8a68d18d0a0e0a97bf00c6126b04c61f23529ab862426",
+    "w_ffe_int.txt": "07dc5e4421674903408f41f68b0a2db9937cc9ae385f639ce6d527135786d6be"
    }
   }
  }

@@ -1,5 +1,20 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-04 · 两个上游 PR 合并并重新 pin；yosys 固定为 0.70，六点重综合、本机与 CI 可复现
+
+- **PA_DPD#3**（合并 5718b83）：导出带指数与输入码；重新导出后旧 JSON 键 + CSV 前四列逐字节相同，本库推出的 e_in / e_c / 输入码与导出值 4/4 全等 —— PA_DPD#2 闭环。
+- **Halo_Serdes#142**（PR 头 19d104f，合并待定）：移位量 int、tb 读检查（截断到 100 行 → `short read ... entry 100`、rc 1）、run_lockstep 用临时目录、补 dfse。
+  Halo 侧：指纹 986 值逐位相同；全量 JIT 1450 / 3 skip，NO_JIT 1341 / 112 skip；Android 两个 API 与编译版 APK 都绿。本库 loop 在 Verilator 5.020 下 5/5（修前 1/5），`sims` 限制去掉。
+- **yosys pin**（OSS CAD Suite 2026-10-25，Yosys 0.70+219）：DDR P=1/2/4 关键路径 1720 ps（`dpd_term`），GMP 1693 ps（`dpd_pow`）；面积 DDR 1.947 / 3.856 / 7.674 mm²，
+  GMP 3.441 / 6.812 / 13.551 mm²；单元 1.53 M / 3.05 M / 6.09 M、2.69 M / 5.37 M / 10.71 M（estimate，`docs/results.md`）。同一 RTL 的 P=1：0.33 1554 → 0.52 1696 → 0.70 1720（DDR）。
+  本机 vs CI（同一二进制）：关键路径 6/6 相同，面积 / 单元 5/6 相同，GMP P=1 面积 −0.024 %（各自重跑稳定）。runner 每点 6–24 min。
+- **被推翻的判断**：① "pin 一个 yosys 只是换个装法" —— 0.70 改了 `stat` 表（≥ 1e7 用 E 记数，CI 的 GMP P=4 报成一个子模块的 10110 单元）和 ABC 输出顺序（逐模块表全记到 dpd_acc 名下），两处都修了、测了两种格式；
+  ② "Verilator bug 要去上游报" —— 5.053 已修；③ "Halo 提交集与生成器一致"（只在 6e79c4a 成立，82ee2c4 上已 54 个文件不同，#142 一并刷新）；
+  ④ "PR 克隆不影响 vendor_check" —— `/home/user/<repo>` 的新克隆抢在 pin 克隆前面被找到，本地要设 `DSPIP_SIBLING_*`。
+- 杂项：重新综合的 sat_shift / units 探针 JSON 混进了 PA_DPD 重新 pin 的提交（bc4d2cd），内容是 pin 版本的正确结果。
+- 测试：本库全量 157 passed（loop × verilator 不再跳过）；PA_DPD#3 CI 29 项全绿；Halo#142 CI 见合并记录。
+- 下一步：两级乘法器冲 P=1（ROADMAP，可选）；流式化 Halo 模块以便综合（ROADMAP）。
+
 ## 2026-11-03 · 瓶颈归因纠错：是乘法级不是加法树；乘法级重分级后单模块 ~1500 ps；P=1/2/4 真实综合交给 CI
 
 - **更正 10-14 / 10-13 条目**：那两条把关键路径归给"40 位行波进位加法器 + ABC 平衡"。本机 hier 日志逐模块 ABC 延迟（ps，DDR/GMP）：`dpd_pow` **1837/1883**、`dpd_env` 1789/1738、`dpd_term` 最差 1734/1679、顶层（加法树）1441/1441、`dpd_acc` 854/981。

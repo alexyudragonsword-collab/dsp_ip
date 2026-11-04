@@ -1,5 +1,19 @@
 # CHANGELOG（按里程碑）
 
+## 上游修复合并 + 综合工具链固定（2026-11-04）
+
+### 上游（本库发现、在上游修、合并后重新 pin）
+- **PA_DPD#3**（合并 `5718b83`，关 PA_DPD#2）：导出 JSON 带 `fixed_point`（输入 / 逐列指数、累加器 LSB），参考 CSV 追加整数输入码两列，docstring 改为"浮点模拟、输出不量化"，两处文档小错修掉；算法与 ACLR 不变。
+  本库：12 个 vendored 文件重新拷贝，导出重新生成（旧键与前四列逐字节不变），`check_upstream_export` 按表头取列并精确比对新字段；新测试 `DpdPolyConfig.derive` 推出的 e_in / 逐列 e_c / 输入码与导出值 4/4 文件全等。
+- **Halo_Serdes#142**（合并 `19d104f` (PR head; merge pending)，关 #136）：`*_dims.svh` 移位量为 `localparam int`、tb 读文件失败 `$fatal`、`run_lockstep.sh` 不写提交集、`rtl/vectors` 刷新并补 `dfse_*`。
+  本库：10 个 `.sv` 与 9 个向量集重新拷贝、重锁；`halo_adc_dsp_loop` 去掉 `sims: [iverilog]`，Verilator 5.020 下 5/5 集通过；`dfse` 集改用 Halo 提交集。
+
+### 综合
+- **yosys 固定**为 OSS CAD Suite 2026-10-25（`Yosys 0.70+219`，`tools/get_yosys.sh`，sha256 校验），本机与 CI 同一二进制；测试拒绝任何非 pin 版本的入表 JSON。
+  六个点重新综合：DDR 1720 ps / 534 MHz、GMP 1693 ps / 541 MHz，各 P 相同，**仍是 P = 2 达 640 MSPS（estimate）**；本机与 CI 关键路径 6/6 相同、面积与单元数 5/6 相同（GMP P=1 面积差 0.024 %）。
+- yosys 0.70 改了两处输出：`stat` 表在 ≥ 1e7 时用 E 记数（改读 `stat -json`），逐模块 ABC 输出先列全部提取再按序给结果（改为按位置配对）；两处都有两种格式的测试。
+- 发现 Verilator 5.053（同一 OSS CAD Suite）已修好 longint 移位折叠 bug，issue 文稿作废。
+
 ## 里程碑 1 收尾：乘法级重分级、综合看得见瓶颈、P=1/2/4 真实综合进 CI、脚手架收尾（2026-11-03）
 
 ### 变更

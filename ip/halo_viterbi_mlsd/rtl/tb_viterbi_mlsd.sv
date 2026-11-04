@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@6e79c4a: rtl/tb_viterbi_mlsd.sv
+// Vendored from Halo_Serdes@19d104f: rtl/tb_viterbi_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Lockstep testbench for viterbi_mlsd.sv against the vectors
 // halo_serdes.dsp.fixed_viterbi.dump_viterbi_vectors wrote. Exits non-zero
@@ -14,20 +14,26 @@ module tb_viterbi_mlsd;
     viterbi_mlsd dut ();
 
     longint gold [N];
-    string dir;
+    string dir, fn;   // fn: the file being read, for error messages
     int fd, r, errors;
     longint val;
 
     initial begin
         if (!$value$plusargs("vecdir=%s", dir)) dir = ".";
-        fd = $fopen({dir, "/vit_y.txt"}, "r");
-        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); dut.y[i] = val; end
+        fn = {dir, "/vit_y.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.y[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/vit_expected.txt"}, "r");
-        for (int i = 0; i < NS * NL; i++) begin r = $fscanf(fd, "%d", val); dut.ex[i] = val; end
+        fn = {dir, "/vit_expected.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < NS * NL; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.ex[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/vit_dec.txt"}, "r");
-        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); gold[i] = val; end
+        fn = {dir, "/vit_dec.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); gold[i] = val; end
         $fclose(fd);
 
         dut.run();

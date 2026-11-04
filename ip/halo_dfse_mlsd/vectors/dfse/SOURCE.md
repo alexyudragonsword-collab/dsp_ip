@@ -1,13 +1,10 @@
-# Committed vector set: Halo_Serdes DFSE (reduced-state Viterbi) segment
+# Committed vector set: Halo_Serdes `rtl/vectors/` (halo_dfse_mlsd / dfse)
 
-Halo_Serdes does **not** commit this set (its `rtl/vectors/` lacks `dfse_*`; raised as
-Halo_Serdes#136). It was generated once by dsp_ip at the pin with Halo's own generator:
+Copied unchanged from `alexyudragonsword-collab/Halo_Serdes` @ `19d104f3eef921cd7cfa623232fd1015812bc518`
+(`rtl/vectors/{dfse_*.txt, dfse_dims.svh}`), Halo's committed snapshot of
 
-    git clone https://github.com/alexyudragonsword-collab/Halo_Serdes && git -C Halo_Serdes checkout 6e79c4a7e32b930a023aca6ee302ac3187eb9022
-    pip install numpy scipy scikit-rf pyyaml matplotlib
-    cd Halo_Serdes && PYTHONPATH=src HALO_NO_JIT=1 python3 rtl/gen_vectors.py <out>
-    cp <out>/dfse_{y,acc,fbt,dec}.txt <out>/dfse_dims.svh ip/halo_dfse_mlsd/vectors/dfse/
+    PYTHONPATH=src HALO_NO_JIT=1 python rtl/gen_vectors.py rtl/vectors   # in a Halo checkout
 
-Halo's generator writes every segment; the other segments it produced were compared with
-Halo's committed `rtl/vectors/` (see cairn/LOG.md 2026-11-03). sha256 of every file is in
-`../vectors.lock.json`.
+(the snapshot was refreshed, and the `dfse_*` files added, by Halo_Serdes PR #142, which
+closed #136). dsp_ip does not regenerate them (rule 3: the consumer's export, pinned);
+sha256 of every file is in `../vectors.lock.json`.

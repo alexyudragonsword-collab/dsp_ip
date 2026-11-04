@@ -7,7 +7,7 @@ on:
 
 env:
   PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
-  HALO_SHA: 6e79c4a7e32b930a023aca6ee302ac3187eb9022
+  HALO_SHA: 19d104f3eef921cd7cfa623232fd1015812bc518   # Halo_Serdes#142 head; becomes the merge commit
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
 
 jobs:

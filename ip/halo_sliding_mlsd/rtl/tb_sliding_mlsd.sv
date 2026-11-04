@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@6e79c4a: rtl/tb_sliding_mlsd.sv
+// Vendored from Halo_Serdes@19d104f: rtl/tb_sliding_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Lockstep testbench for sliding_mlsd.sv against the vectors
 // halo_serdes.dsp.fixed_mlsd.dump_mlsd_vectors wrote. Exits non-zero on any
@@ -14,26 +14,36 @@ module tb_sliding_mlsd;
     sliding_mlsd dut ();
 
     longint gold [N];
-    string dir;
+    string dir, fn;   // fn: the file being read, for error messages
     int fd, r, errors, flips;
     longint val;
 
     initial begin
         if (!$value$plusargs("vecdir=%s", dir)) dir = ".";
-        fd = $fopen({dir, "/mlsd_v.txt"}, "r");
-        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); dut.v[i] = val; end
+        fn = {dir, "/mlsd_v.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.v[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/mlsd_dec0.txt"}, "r");
-        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); dut.dec0[i] = val; end
+        fn = {dir, "/mlsd_dec0.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.dec0[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/mlsd_levels.txt"}, "r");
-        for (int i = 0; i < NL; i++) begin r = $fscanf(fd, "%d", val); dut.levels[i] = val; end
+        fn = {dir, "/mlsd_levels.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < NL; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.levels[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/mlsd_fbt.txt"}, "r");
-        for (int i = 0; i < NL; i++) begin r = $fscanf(fd, "%d", val); dut.fbt[i] = val; end
+        fn = {dir, "/mlsd_fbt.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < NL; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); dut.fbt[i] = val; end
         $fclose(fd);
-        fd = $fopen({dir, "/mlsd_dec.txt"}, "r");
-        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); gold[i] = val; end
+        fn = {dir, "/mlsd_dec.txt"};
+        fd = $fopen(fn, "r");
+        if (fd == 0) $fatal(1, "cannot open %s", fn);
+        for (int i = 0; i < N; i++) begin r = $fscanf(fd, "%d", val); if (r != 1) $fatal(1, "short read: %s entry %0d", fn, i); gold[i] = val; end
         $fclose(fd);
 
         dut.run();

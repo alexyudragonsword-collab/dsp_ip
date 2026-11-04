@@ -13,12 +13,6 @@ vector_sets:
   - {name: pre,   source: committed, dir: vectors/pre}     # precoded 1 + D
   - {name: cal,   source: committed, dir: vectors/cal}     # ADC calibration on
 mutation_file: loop_pi.txt
-sims: [iverilog]
-sims_reason: >
-  Verilator 5.020 constant-folds `longint >>> <longint localparam>` to 0 (tools/quirks/
-  verilator_longint_shift.sv, docs/upstream-findings.md): the tb's final-calibration check
-  `dut.cgsum >>> LANE_SHIFT` reads 0 on the four CAL_ON=0 sets, so 4/5 sets report a phantom
-  mismatch with equal printed values. iverilog passes all five; the tb is upstream's verbatim.
 note: >
   Halo_Serdes closed-loop ADC-based back end (fixed-point CDR + integer LMS + PR + ADC
   calibration), vendored verbatim with its tb and Halo's five committed vector directories.

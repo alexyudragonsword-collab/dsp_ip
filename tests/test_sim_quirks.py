@@ -1,4 +1,6 @@
-"""Known simulator bugs that an ip.yaml ``sims:`` restriction works around.
+"""Known simulator bugs that an ip.yaml ``sims:`` restriction works around (none right
+now: the one IP that hit this bug was fixed upstream, Halo_Serdes#142; Verilator 5.053
+fixes the bug itself; the probe stays to track the installed Verilator).
 
 Each probe is a tiny .sv under tools/quirks/. The test pins the bug's *current* behaviour
 on the installed simulator: when a newer simulator fixes it, the test fails with the IPs
@@ -53,7 +55,8 @@ def test_verilator_longint_shift_quirk(tmp_path):
         pytest.fail(f"{ver} no longer has the longint-shift bug: drop `sims: [iverilog]` from "
                     f"{restricted} and re-run tools/lockstep.py --all --sim verilator")
     assert got[0] == 0, f"{ver}: unexpected value {got[0]} (bug changed shape?)"
-    assert "halo_adc_dsp_loop" in restricted, "the IP that hits the bug must carry sims: [iverilog]"
+    # No IP needs the restriction any more: Halo_Serdes#142 emits shift amounts as
+    # `localparam int`, which sidesteps the fold (halo_adc_dsp_loop: Verilator 5/5 sets).
 
 
 def test_sims_restriction_carries_a_reason():
