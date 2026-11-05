@@ -34,26 +34,25 @@ Max |upstream recomputed − PA_DPD doc| = 0.05 dB; max |int ref W16 (default) �
 | set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
 |---|---|---|---|---|---|---|---|---|
 | ddr_r1_w16 | 1 | hier | 1313 | 682 | 682 | 2.035 | 1631554 | 1 |
+| ddr_r1_w16 | 2 | hier | 1313 | 682 | 1364 | 4.032 | 3252426 | 1 |
+| ddr_r1_w16 | 4 | hier | 1313 | 682 | 2727 | 8.026 | 6493770 | 1 |
 | gmp510_w16 | 1 | hier | 1174 | 753 | 753 | 3.596 | 2873083 | 1 |
+| gmp510_w16 | 2 | hier | 1313 | 682 | 1364 | 7.119 | 5725426 | 1 |
+| gmp510_w16 | 4 | hier | 1313 | 682 | 2727 | 14.173 | 11434324 | 1 |
 
 Worst ABC delay per module (ps, hier rows; the largest one is the critical path, `×n` = parameterizations mapped):
 
 | set | P | `dpd_term` | `dpd_poly` | `dpd_pow` | `dpd_env` | `dpd_acc` |
 |---|---|---|---|---|---|---|
 | ddr_r1_w16 | 1 | 1313 ×15 | 1268 | 1265 | 1114 | 300 |
+| ddr_r1_w16 | 2 | 1313 ×15 | 1057 | 1210 | 1114 | 300 |
+| ddr_r1_w16 | 4 | 1313 ×15 | 835 | 1169 | 1114 | 300 |
 | gmp510_w16 | 1 | 1167 ×5 | 1174 | 1172 | 1114 | 348 |
-
-P = 2 / 4 rows **by construction** (not synthesized yet: the CI `synth-long` job produces the real points): same stages, P copies of the term bank and tree, throughput = f_est × P, area ≈ P × area(P=1); window fan-out not modelled.
-
-| set | P | mode | critical path (ps) | f_est (MHz) | throughput (MSPS) | area (mm²) | cells | P for 640 MSPS |
-|---|---|---|---|---|---|---|---|---|
-| ddr_r1_w16 | 2 | by construction | 1313 | 682 | 1364 | ≈4.070 | ≈3263108 | 1 |
-| ddr_r1_w16 | 4 | by construction | 1313 | 682 | 2727 | ≈8.140 | ≈6526216 | 1 |
-| gmp510_w16 | 2 | by construction | 1174 | 753 | 1507 | ≈7.191 | ≈5746166 | 1 |
-| gmp510_w16 | 4 | by construction | 1174 | 753 | 3013 | ≈14.383 | ≈11492332 | 1 |
+| gmp510_w16 | 2 | 1313 ×5 | 736 | 1166 | 1114 | 348 |
+| gmp510_w16 | 4 | 1313 ×5 | 658 | 1166 | 1114 | 348 |
 
 - **ddr_r1_w16**: f_est ≥ 682 MHz (hier, real term count, estimate) ⇒ **P = 1** reaches 640 MSPS (throughput = f_clk × P).
-- **gmp510_w16**: f_est ≥ 753 MHz (hier, real term count, estimate) ⇒ **P = 1** reaches 640 MSPS (throughput = f_clk × P).
+- **gmp510_w16**: f_est ≥ 682 MHz (hier, real term count, estimate) ⇒ **P = 1** reaches 640 MSPS (throughput = f_clk × P).
 
 Other IPs, each against its own required rate (`target_rate_msps` in its ip.yaml; one sample per clock, estimate, same flow and liberty as above):
 

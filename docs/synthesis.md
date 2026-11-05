@@ -148,6 +148,12 @@ container could not run long enough; those rows are gone. The measured points co
 assumption: area grows linearly in P within a few percent and the critical path does not
 depend on P (the stages are the same; only mapping noise moves it). On the runner a hier
 point takes 6–24 min, not hours: identically parameterized modules are mapped once.
+With the `sopb` script (CI run 41971912703 on `8121937`, 4–8 min per point), CI reproduced both
+local P = 1 points exactly (delay, area, cell count). Every point is ≤ 1313 ps, so P = 1
+already reaches 640 MSPS. One oddity is recorded: GMP's `dpd_term` maps to 1313 ps at P = 2 / 4
+but 1167 ps at P = 1, with the same five parameterizations — exactly DDR's 1312.79 ps. This is
+mapping noise within the ±10 % noted above, and it moves GMP's f_est from 753 to 682 MHz at
+P > 1.
 
 **Tool version and script matter.** The same RTL at P = 1 maps to a longer critical path
 with newer yosys and the `nf` script: DDR 1554 ps (0.33) → 1696 (0.52) → 1720 (0.70, pinned);

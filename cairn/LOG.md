@@ -6,7 +6,8 @@
   ABC 脚本试了 9 种：去掉 dc2 1631、`&syn2/&synch2` 更慢；一轮 `&if -g` 1112；**两轮 506**（16×16 乘 1069）；三轮 517。
 - 采纳两轮（`--abc sopb`，默认）：DDR P=1 1720 → 1313 ps（682 MHz），GMP 1693 → 1174（753 MHz），面积 +4.5 %，本机各 12 / 9 min。
 - **被推翻的判断**：① 11-03 条目与 ROADMAP 说"P=1 要每个乘法器拆两拍、加法树再切"——不需要，RTL 一行没动；② 上一条"P=1 需要改 RTL，不是流程选项"——对 yosys `synth` 选项成立，对 ABC 脚本不成立；③ 11-03 归因"yosys 0.33 的 `$alu→$lcu` 是 Brent-Kung，所以加法树不是瓶颈"只对了一半：yosys 侧是 BK，ABC 之后不是。
-- 旧数字在 `results/synth/abc_nf/`。下一步：CI `synth-long` 用 sopb 重跑 P=1/2/4 六点入表；polar_tx#16 合并后改 pin。
+- CI `synth-long`（run 41971912703）六点：本机 P=1 两点逐值复现；DDR 1313 ps 各 P，GMP 1174 / 1313 / 1313（P≥2 时 `dpd_term` 同参数映成 1313，映射噪声），面积随 P 1.98× / 3.94×。
+- 旧数字在 `results/synth/abc_nf/`。下一步：polar_tx#16 合并后改 pin。
 
 ## 2026-11-05 · 新 IP dp_cal_lms（polar_tx#16 头）；P=1 的综合流程选项全无效
 

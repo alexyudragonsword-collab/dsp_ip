@@ -66,5 +66,5 @@
  "cells": 1631554,
  "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
  "runtime_s": 710.8,
- "source": "local run with the pinned yosys, --abc sopb (tools/synth.py default since 2026-11-05)"
+ "source": "local run with the pinned yosys, --abc sopb; CI run 41971912703 (synth-long on 8121937) reproduced delay, area and cells exactly"
 }
