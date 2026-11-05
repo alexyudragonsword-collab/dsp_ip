@@ -29,7 +29,7 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ 3577685 (polar_tx PR #16, the
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ f43cd4f (merge of polar_tx PR #16, the
 commit whose ``python -m polartx.export.dp_cal_vectors`` produced
 ``ip/dp_cal_lms/vectors/``):
 

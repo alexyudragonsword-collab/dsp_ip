@@ -1,7 +1,8 @@
 # Committed vector set: polar_tx `dp_cal_vectors` (dp_cal_lms / ble_5pct)
 
-Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `357768536cb0e71d25ac9bfe08ab1683f9adc098`
-(polar_tx PR #16, head of `feat/fixed-point-dp-cal`; re-pinned to the merge commit once merged) with
+Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `f43cd4f5ff941583efd974c14c1a3c55e9707e1a`
+(the merge of polar_tx PR #16, which added the fixed-point calibrator and this exporter; the tree
+equals the PR head 3577685 the set was first exported from, and the re-export is byte-identical) with
 
     python -m polartx.export.dp_cal_vectors OUTDIR    # in a polar_tx checkout, pip install -e .
 

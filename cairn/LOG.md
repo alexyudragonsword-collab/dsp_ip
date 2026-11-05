@@ -1,5 +1,11 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-05 · polar_tx#16 合并（f43cd4f），dp_cal_lms 改 pin
+
+- 用户指示"合并到 main"后合并 polar_tx#16（merge 提交 `f43cd4f`，文件树与 PR 头 `3577685` 相同）。
+- 本库改 pin：vendored 头注释、`vendor/__init__.py`、`ci.yml` `POLAR_TX_SHA`、`ble_5pct/SOURCE.md`；在合并提交上重新导出逐字节相同，只有 SOURCE.md 的哈希变（重锁）。
+- ROADMAP 的"等用户合并"项删除。被外部阻塞仅剩两个上游分支待用户在网页上删。
+
 ## 2026-11-05 · P=1 达标：瓶颈是 ABC 的 dc2 把加法器折成链，不是 RTL
 
 - 孤立块测得进位约 37 ps/位（40 位加 1481 ps，24 位 959，20 位 757，16 位 570）——yosys 给的是 Brent-Kung，**被 ABC `dc2` 的面积改写折成了近链式**。

@@ -14,10 +14,7 @@
 
 ## 推回上游
 
-- [ ] **polar_tx#16（定点 sign-sign LMS + 金向量）等用户审阅合并**。CI 24/24 绿（3577685）。`ip/dp_cal_lms` 现在 pin 在 PR 头 `357768536cb0…`；合并后改 pin 到合并提交：
-      vendored 头注释、`ci.yml` `POLAR_TX_SHA`、`vectors/ble_5pct/SOURCE.md`、`src/dspip/vendor/__init__.py`、锁（若导出字节变化），然后 `vendor_check --strict` + `tools/check_dp_cal_export.py`。
-
-（其余无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
+（无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）已合并为 `f43cd4f` 并重新 pin；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
 
 ## 被外部阻塞
 

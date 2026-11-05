@@ -11,7 +11,7 @@
 
 ## 新 IP `dp_cal_lms` + 综合流程选项（2026-11-05）
 
-- **`ip/dp_cal_lms`**：ADPLL 两点调制的在线直通增益校准（sign-sign LMS），polar_tx 的整数参考 `cal/dp_cal_fixed.py`（polar_tx#16，本库提出、待用户合并）原样 vendor 到 `src/dspip/vendor/polartx/`；向量是 polar_tx 导出的 BLE 5 % 增益误差场景（104 004 个参考周期，`source: committed` + SOURCE.md + 锁）。
+- **`ip/dp_cal_lms`**：ADPLL 两点调制的在线直通增益校准（sign-sign LMS），polar_tx 的整数参考 `cal/dp_cal_fixed.py`（polar_tx#16，本库提出，用户指示后合并为  并改 pin）原样 vendor 到 `src/dspip/vendor/polartx/`；向量是 polar_tx 导出的 BLE 5 % 增益误差场景（104 004 个参考周期，`source: committed` + SOURCE.md + 锁）。
   RTL `dp_cal_lms.sv`：每个 valid 周期两个泄漏积分器（W+K+1 位，界由测试在饱和流上验证）、两个符号、±1 饱和计数器；`load` 复位。lockstep：Verilator 5.020 / 5.053、Icarus 12 / 14 四个仿真器都 104 004 样本 0 不匹配，mutation 测试覆盖。
 - 规则 2（开环重放记录的输入）：同步长同 ema 时定点与浮点最大差 4.4e-4（29 LSB），尾段 0.99842 vs 0.99862；相位误差少 2/4/6 位最大偏离 3.4e-3 / 1.7e-2 / 5.7e-2（单调），回归量少 7 位 1.8e-3。闭环（尾段 0.99842、EVM 3.178 %，浮点 0.99887 / 3.076 %）是 polar_tx 测的，记在 meta 里。
 - 规则 3：CI `vendor-drift` 取 polar_tx@`POLAR_TX_SHA`，vendor_check 加 polar_tx sibling，`tools/check_dp_cal_export.py` 重新导出逐字节比对（浮点摘要 1e-9 相对容差）。
