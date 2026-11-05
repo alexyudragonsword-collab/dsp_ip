@@ -1,0 +1,25 @@
+name: polar_dpd_lut
+top: polar_dpd_lut
+rtl:
+  - rtl/polar_dpd_lut.sv
+tb: rtl/tb_polar_dpd_lut.sv
+check: python
+params: {}
+probe: dspip.ip.polar_dpd_lut.ref:probe
+vector_sets:
+  - {name: wifi20, source: committed, dir: vectors/wifi20}
+compare:
+  - {golden: amp.txt, rtl: rtl_amp.txt}
+  - {golden: ph.txt, rtl: rtl_ph.txt}
+mutation_file: amp.txt
+target_rate_msps: 640    # polar_tx wifi_dtc default: one envelope sample per clock, 160 MHz x 4
+synth_params:            # tools/synth.py: ROM contents for the estimate ({set_dir} expanded)
+  AMP_INIT: "{set_dir}/dpd_amp.memh"
+  PH_INIT: "{set_dir}/dpd_ph.memh"
+latency_note: >
+  One read per clock; amp / ph for addr are registered on the next edge (LATENCY = 1).
+note: >
+  RTL of the polar DPD dual LUT polar_tx exports (export/rtl.py quantize_dpd_luts /
+  emit_dpd_rtl; the generator is vendored verbatim under src/dspip/vendor/polartx/). ROM
+  images and the address stream are polar_tx's rtl_vectors export, committed with SOURCE.md
+  and pinned by hash; the reference is the lookup itself.

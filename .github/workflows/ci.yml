@@ -9,7 +9,7 @@ env:
   PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
   HALO_SHA: aca61232855e6458109242f984a82d1d3610a806
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
-  POLAR_TX_SHA: f43cd4f5ff941583efd974c14c1a3c55e9707e1a   # merge of polar_tx#16
+  POLAR_TX_SHA: e928557e1d6c77cab891869f7eff3d5d75a7098d   # polar_tx#17 head; re-pin on merge
 
 jobs:
   lint:
@@ -159,7 +159,8 @@ jobs:
   vendor-drift:
     # Rule 3: vendored Python/RTL matches PA_DPD / Halo_Serdes / polar_tx @SHA byte for byte;
     # the committed exports are what PA_DPD@SHA + OpenDPD@SHA (exact inputs/config, codes
-    # within 1 LSB) and polar_tx@SHA (dp_cal_lms vectors, byte for byte) still produce.
+    # within 1 LSB) and polar_tx@SHA (every dp_cal_lms / dtc_dither / polar_dpd_lut set, byte
+    # for byte) still produce.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -188,10 +189,10 @@ jobs:
       - run: pip install -e ".[test,upstream]"
       - name: Vendor drift (strict)
         run: python tools/vendor_check.py --strict --siblings PA_DPD=$PWD/_siblings/PA_DPD Halo_Serdes=$PWD/_siblings/Halo_Serdes polar_tx=$PWD/_siblings/polar_tx
-      - name: Re-export the dp_cal_lms vectors with polar_tx@SHA and compare
+      - name: Re-export every polar_tx vector set (dp_cal_lms, dtc_dither, polar_dpd_lut) and compare
         run: |
           pip install -e _siblings/polar_tx
-          python tools/check_dp_cal_export.py --polar-tx _siblings/polar_tx
+          python tools/check_polartx_export.py --polar-tx _siblings/polar_tx
       - name: OpenDPD dataset (sparse)
         run: |
           git clone --filter=blob:none --sparse --depth 1 https://github.com/lab-emi/OpenDPD _siblings/OpenDPD

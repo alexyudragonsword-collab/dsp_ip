@@ -29,13 +29,15 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ f43cd4f (merge of polar_tx PR #16, the
-commit whose ``python -m polartx.export.dp_cal_vectors`` produced
-``ip/dp_cal_lms/vectors/``):
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ e928557 (head of polar_tx PR #17,
+which added the vector export entry points; #16 added the fixed-point calibrator):
 
 - ``dp_cal_fixed.py``: the bit-true sign-sign LMS two-point gain calibrator
   (``golden_trace``, ``step_codes``, ``DpCalFixedConfig``) that ``ip/dp_cal_lms``
   implements in RTL. numpy only.
+- ``export/rtl.py`` (as ``rtl.py``): polar_tx's RTL export, for ``efm1_int_golden`` (the
+  DTC dither ``ip/dtc_dither`` implements) and ``quantize_dpd_luts`` (how the
+  ``ip/polar_dpd_lut`` ROM images are made). numpy only.
 
 Everything else in dspip imports these only through ``dspip.vendor.padpd...`` /
 ``dspip.vendor.polartx...``.

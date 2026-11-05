@@ -1,0 +1,24 @@
+{
+ "command": "python -m polartx.export.dp_cal_vectors OUTDIR --variant sat_top",
+ "config": {
+  "e_bits": 10,
+  "e_frac": 12,
+  "k": 10,
+  "reg_bits": 12,
+  "reg_lsb_hz": 500.0,
+  "v_bits": 16,
+  "v_frac": 16
+ },
+ "evm_pct": 2.6685794161121117,
+ "n": 104004,
+ "scenario": {
+  "dp_gain": 1.05,
+  "mode": "event",
+  "n_bits": 2000,
+  "noise_seed": 3,
+  "preset": "ble_1m_adpll",
+  "waveform_seed": 5
+ },
+ "tail_mean": 0.99777604579788,
+ "v_start": 65535
+}

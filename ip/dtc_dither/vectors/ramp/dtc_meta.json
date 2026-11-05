@@ -1,0 +1,8 @@
+{
+ "command": "python -m polartx.export.rtl_vectors dtc_ramp OUTDIR",
+ "frac_bits": 8,
+ "n": 4096,
+ "n_bits": 11,
+ "set": "dtc_ramp",
+ "source": "phase_acc_golden(round(0.0123456789 * 2^w), w), 4096 samples"
+}

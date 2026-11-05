@@ -70,9 +70,9 @@ LIBS = {
         "label": "NanGate45 (FreePDK45) typical, OpenROAD-flow-scripts@e5cc6e7",
     },
     "sky130": {
-        "path": REPO / "third_party/sky130_fd_sc_hd/timing/sky130_fd_sc_hd__tt_025C_1v80.lib",
+        "path": REPO / "third_party/orfs_sky130/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib",
         "dff": "sky130_fd_sc_hd__dfxtp_1",
-        "label": "sky130_fd_sc_hd tt_025C_1v80, skywater-pdk-libs-sky130_fd_sc_hd@28c101f",
+        "label": "sky130_fd_sc_hd tt_025C_1v80 (OpenROAD-flow-scripts@e5cc6e7 sky130hd)",
     },
 }
 ABC_FAST = "strash\nmap\ntopo\nstime -p\n"
@@ -312,6 +312,16 @@ def synth_lines(top: str, flatten: bool, flow: str) -> list[str]:
             f"synth -top {top} -run fine:"]
 
 
+def _is_int(v) -> bool:
+    return re.fullmatch(r"-?\d+", str(v)) is not None
+
+
+def ip_synth_params(spec, set_dir: Path) -> dict:
+    """ip.yaml ``synth_params`` (e.g. ROM init files), ``{set_dir}`` expanded."""
+    return {k: str(v).replace("{set_dir}", str(set_dir))
+            for k, v in (spec.extra.get("synth_params") or {}).items()}
+
+
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,
               flatten: bool = True, top: str | None = None,
               flow: str = "default") -> tuple[str, float]:
@@ -319,8 +329,13 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
     (work / "abc.script").write_text(abc_script)
     top = top or spec.top
     srcs = " ".join(str(p) for p in spec.rtl_paths())
-    chp = " ".join(f"-chparam {k} {v}" for k, v in params.items())
-    lines = [f"read_verilog -sv -I {set_dir} {srcs}", f"hierarchy -top {top} {chp}"]
+    # integers through hierarchy -chparam; strings (e.g. ROM init files) through chparam -set,
+    # which takes a Verilog string where hierarchy -chparam cannot decode one
+    chp = " ".join(f"-chparam {k} {v}" for k, v in params.items() if _is_int(v))
+    strs = " ".join(f'-set {k} "{v}"' for k, v in params.items() if not _is_int(v))
+    lines = [f"read_verilog -sv -I {set_dir} {srcs}",
+             f"chparam {strs} {top}" if strs else "",
+             f"hierarchy -top {top} {chp}"]
     if flatten:
         lines += synth_lines(top, True, flow)
     else:
@@ -381,6 +396,8 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
            + (f"__abc_{abc}" if abc != DEFAULT_ABC else ""))
     work = RESULTS / "logs" / spec.name / tag
     base_params = {"P": P} if ("P" in spec.params and mode != "unit") else {}
+    if mode != "unit" or module == spec.top:
+        base_params.update(ip_synth_params(spec, set_dir))
     if mode == "unit":
         base_params.update(params or {})
     ff = ff_overhead_ps(lib_path, lib["dff"])

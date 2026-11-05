@@ -23,12 +23,14 @@ case "$which" in
     SUM=8d540a4d4cf6d09d27c87ad067857a9c0c2eeb023ab7a56e058cd3113db4e9b1
     ;;
   sky130)
-    REPO=https://github.com/google/skywater-pdk-libs-sky130_fd_sc_hd
-    SHA=28c101fc5db17bb6cadefa4c2a146693c685f1dc
-    DIR="$TP/sky130_fd_sc_hd"
-    SPARSE=timing
-    LIB="$DIR/timing/sky130_fd_sc_hd__tt_025C_1v80.lib"
-    SUM=""   # filled in on first verified fetch (see docs/synthesis.md)
+    # The merged .lib from the same pinned OpenROAD-flow-scripts commit (the
+    # skywater-pdk-libs repo ships per-cell .lib.json only, no merged .lib).
+    REPO=https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+    SHA=e5cc6e799f5ddf36e6bdf2d8c5db73373b88f52c
+    DIR="$TP/orfs_sky130"
+    SPARSE=flow/platforms/sky130hd/lib
+    LIB="$DIR/flow/platforms/sky130hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib"
+    SUM=ec0e1067a35c8bf20b11e58d1e8ac53326067e4dac84a125cc1b917a3518d0d9
     ;;
   *) echo "unknown library $which" >&2; exit 2;;
 esac

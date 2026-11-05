@@ -1,0 +1,69 @@
+{
+ "kind": "estimate",
+ "ip": "dpd_poly",
+ "set": "ddr_r1_w16",
+ "P": 1,
+ "mode": "hier",
+ "liberty": {
+  "name": "sky130",
+  "label": "sky130_fd_sc_hd tt_025C_1v80 (OpenROAD-flow-scripts@e5cc6e7 sky130hd)",
+  "sha256": "ec0e1067a35c8bf20b11e58d1e8ac53326067e4dac84a125cc1b917a3518d0d9"
+ },
+ "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
+ "yosys_pin": "oss-cad-suite 2026-10-25",
+ "flow": "default",
+ "abc": "sopb",
+ "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; strash; &get -n; &st; &if -g -K 6; &st; &if -g -K 6; &st; &dch -f; &nf -D 1000; &put; topo; stime -p",
+ "target_ps": null,
+ "ff": {
+  "cell": "sky130_fd_sc_hd__dfxtp_1",
+  "t_cq_ps": 437.6,
+  "t_setup_ps": 199.8,
+  "total_ps": 637.3
+ },
+ "n_terms_full": 140,
+ "points": [
+  {
+   "label": "hier",
+   "params": {
+    "P": 1
+   },
+   "delay_ps": 6850.3,
+   "runtime_s": 855.2,
+   "area_um2": 9933176.703999,
+   "cells": 1445876,
+   "flops": 63108
+  }
+ ],
+ "modules": {
+  "dpd_env": {
+   "delay_ps": 6850.3,
+   "instances": 1
+  },
+  "dpd_term": {
+   "delay_ps": 5476.5,
+   "instances": 15
+  },
+  "dpd_pow": {
+   "delay_ps": 4522.18,
+   "instances": 1
+  },
+  "dpd_poly": {
+   "delay_ps": 4028.85,
+   "instances": 1
+  },
+  "dpd_acc": {
+   "delay_ps": 1401.31,
+   "instances": 1
+  }
+ },
+ "delay_ps": 6850.3,
+ "period_ps": 7487.6,
+ "f_est_mhz": 133.6,
+ "throughput_est_msps": 133.6,
+ "p_for_640msps": 5,
+ "area_um2": 9933176.703999,
+ "cells": 1445876,
+ "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
+ "runtime_s": 855.2
+}

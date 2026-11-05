@@ -1,5 +1,24 @@
 # CHANGELOG（按里程碑）
 
+## 两个 polar_tx 新 IP、dp_cal_lms 覆盖、指纹全覆盖、时序余量与 sky130 交叉（2026-11-05）
+
+- **`ip/dtc_dither`**（新）：开环 DTC 相位字的一阶误差反馈（EFM1）抖动，参考是 polar_tx `export/rtl.py` 的 `efm1_int_golden`（原样 vendor）。
+  - 两组向量：随机 2048 字；4096 样本的回绕相位累加器斜坡。
+  - lockstep 在四个仿真器上都是 0 不匹配。
+  - 规则 2：在斜坡上与截断比，平均误差 0.000 vs −0.498 LSB，64 样本滑动平均 rms 0.0065 vs 0.499 LSB；小数位宽扫描 2/4/8/12。
+  - 综合 363 ps / 222 µm²，相对 640 MSPS 余量 3.0×。
+- **`ip/polar_dpd_lut`**（新）：极坐标 DPD 双 LUT。ROM 镜像与地址流来自 polar_tx：全地址一遍，再接 WiFi-20 包络地址，共 8960 次读。
+  - 四个仿真器 0 不匹配。
+  - 规则 2：幅度、相位码与浮点 LUT 的最大差都是 0.50 LSB；位宽扫描 8–14。
+  - 综合（带 ROM 内容，`ip.yaml` `synth_params` 经 `chparam -set` 传入）422 ps / 645 µm²，余量 2.7×。
+- **`ip/dp_cal_lms`** 加三组向量：ble_m5pct（向上收敛）、sat_top（16 位寄存器，39 % 周期顶在上限）、narrow（E 4 位 / R 5 位 / K 8）。四个仿真器、四组都是 0 不匹配。
+- 上游：polar_tx#17 新增 `export/rtl_vectors.py` 与 `dp_cal_vectors --variant`（默认集逐字节不变），**等用户合并**。本库按 PR 头 `e928557` pin 全部 polar_tx 文件。
+  `tools/check_polartx_export.py` 取代 `check_dp_cal_export.py`，在 CI 重新导出全部 7 组 polar_tx 向量逐字节比对。
+- **指纹全覆盖**：`tools/fingerprint.py record` 覆盖 `ip/` 下每个 IP。有 Python 参考的记参考输出，Halo 这类记提交金标的哈希；共 250 值，6 s；新增测试保证新 IP 自动被覆盖。
+- **时序余量换阶数：不换**。把 env / pow / term 退回重分级前的版本，在 `sopb` 下分别是 1403 / 1375 / 1543–1770 ps（上限 1409），term 破 P=1，面积只省 1–3 %。
+- **sky130 交叉**（`results/synth/sky130/`，不入表）：DDR / GMP P=1 都是 6850 ps → 134 MHz，需要 P=5，面积 9.93 / 17.57 mm²。该库下 `dpd_env` 开方级最慢，与 NanGate45 的排序不同。
+  `get_liberty.sh sky130` 原来指向的仓库只有逐单元 `.lib.json`，从未能用；已改为同一 pin 的 ORFS sky130hd 合并 `.lib`（sha256 pin）。
+
 ## P = 1 达 640 MSPS：ABC 脚本加 SOP 平衡（2026-11-05）
 
 - **`tools/synth.py --abc sopb`（新默认）**：在原 `&nf` 流程的 `dc2` 之后、`&dch -f; &nf` 之前加两轮 `&if -g -K 6`（SOP 平衡）。根因：`dc2` 按节点数改写，把 yosys 的 Brent-Kung `$lcu` 折成近链式进位（约 37 ps/位）。

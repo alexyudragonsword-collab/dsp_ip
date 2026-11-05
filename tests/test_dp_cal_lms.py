@@ -29,10 +29,28 @@ def vec():
     return cfg, v0, e, r, golden
 
 
-def test_vendored_reference_reproduces_the_committed_values(vec):
-    _cfg, _v0, e, _r, golden = vec
-    assert e.size == golden.size > 100_000
-    assert np.array_equal(reference_values(SET), golden)
+SETS = ["ble_5pct", "ble_m5pct", "sat_top", "narrow"]
+
+
+@pytest.mark.parametrize("name", SETS)
+def test_vendored_reference_reproduces_the_committed_values(name):
+    d = SET.parent / name
+    golden = np.loadtxt(d / "dp_cal_value.txt", dtype=np.int64)
+    assert golden.size > 100_000
+    assert np.array_equal(reference_values(d), golden)
+
+
+def test_sets_cover_both_directions_saturation_and_narrow_widths():
+    """The four sets are not four copies: one slews down, one up, one sits on the value
+    register's ceiling, one runs other widths and K through the same RTL."""
+    cfgs = {n: load_set(SET.parent / n) for n in SETS}
+    g = {n: np.loadtxt(SET.parent / n / "dp_cal_value.txt", dtype=np.int64) for n in SETS}
+    assert g["ble_5pct"][-1] < cfgs["ble_5pct"][1] and g["ble_m5pct"][-1] > cfgs["ble_m5pct"][1]
+    c, v0 = cfgs["sat_top"][0], cfgs["sat_top"][1]
+    assert v0 == c.v_max and 0.1 < np.mean(g["sat_top"] == c.v_max) < 0.9
+    n = cfgs["narrow"][0]
+    assert (n.e_bits, n.reg_bits, n.k) != (cfgs["ble_5pct"][0].e_bits,
+                                          cfgs["ble_5pct"][0].reg_bits, cfgs["ble_5pct"][0].k)
 
 
 def test_dims_match_the_meta(vec):
@@ -102,23 +120,23 @@ def test_probe_reports_the_registers():
 
 
 def test_export_check_catches_a_changed_code(tmp_path):
-    """tools/check_dp_cal_export.py (CI vendor-drift) is not vacuous: one changed value
+    """tools/check_polartx_export.py (CI vendor-drift) is not vacuous: one changed value
     code or one changed float digit in the meta is reported."""
     import importlib.util
     import shutil
 
     spec = importlib.util.spec_from_file_location(
-        "check_dp_cal_export", REPO / "tools" / "check_dp_cal_export.py")
+        "check_polartx_export", REPO / "tools" / "check_polartx_export.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     fresh = tmp_path / "fresh"
     shutil.copytree(SET, fresh)
-    assert mod.compare(fresh) == []
+    assert mod.compare(fresh, SET) == []
     lines = (fresh / "dp_cal_value.txt").read_text().splitlines()
     lines[777] = str(int(lines[777]) + 1)
     (fresh / "dp_cal_value.txt").write_text("\n".join(lines) + "\n")
     meta = json.loads((fresh / "dp_cal_meta.json").read_text())
     meta["evm_pct"] *= 1.001
     (fresh / "dp_cal_meta.json").write_text(json.dumps(meta))
-    probs = mod.compare(fresh)
+    probs = mod.compare(fresh, SET)
     assert any("dp_cal_value.txt" in p for p in probs) and any("evm_pct" in p for p in probs)

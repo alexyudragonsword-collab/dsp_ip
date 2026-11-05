@@ -1,0 +1,22 @@
+name: dtc_dither
+top: dtc_efm1
+rtl:
+  - rtl/dtc_efm1.sv
+tb: rtl/tb_dtc_efm1.sv
+check: python
+params: {}
+probe: dspip.ip.dtc_dither.ref:probe
+vector_sets:
+  - {name: random, source: committed, dir: vectors/random}
+  - {name: ramp, source: committed, dir: vectors/ramp}
+compare:
+  - {golden: code.txt, rtl: rtl_code.txt}
+target_rate_msps: 640    # polar_tx wifi_dtc default: one DTC word per baseband sample, 160 MHz x 4
+latency_note: >
+  One update per valid cycle; the code for phase word n is registered on the edge that
+  consumes it (LATENCY = 1). rst clears the error register, as efm1_int_golden starts at 0.
+note: >
+  Bit-true RTL of polar_tx export/rtl.py efm1_int_golden (vendored verbatim under
+  src/dspip/vendor/polartx/): the first-order error-feedback dither of an open-loop DTC's
+  phase word. Vectors are polar_tx's rtl_vectors export (random words, and a wrapping
+  phase-accumulator ramp), committed with SOURCE.md and pinned by hash.

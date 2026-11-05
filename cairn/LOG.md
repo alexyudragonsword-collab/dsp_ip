@@ -1,5 +1,15 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-05 · 新 IP dtc_dither / polar_dpd_lut，dp_cal_lms 加三组，指纹全覆盖；余量不换阶数；sky130 交叉
+
+- polar_tx#17：`export/rtl_vectors.py` + `dp_cal_vectors --variant`，CI 待看，**等用户合并**。本库 pin 在 PR 头 `e928557`。
+- 新 IP 第一次跑就全过：dtc_dither 2 组、polar_dpd_lut 1 组、dp_cal_lms 新 3 组，Verilator 5.020/5.053、Icarus 12/14 全 0 不匹配。
+- 综合（NanGate45，sopb）：dtc_dither 363 ps / 222 µm²；polar_dpd_lut 422 ps / 645 µm²，ROM 内容经 `chparam -set` 传入（`hierarchy -chparam` 不认字符串、yosys 不认 `parameter string`）。
+- **被推翻的判断**：① "余量可以换回阶数" —— 旧版本在 sopb 下 env 1403、pow 1375、term 1543/1770 ps，term 破线，面积只省 1–3 %，不换；② "sky130 早已接好" —— `get_liberty.sh sky130` 指向的仓库没有合并 `.lib`，从未能用，改用 ORFS sky130hd。
+- sky130 P=1：DDR / GMP 都是 6850 ps（`dpd_env`）→ 134 MHz → P=5；排序与 NanGate45 不同，开方级最慢。
+- 布局布线被阻塞：没有 OpenROAD；litex-hub 预编译包的下载执行被权限策略拒绝，等用户决定（ROADMAP）。
+- 下一步：polar_tx#17 合并后改 pin。
+
 ## 2026-11-05 · polar_tx#16 合并（f43cd4f），dp_cal_lms 改 pin
 
 - 用户指示"合并到 main"后合并 polar_tx#16（merge 提交 `f43cd4f`，文件树与 PR 头 `3577685` 相同）。

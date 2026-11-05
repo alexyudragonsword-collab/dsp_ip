@@ -37,7 +37,7 @@ stat -liberty <lib>
 - **Library**: NanGate45 (FreePDK45) typical corner, `NangateOpenCellLibrary_typical.lib`
   from OpenROAD-flow-scripts @ `e5cc6e7`, sha256 `8d540a4d…` (fetched by
   `tools/get_liberty.sh`, pinned and verified). sky130_fd_sc_hd is wired as an alternative
-  (`--lib sky130`) but every committed number is NanGate45.
+  (`--lib sky130`, cross-check below) but every rendered number is NanGate45.
 - **Critical path**: ABC `stime` after liberty mapping — the longest combinational path
   between registers with the library's cell delays, **no wire load**.
 - **ABC script `sopb`** (`--abc`, the default since 2026-11-05): yosys's liberty flow below
@@ -161,6 +161,44 @@ GMP 1554 → 1697 → 1693 (`results/synth/yosys033/`, `cairn/LOG.md`). Area mov
 The pinned 0.70 with the `sopb` script then gives 1313 / 1174 ps (`results/synth/abc_nf/` holds
 the `nf` points). Compare rows only within one version and one script — which is why both
 are pinned.
+
+## Timing slack at P = 1: give stages back? (2026-11-05, no)
+
+With `sopb`, P = 1 has 682 MHz against 640 needed (1313 ps vs 1409 allowed). The question was
+whether the slack could pay for fewer pipeline stages, i.e. less latency and area, by putting
+back the stage versions from before the 2026-11-03 re-pipelining (`81b31fc^`: env squares and
+sum in one stage, pow with a³ = a²·a and a⁴ = a²·a², term product and add/sub in one stage).
+Unit probes with `sopb` (NanGate45, ps / µm²; current version in brackets):
+
+| module | before re-pipelining | current |
+|---|---|---|
+| `dpd_env` | 1403 / 7411 | (1223 / 7512) |
+| `dpd_pow` (Q2=15, Q3=31, Q4=46) | 1375 / 10384 | (1166 / 10210) |
+| `dpd_term` (K1=1, Q_PAIR=15, SH=14) | 1543 / 14246 | (1255 / 14679) |
+| `dpd_term` (defaults) | 1770 / 12949 | (1231 / 13285) |
+
+`dpd_term` would break P = 1 again. `dpd_env` and `dpd_pow` would sit at the limit with no
+room for the ±10 % in-situ noise. The area saved is 1–3 % per module, and `dpd_pow` even grows.
+The three extra cycles stay; nothing was changed.
+
+## Second library: sky130_fd_sc_hd (cross-check, not rendered)
+
+`--lib sky130` (the merged `sky130_fd_sc_hd__tt_025C_1v80.lib` from the same pinned
+OpenROAD-flow-scripts commit, sha256 `ec0e1067…`; `tools/get_liberty.sh sky130`), same RTL,
+same `sopb` script, P = 1 hier. The results are in `results/synth/sky130/`; the test keeps
+one liberty in the rendered table.
+
+| set | critical path | DFF t_cq + t_setup | f_est | P for 640 MSPS | area | cells |
+|---|---|---|---|---|---|---|
+| ddr_r1_w16 | 6850 ps (`dpd_env`) | 637 ps | 134 MHz | 5 | 9.93 mm² | 1.45 M |
+| gmp510_w16 | 6850 ps (`dpd_env`) | 637 ps | 134 MHz | 5 | 17.57 mm² | 2.56 M |
+
+Per module (DDR, ps): `dpd_env` 6850, `dpd_term` 5476, `dpd_pow` 4522, top tree 4029,
+`dpd_acc` 1401. That is 4.2–6.1× NanGate45 — a 130 nm library against a 45 nm one, as
+expected in magnitude. The ordering differs, though: in sky130 the square-root stages of
+`dpd_env` (an 18-bit compare + subtract + select per stage) are the slowest, not the
+multipliers. A sky130 implementation would split those first. This is recorded here, not
+acted on (no sky130 target).
 
 ## How to read `results/synth/*.json`
 

@@ -1,4 +1,4 @@
-# Vendored from polar_tx@f43cd4f: src/polartx/cal/dp_cal_fixed.py
+# Vendored from polar_tx@e928557: src/polartx/cal/dp_cal_fixed.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Fixed-point sign-sign LMS for the two-point direct-path gain (bit-true).
 

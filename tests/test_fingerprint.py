@@ -64,3 +64,23 @@ def test_record_dpd_poly_is_deterministic(fp):
     b = fp.record_dpd_poly()
     assert fp.compare(a, b)[1] == [] and not fp.raised(a)
     assert a["ddr_r1/w16/pw16/f0"]["n"] == 4096
+
+
+def test_every_ip_is_fingerprinted(fp):
+    """A new IP is covered without touching the tool: it either has a recorder (a Python
+    reference dsp_ip runs) or committed goldens to hash; record_committed must work for
+    every IP that has no recorder."""
+    from dspip.ipspec import all_ips
+
+    for spec in all_ips():
+        if spec.name in fp.RECORDERS:
+            continue
+        rec = fp.record_committed(spec.name)
+        assert set(rec) == {vs.name for vs in spec.vector_sets}
+        assert all(rec[s] for s in rec), spec.name
+
+
+def test_new_recorders_are_stable(fp):
+    for name in ("dp_cal_lms", "dtc_dither", "polar_dpd_lut"):
+        a, b = fp.RECORDERS[name](), fp.RECORDERS[name]()
+        assert a == b and a and "error" not in json.dumps(a)
