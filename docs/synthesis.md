@@ -56,6 +56,24 @@ stat -liberty <lib>
   `dpd_pow` (1837/1883 ps), `dpd_env` (1789) and `dpd_term` (1734) set the path — the
   multiplier stages. `--mode unit --module <m>` synthesizes one leaf module alone in seconds
   so such a claim can be checked before it is written down.
+- **Coarse arithmetic flow** (`--flow`, 2026-11-05): `default` is plain `synth`, and every
+  committed number uses it (the test requires one flow). The alternatives are 0.70's
+  `synth -booth` (radix-4 Booth multipliers) and `-arith_tree` (carry-save trees of adder
+  chains / `$macc`); the `*_prefix` variants run synth's coarse stage by hand with
+  `arith_tree -final prefix`. Tried on the P = 1 critical stages as unit probes
+  (`results/synth/units/flows/`, NanGate45, ps / µm²):
+
+  | module | default | booth | arith | arith_prefix | booth_arith | booth_arith_prefix |
+  |---|---|---|---|---|---|---|
+  | `dpd_term` (K1=1, Q_PAIR=15, SH=14) | 1652 / 14165 | 2086 / 11109 | 1652 / 14165 | 1652 / 14165 | 2086 / 11109 | 2086 / 11109 |
+  | `dpd_term` (defaults) | 1604 / 12820 | 2126 / 9925 | 1604 / 12820 | 1604 / 12820 | 2126 / 9925 | 2126 / 9925 |
+  | `dpd_pow` (Q2=15, Q3=31, Q4=46) | 1693 / 9911 | 1870 / 9353 | 1693 / 9976 | 1719 / 9981 | 1898 / 9399 | 1960 / 9423 |
+  | `dpd_env` | 1580 / 7255 | 1675 / 6721 | 1580 / 7255 | 1580 / 7255 | 1675 / 6721 | 1675 / 6721 |
+
+  None helps the critical path: Booth trades 6–23 % area for 95–520 ps more delay;
+  `arith_tree` finds no adder chain to compress (each stage is one `$mul` plus one add,
+  and `$mul` is left alone), and forcing a prefix final adder is equal or slower. So P = 1
+  needs RTL changes, not flow options.
 - **Frequency**: `f_est = 1 / (critical path + t_cq + t_setup)`, the flop terms read from
   the library's `DFF_X1` tables (median entries: 113 ps + 41 ps).
 - **Area**: `stat -liberty` total cell area (µm²), flops included.

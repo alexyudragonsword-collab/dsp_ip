@@ -1,5 +1,14 @@
 # CHANGELOG（按里程碑）
 
+## 新 IP `dp_cal_lms` + 综合流程选项（2026-11-05）
+
+- **`ip/dp_cal_lms`**：ADPLL 两点调制的在线直通增益校准（sign-sign LMS），polar_tx 的整数参考 `cal/dp_cal_fixed.py`（polar_tx#16，本库提出、待用户合并）原样 vendor 到 `src/dspip/vendor/polartx/`；向量是 polar_tx 导出的 BLE 5 % 增益误差场景（104 004 个参考周期，`source: committed` + SOURCE.md + 锁）。
+  RTL `dp_cal_lms.sv`：每个 valid 周期两个泄漏积分器（W+K+1 位，界由测试在饱和流上验证）、两个符号、±1 饱和计数器；`load` 复位。lockstep：Verilator 5.020 / 5.053、Icarus 12 / 14 四个仿真器都 104 004 样本 0 不匹配，mutation 测试覆盖。
+- 规则 2（开环重放记录的输入）：同步长同 ema 时定点与浮点最大差 4.4e-4（29 LSB），尾段 0.99842 vs 0.99862；相位误差少 2/4/6 位最大偏离 3.4e-3 / 1.7e-2 / 5.7e-2（单调），回归量少 7 位 1.8e-3。闭环（尾段 0.99842、EVM 3.178 %，浮点 0.99887 / 3.076 %）是 polar_tx 测的，记在 meta 里。
+- 规则 3：CI `vendor-drift` 取 polar_tx@`POLAR_TX_SHA`，vendor_check 加 polar_tx sibling，`tools/check_dp_cal_export.py` 重新导出逐字节比对（浮点摘要 1e-9 相对容差）。
+- 综合（estimate，NanGate45）：2216 ps → 422 MHz、1100 µm²、794 单元，相对 32 MHz 参考周期余量 13.2×；`docs/results.md` 新增"其他 IP"表，按各 IP 的 `target_rate_msps` 比，不套 dpd_poly 的 640 MSPS。
+- **`tools/synth.py --flow`**（default / booth / arith / arith_prefix / booth_arith / booth_arith_prefix）：在 P=1 的关键模块上全试过，没有一个缩短关键路径（表在 `docs/synthesis.md`）；入表数字仍是 default，测试要求单一流程。
+
 ## 工具链与 CI 卫生（2026-11-05）
 
 - **lockstep 两套仿真器**：新 `src/dspip/sims.py`（`DSPIP_SIM_BIN=<dir>` 取该目录的 verilator/iverilog/vvp，否则 PATH）；`tools/lockstep.py --sim-bin DIR`，每个报告点记 `sim_version`；`tools/toolchain.sh` 同一规则。

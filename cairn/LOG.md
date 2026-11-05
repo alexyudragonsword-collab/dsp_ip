@@ -1,5 +1,13 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-05 · 新 IP dp_cal_lms（polar_tx#16 头）；P=1 的综合流程选项全无效
+
+- polar_tx#16：`FixedSignSignLMS` + 导出器，CI 24/24 绿，**等用户合并**（我不合）。本库按 PR 头 `3577685` vendor 并提交向量。
+- `dp_cal_lms` RTL 第一次跑就 104 004 样本 0 不匹配（四个仿真器）；综合 2216 ps / 422 MHz / 1100 µm²（estimate），要求 32 MHz。
+- 规则 2 开环：同步长时定点–浮点最大差 4.4e-4；拿上游浮点自己的 mu=2e-5、ema=1e-3 开环重放会差 0.017——**这不是定点误差**：重放的误差信号是定点增益轨迹产生的，浮点步长大就超调；这种比较只能闭环做（polar_tx 已做）。
+- 流程选项（unit 探针，ps）：term 1652 → booth 2086 / arith 1652 / prefix 1652；pow 1693 → 1870 / 1693 / 1719；env 1580 → 1675 / 1580 / 1580。**被推翻的判断**：计划里"先试 `-booth` / `-arith_tree -final prefix`，可能够"——不够，booth 更慢（面积 −6~−23 %），arith_tree 不碰单个 `$mul`。
+- 下一步：2b 改 RTL（乘法器拆两拍、树按级收窄/拆加法）；polar_tx#16 合并后改 pin。
+
 ## 2026-11-05 · 工具链与 CI 卫生：lockstep 跑两套仿真器、quirk 按版本、sibling 认 pin、Actions 升 node24
 
 - `DSPIP_SIM_BIN` / `lockstep.py --sim-bin`：bundle（Verilator 5.053 devel rev v5.052-586、Icarus 14.0 devel）本机 verilator 27/27、iverilog 27/27 点 0 不匹配；apt（5.020 / 12）照旧。CI lockstep 矩阵 distro + bundle。

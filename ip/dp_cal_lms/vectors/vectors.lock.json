@@ -1,0 +1,15 @@
+{
+ "sets": {
+  "ble_5pct": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "7db76aa0a49786aa4d2e0fd8673ecd9f1cd3646d02579805590af9139dacce00",
+    "dp_cal_dims.svh": "494619ba03993763f4cf9ac62b50ce1fc028fdb9fc5bd4b6a295858a8b546fcc",
+    "dp_cal_err.txt": "dda7860f1b05b1cad31947d590f24e7a348fe1cea18c807b9f1121b230fb7c0a",
+    "dp_cal_meta.json": "e334aa4e0b62c58db926e1ebd57cabeb8d99723d03c2699bd3bc692d573ba45c",
+    "dp_cal_reg.txt": "500c7aa68058038bb5f78a4ef4dd75a4abb6efc3a8760c5d56a89891de3e5207",
+    "dp_cal_value.txt": "2b9f5c5c1f3e6faf3ba068c8ee5c43a5e5ea86a57d88f4012cbbce17bd77b56b"
+   }
+  }
+ }
+}

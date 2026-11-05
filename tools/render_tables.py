@@ -146,10 +146,38 @@ def synth_section() -> str:
     return "\n".join(lines)
 
 
+def other_ips_section() -> str:
+    """IPs other than dpd_poly that declare ``target_rate_msps`` in ip.yaml: one row per
+    synthesis JSON, against that IP's own rate (not dpd_poly's 640 MSPS)."""
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    lines = []
+    for p in sorted(SYNTH.glob("*.json")):
+        r = json.loads(p.read_text())
+        if r.get("ip") in (None, "dpd_poly") or not (IP_ROOT / r["ip"] / "ip.yaml").exists():
+            continue
+        target = load_ipspec(IP_ROOT / r["ip"]).extra.get("target_rate_msps")
+        if target is None:
+            continue
+        lines.append(f"| `{r['ip']}` | {r['set']} | {r['mode']} | {r['delay_ps']:.0f} | "
+                     f"{r['f_est_mhz']:.0f} | {target} | {r['f_est_mhz'] / target:.1f}× | "
+                     f"{r['area_um2']:.0f} | {r['cells']} |")
+    if not lines:
+        return ""
+    return "\n" + "\n".join([
+        "Other IPs, each against its own required rate (`target_rate_msps` in its ip.yaml; "
+        "one sample per clock, estimate, same flow and liberty as above):",
+        "",
+        "| IP | set | mode | critical path (ps) | f_est (MHz) | required (MSPS) | margin | area (µm²) | cells |",
+        "|---|---|---|---|---|---|---|---|---|",
+        *lines, ""]) + "\n"
+
+
 def render() -> str:
     return ("# Results (generated — do not edit; `python tools/render_tables.py`)\n\n"
             "## Fixed-point vs float: ACLR (rule 2)\n\n" + aclr_section()
-            + "\n## Parallelism × frequency × area (rule 5)\n\n" + synth_section())
+            + "\n## Parallelism × frequency × area (rule 5)\n\n" + synth_section()
+            + other_ips_section())
 
 
 def main(argv=None) -> int:

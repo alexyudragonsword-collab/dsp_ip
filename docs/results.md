@@ -53,3 +53,10 @@ Worst ABC delay per module (ps, hier rows; the largest one is the critical path,
 
 - **ddr_r1_w16**: f_est ≥ 534 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
 - **gmp510_w16**: f_est ≥ 541 MHz (hier, real term count, estimate) ⇒ **P = 2** reaches 640 MSPS (throughput = f_clk × P).
+
+Other IPs, each against its own required rate (`target_rate_msps` in its ip.yaml; one sample per clock, estimate, same flow and liberty as above):
+
+| IP | set | mode | critical path (ps) | f_est (MHz) | required (MSPS) | margin | area (µm²) | cells |
+|---|---|---|---|---|---|---|---|---|
+| `dp_cal_lms` | ble_5pct | full | 2216 | 422 | 32 | 13.2× | 1100 | 794 |
+

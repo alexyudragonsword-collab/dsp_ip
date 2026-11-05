@@ -1,0 +1,22 @@
+name: dp_cal_lms
+top: dp_cal_lms
+rtl:
+  - rtl/dp_cal_lms.sv
+tb: rtl/tb_dp_cal_lms.sv
+check: python
+params: {}
+probe: dspip.ip.dp_cal_lms.ref:probe
+vector_sets:
+  - {name: ble_5pct, source: committed, dir: vectors/ble_5pct}
+compare:
+  - {golden: dp_cal_value.txt, rtl: rtl_value.txt}
+target_rate_msps: 32     # one update per BLE reference cycle (fref = 32 MHz)
+latency_note: >
+  One update per valid cycle; the value register v holds the code after the update on the
+  next clock edge (the tb samples it 1 ns after the edge). load restarts the calibrator
+  (v <= v_load, both centering accumulators <= 0), as the reference's `.value =` setter.
+note: >
+  Bit-true RTL of polar_tx cal/dp_cal_fixed.py (FixedSignSignLMS, vendored verbatim under
+  src/dspip/vendor/polartx/), the online two-point direct-path gain calibrator of the
+  ADPLL two-point modulator. Vectors are polar_tx's export of the BLE 5 % gain-error
+  scenario (104 004 reference cycles), committed with SOURCE.md and pinned by hash.

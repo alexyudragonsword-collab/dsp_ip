@@ -273,8 +273,35 @@ def keep_modules(spec) -> list[str]:
     return own
 
 
+# Coarse-stage arithmetic mapping (yosys 0.70 `synth`). "default" is plain `synth`; the
+# others restructure multipliers / adder chains before techmap: radix-4 Booth partial
+# products (`-booth`) and carry-save trees with one final adder (`arith_tree`, whose final
+# adder is `auto` under `synth -arith_tree` or forced to a parallel-prefix one here).
+FLOWS = ("default", "booth", "arith", "arith_prefix", "booth_arith", "booth_arith_prefix")
+
+
+def synth_lines(top: str, flatten: bool, flow: str) -> list[str]:
+    """The `synth` part of the yosys script for one flow."""
+    if flow not in FLOWS:
+        raise ValueError(f"unknown flow {flow!r}; one of {FLOWS}")
+    fl = " -flatten" if flatten else ""
+    booth = flow.startswith("booth")
+    if not flow.endswith("prefix"):
+        opts = (" -booth" if booth else "") + (" -arith_tree" if "arith" in flow else "")
+        return [f"synth -top {top}{fl}{opts}"]
+    # `synth -arith_tree` cannot pass -final: run the coarse stage by hand (the 0.70 script,
+    # `help synth`) with `arith_tree -final prefix`, then the rest of synth from `fine`.
+    return [f"synth -top {top}{fl} -run begin:coarse",
+            "proc", "check", "flatten" if flatten else "", "opt_expr", "check", "opt_clean",
+            "opt -nodffe -nosdff", "fsm", "opt", "wreduce", "peepopt", "opt_clean",
+            "booth" if booth else "", "alumacc", "arith_tree -final prefix", "share", "opt",
+            "memory -nomap", "opt_clean",
+            f"synth -top {top} -run fine:"]
+
+
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,
-              flatten: bool = True, top: str | None = None) -> tuple[str, float]:
+              flatten: bool = True, top: str | None = None,
+              flow: str = "default") -> tuple[str, float]:
     work.mkdir(parents=True, exist_ok=True)
     (work / "abc.script").write_text(abc_script)
     top = top or spec.top
@@ -282,13 +309,12 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
     chp = " ".join(f"-chparam {k} {v}" for k, v in params.items())
     lines = [f"read_verilog -sv -I {set_dir} {srcs}", f"hierarchy -top {top} {chp}"]
     if flatten:
-        lines.append(f"synth -top {top} -flatten")
+        lines += synth_lines(top, True, flow)
     else:
         keep = " ".join(f"*{m}*" for m in keep_modules(spec))
         lines += ["proc",
                   f"setattr -mod -set keep_hierarchy 1 {keep}" if keep else "",
-                  "flatten",
-                  f"synth -top {top}"]
+                  "flatten"] + synth_lines(top, False, flow)
     lines += [
         f"dfflibmap -liberty {lib}",
         f"abc -liberty {lib} -script {work / 'abc.script'}",
@@ -312,7 +338,8 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
 
 def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: int | None,
                 dch: bool, target_ps: float | None = None, legacy: bool = False,
-                module: str | None = None, params: dict | None = None) -> dict:
+                module: str | None = None, params: dict | None = None,
+                flow: str = "default") -> dict:
     """One estimate. ``mode == "unit"`` synthesizes ``module`` (one of the IP's own leaf
     modules) alone as the top with its default parameters plus ``params`` (``-chparam``):
     minutes instead of hours, for finding and fixing the stage that sets the critical path."""
@@ -323,7 +350,8 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     if not lib_path.exists():
         raise FileNotFoundError(f"{lib_path} missing: run tools/get_liberty.sh {lib_name}")
     set_dir = spec.set_dir(set_name)
-    if not (set_dir / "dims_params.svh").exists() and not (set_dir / "dims.svh").exists():
+    if not any(set_dir.glob("*.svh")):
+        # generated set not built yet (a committed set ships its own *_dims.svh)
         gen = spec.load_callable(spec.generator)
         gen(set_name, set_dir)
     n_full = None
@@ -335,7 +363,8 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     ptag = "_".join(f"{k}{v}" for k, v in sorted((params or {}).items()))
     tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + (f"__{module}" if module else "")
            + (f"__{ptag}" if ptag else "") + ("_legacy" if legacy else "")
-           + ("_dch" if dch else "") + (f"_D{int(target_ps)}" if target_ps else ""))
+           + ("_dch" if dch else "") + (f"_D{int(target_ps)}" if target_ps else "")
+           + (f"__flow_{flow}" if flow != "default" else ""))
     work = RESULTS / "logs" / spec.name / tag
     base_params = {"P": P} if ("P" in spec.params and mode != "unit") else {}
     if mode == "unit":
@@ -345,6 +374,7 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
            "liberty": {"name": lib_name, "label": lib["label"],
                        "sha256": hashlib.sha256(lib_path.read_bytes()).hexdigest()},
            "yosys": yosys_version(), "yosys_pin": YOSYS_PIN if yosys_version() == YOSYS_PIN_VERSION else None,
+           "flow": flow,
            "abc_script": script.strip().replace("\n", "; "),
            "target_ps": target_ps,
            "ff": ff, "n_terms_full": n_full, "points": []}
@@ -361,7 +391,8 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
         points.append((f"terms{2 * t}", {"N_TERMS": 2 * t}))
     for label, extra in points:
         log, dt = run_yosys(spec, set_dir, lib_path, {**base_params, **extra}, work / label,
-                            script, flatten=(mode != "hier"), top=module if mode == "unit" else None)
+                            script, flatten=(mode != "hier"), top=module if mode == "unit" else None,
+                            flow=flow)
         delays = parse_abc_delay(log)
         st = parse_stat(log)
         sj = parse_stat_json(work / label / "stat.json")
@@ -431,6 +462,8 @@ def main(argv=None) -> int:
     ap.add_argument("--dch", action="store_true", help="legacy flow: dch before map")
     ap.add_argument("--target-ps", type=float, default=None,
                     help=f"ABC delay target in ps (default {DEFAULT_TARGET_PS:.0f} for the &nf flow)")
+    ap.add_argument("--flow", choices=FLOWS, default="default",
+                    help="coarse arithmetic mapping (Booth multipliers, carry-save trees)")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if yosys_bin() is None:
@@ -442,10 +475,12 @@ def main(argv=None) -> int:
     spec = load_ipspec(IP_ROOT / args.ip)
     params = dict(kv.split("=", 1) for kv in args.param)
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,
-                      args.target_ps, args.legacy, module=args.module, params=params)
+                      args.target_ps, args.legacy, module=args.module, params=params,
+                      flow=args.flow)
     RESULTS.mkdir(parents=True, exist_ok=True)
     suffix = (("_legacy" if args.legacy else "") + ("_dch" if args.dch else "")
-              + (f"_D{int(args.target_ps)}" if args.target_ps else ""))
+              + (f"_D{int(args.target_ps)}" if args.target_ps else "")
+              + (f"__flow_{args.flow}" if args.flow != "default" else ""))
     if args.mode == "unit":
         # stage probes live in units/: render_tables only reads results/synth/*.json
         ptag = "_".join(f"{k}{v}" for k, v in sorted(params.items()))

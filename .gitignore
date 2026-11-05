@@ -5,6 +5,7 @@ ip/*/vectors/*
 # ip.yaml with committed sets must re-include its set directories here
 # (tests/test_vectors_lock.py::test_committed_sets_are_tracked checks it).
 !ip/halo_*/vectors/*
+!ip/dp_cal_lms/vectors/*
 # lockstep's per-IP flock file (tools/lockstep.py vectors_lock)
 ip/*/vectors/.lockstep.lock
 # simulation / synthesis outputs (CI uploads them as artifacts)

@@ -167,6 +167,8 @@ def test_committed_results_use_the_pinned_yosys(sy):
     bad = {n: r["yosys"] for n, r in reps.items() if r["yosys"] != sy.YOSYS_PIN_VERSION}
     assert not bad, bad
     assert all(r.get("yosys_pin") == sy.YOSYS_PIN for r in reps.values())
+    # one coarse flow too (JSONs from before --flow existed are the default flow)
+    assert {r.get("flow", "default") for r in reps.values()} == {"default"}
     assert len({r["liberty"]["sha256"] for r in reps.values()}) == 1
 
 
@@ -256,3 +258,30 @@ def test_parse_stat_json_exact_totals(sy, tmp_path):
                               "\\leaf": 2}}}))
     assert sy.parse_stat_json(j) == {"area_um2": 13776694.078, "cells": 10753924, "flops": 753924}
     assert sy.parse_stat_json(tmp_path / "missing.json") is None
+
+
+def test_flow_scripts(sy):
+    """--flow: plain `synth` options, or (for a forced prefix final adder) synth's 0.70
+    coarse stage by hand with `arith_tree -final prefix`, then synth from `fine`."""
+    assert sy.synth_lines("t", True, "default") == ["synth -top t -flatten"]
+    assert sy.synth_lines("t", False, "booth_arith") == ["synth -top t -booth -arith_tree"]
+    pre = sy.synth_lines("t", True, "booth_arith_prefix")
+    assert pre[0] == "synth -top t -flatten -run begin:coarse" and pre[-1] == "synth -top t -run fine:"
+    assert "booth" in pre and "alumacc" in pre and "arith_tree -final prefix" in pre
+    assert pre.index("booth") < pre.index("alumacc") < pre.index("arith_tree -final prefix")
+    assert "booth" not in sy.synth_lines("t", True, "arith_prefix")
+    with pytest.raises(ValueError):
+        sy.synth_lines("t", True, "nope")
+
+
+@pytest.mark.skipif(not shutil.which("yosys"), reason="no yosys")
+@pytest.mark.parametrize("flow", ["booth", "booth_arith_prefix"])
+def test_flows_run_and_are_labelled(sy, flow):
+    if not sy.LIBS["nangate45"]["path"].exists():
+        pytest.skip("liberty not fetched (tools/get_liberty.sh)")
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "sat_shift")
+    rep = sy.synth_point(spec, "signed_w40_s12_o16", "nangate45", 1, "unit", None, False,
+                         module="sat_shift", params={"W_IN": "24"}, flow=flow)
+    assert rep["flow"] == flow and rep["delay_ps"] > 0
