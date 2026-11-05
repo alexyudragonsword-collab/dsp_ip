@@ -1,5 +1,13 @@
 # CHANGELOG（按里程碑）
 
+## 工具链与 CI 卫生（2026-11-05）
+
+- **lockstep 两套仿真器**：新 `src/dspip/sims.py`（`DSPIP_SIM_BIN=<dir>` 取该目录的 verilator/iverilog/vvp，否则 PATH）；`tools/lockstep.py --sim-bin DIR`，每个报告点记 `sim_version`；`tools/toolchain.sh` 同一规则。
+  CI `lockstep` 改成矩阵 `toolchain: [distro, bundle]`：apt 的 Verilator 5.020 / Icarus 12 与 pin 的 OSS CAD Suite Verilator 5.053 / Icarus 14（复用 `third_party/dl` 缓存）。本机 bundle：verilator 27/27、iverilog 27/27 点 0 不匹配。
+- `tests/test_sim_quirks.py` 按版本断言（5.020 折叠成 0、5.053 正确；未见过的版本只许两种形状之一），不再"bug 修好就红"；CI 两条腿都跑。
+- `tools/vendor_check.py`：`Siblings.path(repo, sha)` 在全部候选克隆里优先取含 pin 提交的那个（HEAD 比对也读同一个克隆），都没有才回到第一个并尝试 fetch；临时双仓库测试。本机不设 `DSPIP_SIBLING_*` 也 22/22 verbatim。
+- Actions 全部换成 node24 版本：checkout@v7、setup-python@v7、cache@v6、upload-artifact@v7（各 tag 的 `action.yml` `runs.using: node24`，所用输入都还在）；`tests/test_ci_yaml.py` 守住版本与两条 lockstep 腿。
+
 ## 上游修复合并 + 综合工具链固定（2026-11-04）
 
 ### 上游（本库发现、在上游修、合并后重新 pin）

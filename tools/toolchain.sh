@@ -5,6 +5,9 @@
 # record "lockstep simulator" under ROADMAP "被外部阻塞" rather than faking RTL in Python.
 set -euo pipefail
 
+# Simulators: $DSPIP_SIM_BIN/<name> when set (e.g. the pinned bundle's bin/, as the
+# lockstep CI "bundle" leg does), else PATH — the same rule as src/dspip/sims.py.
+sim() { if [ -n "${DSPIP_SIM_BIN:-}" ]; then echo "$DSPIP_SIM_BIN/$1"; else echo "$1"; fi; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 if [ "${1:-}" = "--install" ]; then
@@ -20,19 +23,21 @@ if [ "${1:-}" = "--install" ]; then
   fi
 fi
 
-# Only yosys comes from the pinned OSS CAD Suite (tools/synth.py looks there first); its
-# bin/ also holds verilator and iverilog, which must NOT shadow the simulators below.
+# yosys comes from the pinned OSS CAD Suite (tools/synth.py looks there first). Its bin/
+# also holds verilator and iverilog; they are used only via DSPIP_SIM_BIN, never via PATH.
 PINNED_YOSYS="$(cd "$(dirname "$0")/.." && pwd)/third_party/oss-cad-suite/bin/yosys"
 
 echo "== dsp_ip toolchain =="
+[ -n "${DSPIP_SIM_BIN:-}" ] && echo "  (simulators from DSPIP_SIM_BIN=$DSPIP_SIM_BIN)"
 for t in verilator iverilog vvp yosys python3; do
+  case $t in verilator|iverilog|vvp) b=$(sim $t);; *) b=$t;; esac
   if [ "$t" = yosys ] && [ -x "$PINNED_YOSYS" ]; then
     printf "  %-10s %s [pinned: tools/get_yosys.sh]\n" yosys "$("$PINNED_YOSYS" -V)"
-  elif have "$t"; then
+  elif have "$b"; then
     case $t in
-      verilator) v=$(verilator --version 2>&1 | sed -n 1p);;
-      iverilog)  v=$(iverilog -V 2>&1 | sed -n 1p);;
-      vvp)       v=$(vvp -V 2>&1 | sed -n 1p);;
+      verilator) v=$("$b" --version 2>&1 | sed -n 1p);;
+      iverilog)  v=$("$b" -V 2>&1 | sed -n 1p);;
+      vvp)       v=$("$b" -V 2>&1 | sed -n 1p);;
       yosys)     v="$(yosys -V) [NOT the pinned build: run tools/get_yosys.sh]";;
       python3)   v=$(python3 --version);;
     esac
@@ -41,7 +46,7 @@ for t in verilator iverilog vvp yosys python3; do
     printf "  %-10s MISSING\n" "$t"
   fi
 done
-if ! have verilator && ! have iverilog; then
+if ! have "$(sim verilator)" && ! have "$(sim iverilog)"; then
   echo "no simulator: lockstep cannot run (see ROADMAP 被外部阻塞)" >&2
   exit 1
 fi

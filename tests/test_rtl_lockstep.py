@@ -11,18 +11,18 @@ from __future__ import annotations
 
 import importlib.util
 import os
-import shutil
 import sys
 from pathlib import Path
 
 import pytest
 
+from dspip import sims as S
 from dspip import vectors as V
 from dspip.ipspec import IP_ROOT, all_ips
 
 REPO = Path(__file__).resolve().parents[1]
 
-_HAVE_SIM = bool(shutil.which("verilator") or shutil.which("iverilog"))
+_HAVE_SIM = bool(S.installed())
 if not _HAVE_SIM and os.environ.get("DSPIP_REQUIRE_SIM"):
     raise RuntimeError("DSPIP_REQUIRE_SIM set but neither verilator nor iverilog is installed")
 pytestmark = pytest.mark.skipif(not _HAVE_SIM, reason="no simulator (verilator/iverilog)")
@@ -38,7 +38,7 @@ def ls():
 
 
 def _sims():
-    return [s for s in ("verilator", "iverilog") if shutil.which(s)]
+    return S.installed()  # $DSPIP_SIM_BIN (pinned bundle) or PATH
 
 
 def _points():

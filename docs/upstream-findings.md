@@ -116,6 +116,9 @@ so nothing is broken upstream today; the note is on Halo_Serdes#136 because a
 Upstream status (2026-11-04): **already fixed in Verilator.** The 5.053 development build
 shipped in OSS CAD Suite 2026-10-25 (the bundle dsp_ip now pins for yosys) prints 16384 for
 all four probe expressions, so no issue was filed (the draft was dropped). The Debian/Ubuntu
-apt package is still 5.020; `tests/test_sim_quirks.py` keeps probing the installed Verilator.
+apt package is still 5.020. Since 2026-11-05 the lockstep CI job runs both toolchains
+(`toolchain: [distro, bundle]`, the bundle via `DSPIP_SIM_BIN`), and `tests/test_sim_quirks.py`
+asserts the known behaviour per version (5.020: folds to 0; 5.053: 16384) instead of failing
+when the bug goes away.
 Halo_Serdes's fix for #136 (shift amounts emitted as `localparam int`) sidesteps it for
 every Verilator version.

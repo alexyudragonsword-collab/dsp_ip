@@ -14,8 +14,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install ruff
@@ -29,8 +29,8 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[test,upstream]"
@@ -38,29 +38,47 @@ jobs:
       - run: python tools/render_tables.py --check
 
   lockstep:
-    # Rule 1: every IP, every vector set, every P, zero mismatches, both simulators; the
-    # mutation test proves the check is not vacuous. DSPIP_REQUIRE_SIM turns a skip into red.
+    # Rule 1: every IP, every vector set, every P, zero mismatches, both simulators, on two
+    # toolchains: the distro packages (Verilator 5.020 / Icarus 12) and the pinned OSS CAD
+    # Suite bundle (Verilator 5.053 / Icarus 14, tools/get_yosys.sh, DSPIP_SIM_BIN). The
+    # mutation test proves the check is not vacuous; DSPIP_REQUIRE_SIM turns a skip into red.
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [distro, bundle]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Install simulators (verilator + iverilog)
+      - name: Install simulators (distro verilator + iverilog)
+        if: matrix.toolchain == 'distro'
         run: sudo apt-get update && sudo apt-get install -y iverilog verilator
+      - name: Pinned OSS CAD Suite (tools/get_yosys.sh)
+        if: matrix.toolchain == 'bundle'
+        uses: actions/cache@v6
+        with:
+          path: third_party/dl
+          key: oss-cad-suite-2026-10-25
+      - name: Simulators from the pinned bundle
+        if: matrix.toolchain == 'bundle'
+        run: |
+          tools/get_yosys.sh
+          echo "DSPIP_SIM_BIN=$PWD/third_party/oss-cad-suite/bin" >> "$GITHUB_ENV"
       - run: pip install -e ".[test,upstream]"
       - run: tools/toolchain.sh
       - name: Lockstep, verilator
         run: python tools/lockstep.py --all --sim verilator
       - name: Lockstep, iverilog
         run: python tools/lockstep.py --all --sim iverilog
-      - name: Lockstep + mutation tests
-        run: DSPIP_REQUIRE_SIM=1 python -m pytest -q tests/test_rtl_lockstep.py
-      - uses: actions/upload-artifact@v4
+      - name: Lockstep + mutation tests, simulator quirk probes (pinned per version)
+        run: DSPIP_REQUIRE_SIM=1 python -m pytest -q tests/test_rtl_lockstep.py tests/test_sim_quirks.py
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: lockstep-reports
+          name: lockstep-reports-${{ matrix.toolchain }}
           path: |
             results/lockstep/*.json
             results/lockstep/**/sim.log
@@ -72,12 +90,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Pinned yosys (OSS CAD Suite, tools/get_yosys.sh)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: third_party/dl
           key: oss-cad-suite-2026-10-25
@@ -91,7 +109,7 @@ jobs:
           python tools/synth.py --ip dpd_poly --set gmp510_w16 --P 1 --mode hier --out results/synth-ci/gmp510_w16_P1.json
       - name: Synthesis tool tests
         run: python -m pytest -q tests/test_synth_tool.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: synth-estimates
@@ -113,12 +131,12 @@ jobs:
         set: [ddr_r1_w16, gmp510_w16]
         P: [1, 2, 4]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Pinned yosys (OSS CAD Suite, tools/get_yosys.sh)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: third_party/dl
           key: oss-cad-suite-2026-10-25
@@ -129,7 +147,7 @@ jobs:
         run: python tools/synth.py --ip dpd_poly --set ${{ matrix.set }} --P ${{ matrix.P }} --mode hier
       - name: "Print the estimate (copy into results/synth/ to publish)"
         run: cat results/synth/dpd_poly__${{ matrix.set }}__P${{ matrix.P }}__hier.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: synth-long-${{ matrix.set }}-P${{ matrix.P }}
@@ -143,20 +161,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           repository: alexyudragonsword-collab/PA_DPD
           ref: ${{ env.PA_DPD_SHA }}
           path: _siblings/PA_DPD
           fetch-depth: 1
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: alexyudragonsword-collab/Halo_Serdes
           ref: ${{ env.HALO_SHA }}
           path: _siblings/Halo_Serdes
           fetch-depth: 1
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e ".[test,upstream]"
@@ -176,14 +194,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           repository: alexyudragonsword-collab/PA_DPD
           ref: ${{ env.PA_DPD_SHA }}
           path: _siblings/PA_DPD
           fetch-depth: 1
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install -e ".[test,upstream]"
@@ -201,7 +219,7 @@ jobs:
         run: |
           python examples/01_bitwidth_aclr.py --out results/aclr_table_ci.json
           python -m pytest -q tests/test_fixed_vs_float.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: aclr-table

@@ -1,5 +1,15 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-05 · 工具链与 CI 卫生：lockstep 跑两套仿真器、quirk 按版本、sibling 认 pin、Actions 升 node24
+
+- `DSPIP_SIM_BIN` / `lockstep.py --sim-bin`：bundle（Verilator 5.053 devel rev v5.052-586、Icarus 14.0 devel）本机 verilator 27/27、iverilog 27/27 点 0 不匹配；apt（5.020 / 12）照旧。CI lockstep 矩阵 distro + bundle。
+- quirk 探针：5.020 `a>>>SH_longint` = 0、5.053 = 16384，按版本写死；不再用"修好就 fail"的方式提醒（没有 IP 还需要 `sims:` 限制）。
+- vendor_check：`/home/user/halo_serdes`（PR 克隆，HEAD 19d104f，无 aca6123）排在 pin 克隆前也不再抢；不设 env 22/22 verbatim。
+- Actions：checkout v4→v7、setup-python v5→v7、cache v4→v6、upload-artifact v4→v7（tag 上 action.yml 都是 node24）。
+- **被推翻的判断**：上一条说"PR 分支合并后删掉即可"——本会话 `git push origin --delete` 对 Halo `fix/rtl-dsp-ip-findings`、PA_DPD `fix/export-for-integer-rtl` 都回 HTTP 403（git 代理策略；两分支已确认是各自 main 的祖先），没删成，留给用户在网页上删（ROADMAP 被外部阻塞）。
+- 测试：ruff 干净；非 lockstep 119 passed；quirk 测试 apt/bundle 各 3 passed。
+- 下一步：polar_tx 定点 LMS PR（3a）→ 冲 P=1 流程选项（2a）→ dsp_ip `dp_cal_lms`（3b）。
+
 ## 2026-11-04 · 两个上游 PR 合并并重新 pin；yosys 固定为 0.70，六点重综合、本机与 CI 可复现
 
 - **PA_DPD#3**（合并 5718b83）：导出带指数与输入码；重新导出后旧 JSON 键 + CSV 前四列逐字节相同，本库推出的 e_in / e_c / 输入码与导出值 4/4 全等 —— PA_DPD#2 闭环。

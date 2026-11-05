@@ -71,4 +71,6 @@ python tools/vendor_check.py --strict   # needs a PA_DPD checkout next to this r
    `sims: [iverilog]` + `sims_reason` restricts an IP to one simulator — only for a documented
    simulator bug (probe under `tools/quirks/`, `tests/test_sim_quirks.py`), never for a mismatch.
 4. `python tools/lockstep.py <name> --update-lock` pins the vectors; `tests/test_rtl_lockstep.py`
-   picks the IP up automatically, mutation test included.
+   picks the IP up automatically, mutation test included. CI runs it on the distro simulators
+   and on the pinned OSS CAD Suite ones (`--sim-bin third_party/oss-cad-suite/bin`, or
+   `DSPIP_SIM_BIN`); each report point records `sim_version`.

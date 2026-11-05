@@ -116,7 +116,9 @@ class FileResult:
 class Siblings:
     roots: dict = field(default_factory=dict)
 
-    def path(self, repo: str) -> Path | None:
+    def candidates(self, repo: str) -> list[Path]:
+        """Every checkout of ``repo`` that exists, in lookup order (explicit root,
+        ``DSPIP_SIBLING_<repo>``, then the default roots), duplicates removed."""
         cands = []
         if repo in self.roots:
             cands.append(self.roots[repo])
@@ -126,14 +128,33 @@ class Siblings:
         for root in DEFAULT_SIBLING_ROOTS:
             cands.append(os.path.join(root, repo))
             cands.append(os.path.join(root, repo.lower()))
+        out: list[Path] = []
         for c in cands:
             p = Path(c)
-            if (p / ".git").exists():
-                return p
-        return None
+            if (p / ".git").exists() and p.resolve() not in {q.resolve() for q in out}:
+                out.append(p)
+        return out
 
-    def show(self, repo: str, ref: str, path: str) -> str | None:
-        root = self.path(repo)
+    @staticmethod
+    def _contains(root: Path, sha: str) -> bool:
+        return subprocess.run(
+            ["git", "-C", str(root), "cat-file", "-e", f"{sha}^{{commit}}"],
+            capture_output=True).returncode == 0
+
+    def path(self, repo: str, sha: str | None = None) -> Path | None:
+        """The checkout to read ``repo`` from. With ``sha``: the first candidate that
+        already contains that commit (a fresh PR clone earlier in the order must not
+        shadow the clone that has the pin), else the first candidate."""
+        cands = self.candidates(repo)
+        if sha:
+            for p in cands:
+                if self._contains(p, sha):
+                    return p
+        return cands[0] if cands else None
+
+    def show(self, repo: str, ref: str, path: str, pin: str | None = None) -> str | None:
+        """``git show ref:path`` in the checkout chosen for ``pin`` (default: ``ref``)."""
+        root = self.path(repo, pin or ref)
         if root is None:
             return None
         r = subprocess.run(
@@ -143,27 +164,21 @@ class Siblings:
         return r.stdout if r.returncode == 0 else None
 
     def has_commit(self, repo: str, sha: str) -> bool:
-        """Is the pinned commit object present in this checkout?  A shallow /
-        rewritten sibling clone (typical in CI) may not contain a historical
-        pin; try a targeted fetch once before giving up."""
-        root = self.path(repo)
+        """Is the pinned commit object present in some checkout?  If none has it (a
+        shallow / rewritten sibling clone, typical in CI), try one targeted fetch into
+        the first candidate before giving up."""
+        root = self.path(repo, sha)
         if root is None:
             return False
-
-        def _have():
-            return subprocess.run(
-                ["git", "-C", str(root), "cat-file", "-e", f"{sha}^{{commit}}"],
-                capture_output=True).returncode == 0
-
-        if _have():
+        if self._contains(root, sha):
             return True
         subprocess.run(["git", "-C", str(root), "fetch", "--quiet",
                         "--depth=1", "origin", sha],
                        capture_output=True)
-        return _have()
+        return self._contains(root, sha)
 
-    def head(self, repo: str) -> str | None:
-        root = self.path(repo)
+    def head(self, repo: str, pin: str | None = None) -> str | None:
+        root = self.path(repo, pin)
         if root is None:
             return None
         r = subprocess.run(
@@ -244,7 +259,7 @@ def check(siblings: Siblings, manifest: dict) -> list[FileResult]:
 
         # stale-pin (advisory): pinned sha vs sibling HEAD
         stale = ""
-        head_body = siblings.show(repo, "HEAD", upath)
+        head_body = siblings.show(repo, "HEAD", upath, pin=sha)
         if head_body is not None and head_body.rstrip("\n") != upstream:
             n = sum(1 for ln in difflib.unified_diff(
                 upstream.splitlines(), head_body.rstrip("\n").splitlines(),

@@ -2,8 +2,9 @@
 // shift of a longint by a *longint* localparam to 0. `int` shift amounts, logical `>>`,
 // and a non-constant left operand are all fine; Icarus 12 is right in every case.
 // Halo_Serdes' tb_adc_dsp_loop.sv hits it in `dut.cgsum >>> LANE_SHIFT` (4/5 sets have
-// CAL_ON=0, so cgsum is a propagated constant) -> ip/halo_adc_dsp_loop runs iverilog only.
-// tests/test_sim_quirks.py runs this and tells you when the restriction can be lifted.
+// CAL_ON=0, so cgsum is a propagated constant); it used to run iverilog only.
+// tests/test_sim_quirks.py runs this on both CI toolchains and pins the result per version
+// (5.020: bug; 5.053: fixed). The loop IP no longer needs a restriction (Halo_Serdes#142).
 //
 //   $ verilator --binary --timing -Wno-WIDTH --top-module t --Mdir obj tools/quirks/verilator_longint_shift.sv && obj/Vt
 //   $ iverilog -g2012 -o q.vvp tools/quirks/verilator_longint_shift.sv && vvp -n q.vvp

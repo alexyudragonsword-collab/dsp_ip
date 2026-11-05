@@ -7,6 +7,7 @@ output sample with the Python reference (rule 4: one scaffold for every IP, driv
     python tools/lockstep.py dpd_poly --set ddr_r1_w16 --param P=2
     python tools/lockstep.py --all --sim iverilog     # every IP (after a scaffold change)
     python tools/lockstep.py dpd_poly --update-lock   # re-pin vectors after a reference change
+    python tools/lockstep.py --all --sim-bin third_party/oss-cad-suite/bin   # pinned bundle
 
 For each (vector set, parameter point):
   1. regenerate the set from the Python reference (``source: generated``) and verify every
@@ -17,7 +18,8 @@ For each (vector set, parameter point):
   4. ``check: python``: compare each ``compare`` pair line by line (first mismatch: sample
      index, RTL vs golden value, and the reference's internal registers from ``probe``);
      ``check: tb``: the tb self-checks, look for ``pass_pattern`` and a zero exit code.
-Exit status is non-zero if any point fails. A JSON report goes to results/lockstep/.
+Exit status is non-zero if any point fails. A JSON report goes to results/lockstep/; each
+point records ``sim_version`` (CI runs the distro and the pinned-bundle simulators).
 """
 
 from __future__ import annotations
@@ -39,19 +41,19 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "src"))
 
+from dspip import sims as S  # noqa: E402
 from dspip import vectors as V  # noqa: E402
 from dspip.ipspec import IP_ROOT, IpSpec, all_ips, load_ipspec  # noqa: E402
 
 RESULTS = REPO / "results" / "lockstep"
-SIM_PREF = ("verilator", "iverilog")
+SIM_PREF = S.SIMS
 
 
 def detect_sim(pref: str = "auto") -> str | None:
+    """Preferred simulator available under the current selection ($DSPIP_SIM_BIN or PATH)."""
+    have = S.installed()
     cands = SIM_PREF if pref == "auto" else (pref,)
-    for s in cands:
-        if shutil.which(s):
-            return s
-    return None
+    return next((s for s in cands if s in have), None)
 
 
 # --- vectors ----------------------------------------------------------------------------
@@ -135,7 +137,7 @@ def build(spec: IpSpec, set_dir: Path, sim: str, params: dict, work: Path) -> tu
     srcs = [str(p) for p in spec.rtl_paths()] + [str(spec.tb_path)]
     if sim == "verilator":
         obj = work / "obj"
-        cmd = ["verilator", "--binary", "--timing", "-Wno-fatal", "-Wno-WIDTH", "-Wno-UNUSED",
+        cmd = [S.exe("verilator"), "--binary", "--timing", "-Wno-fatal", "-Wno-WIDTH", "-Wno-UNUSED",
                "-Wno-UNOPTFLAT", "--top-module", spec.tb_module, f"+incdir+{set_dir}",
                "--Mdir", str(obj), "-j", str(min(4, os.cpu_count() or 1))]
         cmd += [f"-G{k}={v}" for k, v in params.items()]
@@ -143,10 +145,10 @@ def build(spec: IpSpec, set_dir: Path, sim: str, params: dict, work: Path) -> tu
         run = [str(obj / f"V{spec.tb_module}")]
     elif sim == "iverilog":
         vvp = work / "sim.vvp"
-        cmd = ["iverilog", "-g2012", "-I", str(set_dir), "-o", str(vvp)]
+        cmd = [S.exe("iverilog"), "-g2012", "-I", str(set_dir), "-o", str(vvp)]
         cmd += [f"-P{spec.tb_module}.{k}={v}" for k, v in params.items()]
         cmd += srcs
-        run = ["vvp", "-n", str(vvp)]
+        run = [S.exe("vvp"), "-n", str(vvp)]
     else:
         raise ValueError(sim)
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -195,8 +197,8 @@ def run_point(spec: IpSpec, set_name: str, sim: str, params: dict, *, generate: 
     t0 = time.time()
     ptag = "_".join(f"{k}{v}" for k, v in params.items()) or "default"
     work = RESULTS / spec.name / f"{set_name}__{ptag}__{sim}"
-    rep = {"ip": spec.name, "set": set_name, "sim": sim, "params": params, "work": str(work),
-           "status": "ERROR", "mismatches": None}
+    rep = {"ip": spec.name, "set": set_name, "sim": sim, "sim_version": S.version(sim),
+           "params": params, "work": str(work), "status": "ERROR", "mismatches": None}
     try:
         set_dir, problems = ensure_vectors(spec, set_name, generate=generate,
                                            update_lock=update_lock)
@@ -313,7 +315,12 @@ def main(argv=None) -> int:
     ap.add_argument("--update-lock", action="store_true",
                     help="re-pin the vector sets' hashes (after a deliberate reference change)")
     ap.add_argument("--json", type=Path, help="write the report here (default results/lockstep/)")
+    ap.add_argument("--sim-bin", type=Path, metavar="DIR",
+                    help=f"use verilator/iverilog/vvp from DIR (same as ${S.SIM_BIN_ENV}), e.g. "
+                         "third_party/oss-cad-suite/bin for the pinned bundle; default: PATH")
     args = ap.parse_args(argv)
+    if args.sim_bin:
+        os.environ[S.SIM_BIN_ENV] = str(args.sim_bin.resolve())
     if not args.ip and not args.all:
         ap.error("give an IP name or --all")
 
@@ -329,7 +336,7 @@ def main(argv=None) -> int:
     specs = all_ips() if args.all else [load_ipspec(IP_ROOT / args.ip)]
     if args.sim == "auto" and not args.all:
         # one IP: auto means the preferred *installed* simulator this IP runs under
-        sim = next((s for s in SIM_PREF if shutil.which(s) and s in specs[0].sims), None) or sim
+        sim = next((s for s in S.installed() if s in specs[0].sims), None) or sim
     reports = []
     for spec in specs:
         reports += run_ip(spec, sim, args.sets, overrides, update_lock=args.update_lock)
@@ -340,7 +347,7 @@ def main(argv=None) -> int:
     out = args.json or RESULTS / ("report_all.json" if args.all else f"report_{specs[0].name}.json")
     out.write_text(json.dumps(reports, indent=1))
     n_fail = sum(r["status"] != "PASS" for r in reports)
-    print(f"\n{len(reports) - n_fail}/{len(reports)} points PASS ({sim}); report: {out}")
+    print(f"\n{len(reports) - n_fail}/{len(reports)} points PASS ({S.version(sim)}); report: {out}")
     return 1 if n_fail else 0
 
 

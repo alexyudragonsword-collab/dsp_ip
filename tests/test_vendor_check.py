@@ -78,3 +78,39 @@ def test_vendor_detects_injected_drift():
         assert any("gmp.py" in r.rel for r in drift)
     finally:
         target.write_text(original)
+
+
+def _git(*args, cwd):
+    import subprocess
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True,
+                          text=True).stdout.strip()
+
+
+def _repo_with(path, text):
+    path.mkdir()
+    _git("init", "-q", cwd=path)
+    (path / "f.txt").write_text(text)
+    _git("add", "f.txt", cwd=path)
+    _git("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-qm", text,
+         cwd=path)
+    return _git("rev-parse", "HEAD", cwd=path)
+
+
+def test_sibling_lookup_prefers_the_clone_with_the_pin(tmp_path, monkeypatch):
+    """A fresh clone earlier in the lookup order (e.g. a PR working copy) must not
+    shadow the clone that contains the pinned commit — and the advisory HEAD
+    comparison reads the same clone."""
+    first, second = tmp_path / "pr_clone", tmp_path / "pin_clone"
+    _repo_with(first, "pr head")
+    pin = _repo_with(second, "pinned")
+    monkeypatch.delenv("DSPIP_SIBLING_Fake", raising=False)
+    monkeypatch.setattr(vc, "DEFAULT_SIBLING_ROOTS", [])
+    sib = vc.Siblings({"Fake": str(first)})
+    monkeypatch.setenv("DSPIP_SIBLING_Fake", str(second))
+    assert sib.candidates("Fake") == [first, second]
+    assert sib.path("Fake") == first                 # no pin: lookup order
+    assert sib.path("Fake", pin) == second           # pin: the clone that has it
+    assert sib.has_commit("Fake", pin)
+    assert sib.show("Fake", pin, "f.txt") == "pinned"
+    assert sib.show("Fake", "HEAD", "f.txt", pin=pin) == "pinned"
+    assert sib.head("Fake", pin) == pin
