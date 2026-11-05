@@ -1,5 +1,13 @@
 # CHANGELOG（按里程碑）
 
+## P = 1 达 640 MSPS：ABC 脚本加 SOP 平衡（2026-11-05）
+
+- **`tools/synth.py --abc sopb`（新默认）**：在原 `&nf` 流程的 `dc2` 之后、`&dch -f; &nf` 之前加两轮 `&if -g -K 6`（SOP 平衡）。根因：`dc2` 按节点数改写，把 yosys 的 Brent-Kung `$lcu` 折成近链式进位（约 37 ps/位）。
+  孤立块（NanGate45）：40 位加法 1481 → 506 ps、24 位 959 → 423、16×16 乘法 1668 → 1069。
+- **整体 P=1**（estimate）：DDR 1720 → **1313 ps**，534 → **682 MHz**；GMP 1693 → **1174 ps**，541 → **753 MHz**。面积 +4.5 %、单元 +6.7 %，**P = 1 即达 640 MSPS**，RTL 不动。dp_cal_lms 2216 → 1736 ps（1100 → 1398 µm²）。
+- 旧 `nf` 数字全部移到 `results/synth/abc_nf/` 对照、不入表；测试要求表内单一 ABC 脚本。P=2/4 在 CI `synth-long` 重跑前先按 by-construction 行显示。
+- 计划中的 RTL 拆分（乘法器两拍、加法树拆加法）没有做：流程层面已达标。
+
 ## 新 IP `dp_cal_lms` + 综合流程选项（2026-11-05）
 
 - **`ip/dp_cal_lms`**：ADPLL 两点调制的在线直通增益校准（sign-sign LMS），polar_tx 的整数参考 `cal/dp_cal_fixed.py`（polar_tx#16，本库提出、待用户合并）原样 vendor 到 `src/dspip/vendor/polartx/`；向量是 polar_tx 导出的 BLE 5 % 增益误差场景（104 004 个参考周期，`source: committed` + SOURCE.md + 锁）。

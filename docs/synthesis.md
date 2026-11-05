@@ -15,8 +15,9 @@ setattr -mod -set keep_hierarchy 1 *dpd_env* *dpd_pow* *dpd_term* *dpd_acc*
 flatten                                               # helpers (sat_shift) into their parents
 synth -top dpd_poly
 dfflibmap -liberty <lib>
-abc -liberty <lib> -script "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash;
-                            &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p"
+abc -liberty <lib> -script "strash; &get -n; &fraig -x; &put; scorr; dc2; strash; &get -n;
+                            &st; &if -g -K 6; &st; &if -g -K 6; &st; &dch -f; &nf -D 1000;
+                            &put; topo; stime -p"                  # --abc sopb (default)
 opt_clean
 stat -liberty <lib>
 ```
@@ -39,7 +40,26 @@ stat -liberty <lib>
   (`--lib sky130`) but every committed number is NanGate45.
 - **Critical path**: ABC `stime` after liberty mapping — the longest combinational path
   between registers with the library's cell delays, **no wire load**.
-- **Mapping**: the committed numbers use yosys's own liberty flow (`&fraig; scorr; dc2;
+- **ABC script `sopb`** (`--abc`, the default since 2026-11-05): yosys's liberty flow below
+  plus two rounds of SOP balancing (`&if -g -K 6`) between the area rewriting and the
+  mapping. Why: `dc2` (AIG rewriting for node count) folds yosys's Brent-Kung `$lcu` into a
+  near-ripple carry chain, ~37 ps/bit. In isolation (registered in/out, NanGate45), a 40-bit
+  add mapped to 1481 ps, a 24-bit one to 959 and a 16 × 16 multiply to 1668. Balancing
+  restores the log-depth structure before `&dch`/`&nf` map it: 506, 423 and 1069 ps. On the
+  whole design at P = 1:
+
+  | set | `nf` critical path | `sopb` critical path | f_est | area | cells |
+  |---|---|---|---|---|---|
+  | ddr_r1_w16 | 1720 ps | **1313 ps** | 534 → **682 MHz** | 1.947 → 2.035 mm² (+4.5 %) | +6.7 % |
+  | gmp510_w16 | 1693 ps | **1174 ps** | 541 → **753 MHz** | 3.441 → 3.596 mm² (+4.5 %) | +6.7 % |
+
+  So **P = 1 reaches 640 MSPS** with the RTL unchanged (estimate). The plan to split every
+  multiplier and adder into two cycles was not needed. One balancing round gave about
+  three quarters of the gain on the blocks (40-bit add 1112 ps, 16 × 16 multiply 1412); a
+  third round added little (517 / 1040). Every number the `nf` script produced is kept in
+  `results/synth/abc_nf/` for comparison and is not rendered. The test requires one ABC
+  script across `results/synth/*.json`.
+- **Mapping**: the `nf` script (the default until 2026-11-05) is yosys's own liberty flow (`&fraig; scorr; dc2;
   dretime; &dch -f; &nf -D 1000`, i.e. the modern `&nf` mapper with a 1 ns delay target).
   The old area-oriented `map` is kept behind `--legacy-map` for comparison: its delay swung
   by ±40 % with the size of the netlist it was handed (the same DDR RTL mapped to 1783 ps
@@ -60,8 +80,8 @@ stat -liberty <lib>
   committed number uses it (the test requires one flow). The alternatives are 0.70's
   `synth -booth` (radix-4 Booth multipliers) and `-arith_tree` (carry-save trees of adder
   chains / `$macc`); the `*_prefix` variants run synth's coarse stage by hand with
-  `arith_tree -final prefix`. Tried on the P = 1 critical stages as unit probes
-  (`results/synth/units/flows/`, NanGate45, ps / µm²):
+  `arith_tree -final prefix`. Tried on the P = 1 critical stages as unit probes, with
+  the `nf` ABC script (`results/synth/units/flows/`, NanGate45, ps / µm²):
 
   | module | default | booth | arith | arith_prefix | booth_arith | booth_arith_prefix |
   |---|---|---|---|---|---|---|
@@ -72,8 +92,8 @@ stat -liberty <lib>
 
   None helps the critical path: Booth trades 6–23 % area for 95–520 ps more delay;
   `arith_tree` finds no adder chain to compress (each stage is one `$mul` plus one add,
-  and `$mul` is left alone), and forcing a prefix final adder is equal or slower. So P = 1
-  needs RTL changes, not flow options.
+  and `$mul` is left alone), and forcing a prefix final adder is equal or slower. A yosys
+  prefix adder does not survive ABC's `dc2` anyway, which is what the `sopb` script fixes.
 - **Frequency**: `f_est = 1 / (critical path + t_cq + t_setup)`, the flop terms read from
   the library's `DFF_X1` tables (median entries: 113 ps + 41 ps).
 - **Area**: `stat -liberty` total cell area (µm²), flops included.
@@ -129,10 +149,12 @@ assumption: area grows linearly in P within a few percent and the critical path 
 depend on P (the stages are the same; only mapping noise moves it). On the runner a hier
 point takes 6–24 min, not hours: identically parameterized modules are mapped once.
 
-**Tool version matters.** The same RTL at P = 1 maps to a longer critical path with newer
-yosys: DDR 1554 ps (0.33) → 1696 (0.52) → 1720 (0.70, pinned); GMP 1554 → 1697 → 1693
-(`results/synth/yosys033/`, `cairn/LOG.md`). Area moves by under 2 %. Compare rows only
-within one version — which is why the version is now pinned.
+**Tool version and script matter.** The same RTL at P = 1 maps to a longer critical path
+with newer yosys and the `nf` script: DDR 1554 ps (0.33) → 1696 (0.52) → 1720 (0.70, pinned);
+GMP 1554 → 1697 → 1693 (`results/synth/yosys033/`, `cairn/LOG.md`). Area moves by under 2 %.
+The pinned 0.70 with the `sopb` script then gives 1313 / 1174 ps (`results/synth/abc_nf/` holds
+the `nf` points). Compare rows only within one version and one script — which is why both
+are pinned.
 
 ## How to read `results/synth/*.json`
 

@@ -11,7 +11,9 @@
  },
  "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
  "yosys_pin": "oss-cad-suite 2026-10-25",
- "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; dretime; strash; &get -n; &dch -f; &nf -D 1000; &put; topo; stime -p",
+ "flow": "default",
+ "abc": "sopb",
+ "abc_script": "strash; &get -n; &fraig -x; &put; scorr; dc2; strash; &get -n; &st; &if -g -K 6; &st; &if -g -K 6; &st; &dch -f; &nf -D 1000; &put; topo; stime -p",
  "target_ps": null,
  "ff": {
   "cell": "DFF_X1",
@@ -26,43 +28,43 @@
    "params": {
     "P": 1
    },
-   "delay_ps": 1693.17,
-   "runtime_s": 767.4,
-   "area_um2": 3441303.978,
-   "cells": 2693550,
+   "delay_ps": 1173.55,
+   "runtime_s": 547.0,
+   "area_um2": 3595736.396,
+   "cells": 2873083,
    "flops": 123005
   }
  ],
  "modules": {
+  "dpd_poly": {
+   "delay_ps": 1173.55,
+   "instances": 1
+  },
   "dpd_pow": {
-   "delay_ps": 1693.17,
+   "delay_ps": 1172.06,
    "instances": 1
   },
   "dpd_term": {
-   "delay_ps": 1643.4,
+   "delay_ps": 1166.98,
    "instances": 5
   },
-  "dpd_poly": {
-   "delay_ps": 1632.72,
-   "instances": 1
-  },
   "dpd_env": {
-   "delay_ps": 1579.95,
+   "delay_ps": 1114.01,
    "instances": 1
   },
   "dpd_acc": {
-   "delay_ps": 669.5,
+   "delay_ps": 348.05,
    "instances": 1
   }
  },
- "delay_ps": 1693.17,
- "period_ps": 1847.1,
- "f_est_mhz": 541.4,
- "throughput_est_msps": 541.4,
- "p_for_640msps": 2,
- "area_um2": 3441303.978,
- "cells": 2693550,
+ "delay_ps": 1173.55,
+ "period_ps": 1327.5,
+ "f_est_mhz": 753.3,
+ "throughput_est_msps": 753.3,
+ "p_for_640msps": 1,
+ "area_um2": 3595736.396,
+ "cells": 2873083,
  "method": "whole design, real term count, hierarchy kept for dpd_env, dpd_pow, dpd_term, dpd_acc (helpers flattened into them); ABC maps and times each module separately, delay = max over modules (no wire load) + liberty DFF t_cq + t_setup; area = stat -liberty hierarchy total",
- "runtime_s": 767.4,
- "source": "local run with the pinned yosys; module delays and stat totals re-derived from its yosys.log with the fixed parsers"
+ "runtime_s": 547.0,
+ "source": "local run with the pinned yosys, --abc sopb (tools/synth.py default since 2026-11-05)"
 }

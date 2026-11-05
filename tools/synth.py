@@ -80,16 +80,29 @@ ABC_DCH = "strash\ndch -f\nmap\ntopo\nstime -p\n"
 # yosys's own default liberty flow (&nf mapper) with a delay target, plus stime for the report
 ABC_NF = ("strash\n&get -n\n&fraig -x\n&put\nscorr\ndc2\ndretime\nstrash\n&get -n\n&dch -f\n"
           "&nf -D {D}\n&put\ntopo\nstime -p\n")
+# ABC_NF plus two rounds of SOP balancing (`&if -g`, delay-oriented restructuring) before
+# the choice computation and mapping. `dc2` (area rewriting) folds yosys's Brent-Kung
+# `$lcu` into a near-ripple carry chain (~37 ps/bit: a lone 40-bit add 1481 ps, a 16x16
+# multiply 1668 ps); after balancing the same blocks map to 506 / 1069 ps (+10 % area).
+ABC_SOPB = ("strash\n&get -n\n&fraig -x\n&put\nscorr\ndc2\nstrash\n&get -n\n&st\n&if -g -K 6\n"
+            "&st\n&if -g -K 6\n&st\n&dch -f\n&nf -D {D}\n&put\ntopo\nstime -p\n")
+ABC_SCRIPTS = {"nf": ABC_NF, "sopb": ABC_SOPB}
 DEFAULT_TARGET_PS = 1000.0
 
 
-def abc_script(dch: bool, target_ps: float | None, legacy: bool = False) -> str:
-    """ABC script. Default: the ``&nf`` mapper with a delay target (what yosys's own
-    ``abc -liberty -D`` runs), which maps a 167 k-gate adder tree to 1441 ps where the old
-    area-oriented ``map`` left a 1969 ps path. ``legacy`` selects the old ``map`` flow
+DEFAULT_ABC = "sopb"
+
+
+def abc_script(dch: bool, target_ps: float | None, legacy: bool = False,
+               abc: str = DEFAULT_ABC) -> str:
+    """ABC script. Default (since 2026-11-05): ``sopb`` — the ``&nf`` mapper with a delay
+    target preceded by two rounds of SOP balancing; it took dpd_poly P = 1 from 1720 to
+    1313 ps (DDR) and 1693 to 1174 ps (GMP) for +4.5 % area. ``nf`` is the previous default
+    (yosys's own ``abc -liberty -D`` script; the committed numbers made with it are in
+    ``results/synth/abc_nf/``). ``legacy`` selects the old area-oriented ``map`` flow
     (``dch`` optional, ``-D`` optional) for comparison."""
     if not legacy:
-        return ABC_NF.replace("{D}", str(int(target_ps or DEFAULT_TARGET_PS)))
+        return ABC_SCRIPTS[abc].replace("{D}", str(int(target_ps or DEFAULT_TARGET_PS)))
     s = ABC_DCH if dch else ABC_FAST
     if target_ps:
         s = s.replace("\nmap\n", f"\nmap -D {int(target_ps)}\n")
@@ -339,7 +352,7 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
 def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: int | None,
                 dch: bool, target_ps: float | None = None, legacy: bool = False,
                 module: str | None = None, params: dict | None = None,
-                flow: str = "default") -> dict:
+                flow: str = "default", abc: str = DEFAULT_ABC) -> dict:
     """One estimate. ``mode == "unit"`` synthesizes ``module`` (one of the IP's own leaf
     modules) alone as the top with its default parameters plus ``params`` (``-chparam``):
     minutes instead of hours, for finding and fixing the stage that sets the critical path."""
@@ -359,12 +372,13 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
     if dp.exists():
         m = re.search(r"N_TERMS\s*=\s*(\d+)", dp.read_text())
         n_full = int(m.group(1)) if m else None
-    script = abc_script(dch, target_ps, legacy)
+    script = abc_script(dch, target_ps, legacy, abc)
     ptag = "_".join(f"{k}{v}" for k, v in sorted((params or {}).items()))
     tag = (f"{set_name}__P{P}__{mode}__{lib_name}" + (f"__{module}" if module else "")
            + (f"__{ptag}" if ptag else "") + ("_legacy" if legacy else "")
            + ("_dch" if dch else "") + (f"_D{int(target_ps)}" if target_ps else "")
-           + (f"__flow_{flow}" if flow != "default" else ""))
+           + (f"__flow_{flow}" if flow != "default" else "")
+           + (f"__abc_{abc}" if abc != DEFAULT_ABC else ""))
     work = RESULTS / "logs" / spec.name / tag
     base_params = {"P": P} if ("P" in spec.params and mode != "unit") else {}
     if mode == "unit":
@@ -374,7 +388,7 @@ def synth_point(spec, set_name: str, lib_name: str, P: int, mode: str, terms: in
            "liberty": {"name": lib_name, "label": lib["label"],
                        "sha256": hashlib.sha256(lib_path.read_bytes()).hexdigest()},
            "yosys": yosys_version(), "yosys_pin": YOSYS_PIN if yosys_version() == YOSYS_PIN_VERSION else None,
-           "flow": flow,
+           "flow": flow, "abc": "legacy-map" if legacy else abc,
            "abc_script": script.strip().replace("\n", "; "),
            "target_ps": target_ps,
            "ff": ff, "n_terms_full": n_full, "points": []}
@@ -464,6 +478,9 @@ def main(argv=None) -> int:
                     help=f"ABC delay target in ps (default {DEFAULT_TARGET_PS:.0f} for the &nf flow)")
     ap.add_argument("--flow", choices=FLOWS, default="default",
                     help="coarse arithmetic mapping (Booth multipliers, carry-save trees)")
+    ap.add_argument("--abc", choices=list(ABC_SCRIPTS), default=DEFAULT_ABC,
+                    help="ABC script: sopb (default: + SOP balancing) or nf (the previous "
+                         "default, area rewriting + &nf)")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if yosys_bin() is None:
@@ -476,11 +493,12 @@ def main(argv=None) -> int:
     params = dict(kv.split("=", 1) for kv in args.param)
     rep = synth_point(spec, args.set_name, args.lib, args.P, args.mode, args.terms, args.dch,
                       args.target_ps, args.legacy, module=args.module, params=params,
-                      flow=args.flow)
+                      flow=args.flow, abc=args.abc)
     RESULTS.mkdir(parents=True, exist_ok=True)
     suffix = (("_legacy" if args.legacy else "") + ("_dch" if args.dch else "")
               + (f"_D{int(args.target_ps)}" if args.target_ps else "")
-              + (f"__flow_{args.flow}" if args.flow != "default" else ""))
+              + (f"__flow_{args.flow}" if args.flow != "default" else "")
+              + (f"__abc_{args.abc}" if args.abc != DEFAULT_ABC else ""))
     if args.mode == "unit":
         # stage probes live in units/: render_tables only reads results/synth/*.json
         ptag = "_".join(f"{k}{v}" for k, v in sorted(params.items()))

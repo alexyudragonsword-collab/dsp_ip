@@ -167,8 +167,10 @@ def test_committed_results_use_the_pinned_yosys(sy):
     bad = {n: r["yosys"] for n, r in reps.items() if r["yosys"] != sy.YOSYS_PIN_VERSION}
     assert not bad, bad
     assert all(r.get("yosys_pin") == sy.YOSYS_PIN for r in reps.values())
-    # one coarse flow too (JSONs from before --flow existed are the default flow)
+    # one coarse flow and one ABC script too (JSONs from before --flow / --abc existed are
+    # the default flow and the `nf` script; those live in results/synth/abc_nf/ now)
     assert {r.get("flow", "default") for r in reps.values()} == {"default"}
+    assert {r.get("abc", "nf") for r in reps.values()} == {sy.DEFAULT_ABC}
     assert len({r["liberty"]["sha256"] for r in reps.values()}) == 1
 
 
@@ -285,3 +287,15 @@ def test_flows_run_and_are_labelled(sy, flow):
     rep = sy.synth_point(spec, "signed_w40_s12_o16", "nangate45", 1, "unit", None, False,
                          module="sat_shift", params={"W_IN": "24"}, flow=flow)
     assert rep["flow"] == flow and rep["delay_ps"] > 0
+
+
+def test_abc_scripts(sy):
+    """--abc: `nf` is yosys's liberty flow with a delay target; `sopb` adds two rounds of
+    SOP balancing (`&if -g`) between the area rewriting (`dc2`) and the mapping, which is
+    what keeps adders from mapping as carry chains (measured: 40-bit add 1481 -> 506 ps)."""
+    nf = sy.abc_script(False, None, abc="nf")
+    sopb = sy.abc_script(False, None, abc="sopb")
+    assert "&nf -D 1000" in nf and "&if -g" not in nf
+    assert sopb.count("&if -g -K 6") == 2 and "&nf -D 1000" in sopb
+    assert sopb.index("dc2") < sopb.index("&if -g") < sopb.index("&dch -f") < sopb.index("&nf")
+    assert sy.abc_script(False, 800, abc="sopb").count("&nf -D 800") == 1

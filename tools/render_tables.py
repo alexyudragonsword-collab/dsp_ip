@@ -67,7 +67,8 @@ def synth_section() -> str:
         return "_results/synth/*.json not present — run tools/synth.py._\n"
     lib = reps[0]["liberty"]["label"]
     lines = [
-        f"**Estimates** — yosys ({reps[0]['yosys']}) + ABC, {lib}, no wire load; "
+        f"**Estimates** — yosys ({reps[0]['yosys']}) + ABC (script `{reps[0].get('abc', 'nf')}`), "
+        f"{lib}, no wire load; "
         f"f_est = 1/(ABC critical path + DFF t_cq + t_setup); method per row in the JSON "
         f"(see `docs/synthesis.md`).",
         "",

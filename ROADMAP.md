@@ -2,8 +2,7 @@
 
 ## 里程碑 1 收尾（可选、不阻塞验收）
 
-- [ ] 两级乘法器冲 P=1（用户已选，进行中）。**流程选项已试、无效**（2026-11-05，`docs/synthesis.md` 表，`results/synth/units/flows/`）：`-booth` 让各级慢 95–520 ps，`-arith_tree` 不动 `$mul`、无变化，强制 prefix 末端加法器持平或更慢 → 改 RTL。原始数据：pin 版 yosys 0.70 下 in situ 各级很平：DDR `dpd_term` 1720、`dpd_pow` 1693、加法树 1682、`dpd_env` 1580 ps；GMP `dpd_pow` 1693、树 1633–1684、`dpd_term` 1643–1670（estimate，`docs/results.md`）。
-      P=1 达 640 MSPS 要求关键路径 ≤ 1e6/640 − 154 ≈ 1409 ps，即每个乘法器都要拆两拍（部分积分两组相加），加法树（顶层 ~1450）也要再切。复现：`python tools/synth.py --ip dpd_poly --set ddr_r1_w16 --mode unit --module dpd_term`。
+- [ ] P=2/4 用 `sopb` 脚本重新综合（CI `synth-long` dispatch，6 点），入表替换现在的 by-construction 行；P=1 本机已达标：DDR 1313 ps / 682 MHz、GMP 1174 ps / 753 MHz（estimate），CI `synth` job 每次 push 复核两个 P=1 点。
 
 ## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
