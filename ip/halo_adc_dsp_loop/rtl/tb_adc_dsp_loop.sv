@@ -1,5 +1,4 @@
-// Vendored from Halo_Serdes@5366b75: rtl/tb_adc_dsp_loop.sv
-// Adapted-copy policy: see src/dspip/vendor/__init__.py
+// Vendored from Halo_Serdes@c59c2c8: rtl/tb_adc_dsp_loop.sv
 // Lockstep testbench for adc_dsp_loop.sv: load the vectors
 // halo_serdes.dsp.fixed_loop.dump_loop_vectors wrote from a closed-loop run,
 // replay the input words through the SV back end, and require every PI code,

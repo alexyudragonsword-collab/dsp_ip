@@ -15,7 +15,7 @@ and is byte-identical to upstream below the header (``tools/vendor_check.py``
 re-derives this against a sibling checkout and fails CI on any undeclared
 edit; the same tool scans ``ip/*/rtl/*.sv`` for ``// Vendored from`` headers
 so milestone 2 can vendor Halo_Serdes' RTL under the same policy; every Halo file is now at
-Halo_Serdes@5366b75, the head of PR #147, which adds LOOKAHEAD to the streaming FFE + DFE).
+Halo_Serdes@c59c2c8, the head of PR #148, stacked on #147: LOOKAHEAD and the streaming MLSDs).
 
 ``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 5718b83 (the commit
 whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):

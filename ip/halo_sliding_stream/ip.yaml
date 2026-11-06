@@ -1,0 +1,28 @@
+name: halo_sliding_stream
+top: sliding_stream
+rtl:
+  - rtl/sliding_stream.sv
+tb: rtl/tb_sliding_stream.sv
+check: tb                              # Halo's tb self-checks: MLSD STREAM LOCKSTEP PASS/FAIL
+pass_pattern: "MLSD STREAM LOCKSTEP PASS"
+params: {}
+param_points:                          # storage width (64) and 12-bit words; idle clocks
+  - {}
+  - {V_W: 12, LV_W: 12}
+  - {V_W: 12, LV_W: 12, GAPS: 1}
+vector_sets:
+  - {name: mlsd, source: committed, dir: vectors/mlsd}
+  - {name: mlsd_tie, source: committed, dir: vectors/mlsd_tie}
+mutation_file: mlsd_dec.txt
+synth_dims: [NL, SEQ_LEN, MARGIN, SQ_SHIFT, METRIC_MAX, PASSES]
+synth_params: {V_W: 12, LV_W: 12}      # |v| < 2^11, levels and feedback words < 2^10
+synth_chparam: set                     # yosys 0.70 asserts deriving this top with hierarchy -chparam
+latency_note: >
+  One (v, dec0) per clock; each pass is a stream stage holding SEQ_LEN + 2 symbols, so a
+  decision leaves PASSES * (SEQ_LEN + 2) symbols after it went in (plus one clock per stage);
+  after the last symbol the windows drain. out_valid / out_last mark the outputs, in order.
+note: >
+  Halo_Serdes rtl/sliding_stream.sv + tb_sliding_stream.sv vendored verbatim: the streaming,
+  synthesizable form of the sliding-detector MLSD (halo_sliding_mlsd is the whole-block model
+  of the same arithmetic). Halo's committed vectors: Halo's set and mlsd_tie (zero margin,
+  candidate metrics equal to the base, late flips, which Halo's set never hits).

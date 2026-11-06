@@ -1,0 +1,27 @@
+name: halo_dfse_stream
+top: dfse_stream
+rtl:
+  - rtl/dfse_stream.sv
+tb: rtl/tb_dfse_stream.sv
+check: tb                              # Halo's tb self-checks: DFSE STREAM LOCKSTEP PASS/FAIL
+pass_pattern: "DFSE STREAM LOCKSTEP PASS"
+params: {}
+param_points:                          # 32-bit words and narrow ones; idle clocks
+  - {}
+  - {Y_W: 12, ACC_W: 20, FB_W: 17}
+  - {Y_W: 12, ACC_W: 20, FB_W: 17, GAPS: 1}
+vector_sets:
+  - {name: dfse, source: committed, dir: vectors/dfse}
+  - {name: dfse_k2, source: committed, dir: vectors/dfse_k2}
+mutation_file: dfse_dec.txt
+synth_dims: [NL, NS, K, T, C_FL, SQ_SHIFT, METRIC_MAX]
+synth_params: {Y_W: 12, ACC_W: 20, FB_W: 17, KW: 12}   # |acc| < 2^19, |fbt| < 2^16
+latency_note: >
+  As halo_viterbi_stream: one slicer word per clock in; after in_last one clock for the best
+  state, then one decision per clock from the last symbol back (out_k). Survivor memory outside.
+note: >
+  Halo_Serdes rtl/dfse_stream.sv + tb_dfse_stream.sv vendored verbatim: the streaming,
+  synthesizable form of the reduced-state Viterbi (halo_dfse_mlsd is the whole-block model).
+  The per-survivor tails are loop state, so the branch metrics stay inside the one-cycle
+  add-compare-select. Halo's committed vectors: Halo's set (4 states, two fed back) and
+  dfse_k2 (16 states, one fed back).

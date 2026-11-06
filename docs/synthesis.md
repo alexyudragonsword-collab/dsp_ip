@@ -300,6 +300,34 @@ These are not link rates. At one symbol per clock, a 32 GBd NRZ lane at about 45
 need about 71 parallel slices, which is how SerDes receivers are built. The loop is what
 limits a slice. No 640 MSPS target is attached to this IP.
 
+## Halo's MLSDs, streaming form (2026-11-06)
+
+Halo_Serdes#148 (stacked on #147) adds streaming, synthesizable forms of three of Halo's
+detectors. They are vendored here as `ip/halo_viterbi_stream`, `ip/halo_sliding_stream` and
+`ip/halo_dfse_stream`, each with an edge-case vector set the original set never exercises:
+
+- `vit_tie`: path metrics that tie;
+- `mlsd_tie`: a candidate equal to the base, and flips at the end of the block;
+- `dfse_k2`: two symbols per state.
+
+Default flow; the parameters come from each set's dims. P&R uses `tools/pnr.py`;
+`results/pnr/halo_{sliding,dfse}_stream__*.json`.
+
+| block | ABC | routed | area, routed (µm²) | what limits it |
+|---|---|---|---|---|
+| sliding MLSD, 2 passes (`mlsd`) | 4243 ps / 227 MHz | 285 MHz | 34 299 | one step per symbol: residuals, squares, two hypotheses, compare, write back |
+| DFSE, 4 states, 2 fed back (`dfse`) | 8918 ps / 110 MHz | 160 MHz | 41 480 | per-survivor feedback: the expected word, its square and the ACS in one cycle |
+| Viterbi, 16 states (`vit`) | synthesis did not finish here (see below) | | | |
+
+The Viterbi's survivor memory is outside the module, as an SRAM macro would be, so its area
+is not in these numbers. Its branch metrics depend only on the input, so they are registered
+a clock ahead, and the loop is add-compare-select plus renormalisation.
+
+`halo_sliding_stream` sets `synth_chparam: set`. yosys 0.70 asserts
+(`rtlil_bufnorm.cc:679`) when `hierarchy -chparam` derives a top whose generate loop
+instantiates a module it also has to derive. `chparam -set` plus `rename -top` gives the
+same parameters without that path (`tools/synth.py: chparam_args`).
+
 ## How to read `results/synth/*.json`
 
 Every file has `"kind": "estimate"`, the `method` string, the library name and sha256, the

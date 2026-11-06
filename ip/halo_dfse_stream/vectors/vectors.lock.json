@@ -1,0 +1,26 @@
+{
+ "sets": {
+  "dfse": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "869da3b0430c1cf69a36d925c7d81cc168026b4684817ccd6243528310ddeab7",
+    "dfse_acc.txt": "dda1489a9228e57389b9e37f54f09d7f8bfd3aac30ddc1d04fd4818ae52a9c63",
+    "dfse_dec.txt": "7f4ef775c464beb94ffabf69ba89d7e7910e5917f39a26c253e9ae874e87b7d4",
+    "dfse_dims.svh": "71e29c976d222f2967d373dd5a63862a969296f5cea064a6342ae2eaf0cbb08b",
+    "dfse_fbt.txt": "46c71817b4f6ed6656c1cdb880e0a08f9dd74372b655b1bc232370b042424cf9",
+    "dfse_y.txt": "5b99e20554c5cce8ff4618216e08dd1d48a3a781993b31cb1f2e7bbe8c8c8103"
+   }
+  },
+  "dfse_k2": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "02e062305fb48743b64a733490b532ef10a47d30c52c13fef24326795f7e9571",
+    "dfse_acc.txt": "3427d9504cd216e0ceb00479eba0408cbdcf83848ee885175cea9dc67793d1cd",
+    "dfse_dec.txt": "a0c846f035eac759e286a5c2f98f1b2bf7d4e1c9fca0a4ea83442acf440c76c9",
+    "dfse_dims.svh": "da025dc9bb40f7a481b1052603e0455b014f49ca500389ee9ef2378544af0f4b",
+    "dfse_fbt.txt": "81d8200267f271e4447a75e5e8ec256c325c5f63e3e2b27769f64625e47f9213",
+    "dfse_y.txt": "0c1d063f0bebbcad4f6782fd2afa598239fa88db9e9769692cef753275202075"
+   }
+  }
+ }
+}

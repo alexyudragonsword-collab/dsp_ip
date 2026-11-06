@@ -67,8 +67,7 @@ def netlist(spec, set_dir: Path, top: str, params: dict, work: Path,
     work.mkdir(parents=True, exist_ok=True)
     (work / "abc.script").write_text(SY.abc_script(False, None))
     srcs = " ".join(str(p) for p in spec.rtl_paths())
-    chp = " ".join(f"-chparam {k} {v}" for k, v in params.items() if SY._is_int(v))
-    strs = " ".join(f'-set {k} "{v}"' for k, v in params.items() if not SY._is_int(v))
+    chp, strs = SY.chparam_args(spec, params)
     out = work / f"{top}.v"
     keep = " ".join(f"*{m}*" for m in SY.keep_modules(spec))
     if hier and not keep:
@@ -77,6 +76,7 @@ def netlist(spec, set_dir: Path, top: str, params: dict, work: Path,
         f"read_verilog -sv -I {set_dir} {srcs}",
         f"chparam {strs} {top}" if strs else "",
         f"hierarchy -top {top} {chp}",
+        f"rename -top {top}" if spec.extra.get("synth_chparam") == "set" else "",
         *(SY.synth_lines(top, True, "default") if not hier else [
             "proc",
             "setattr -mod -set keep_hierarchy 1 " + keep,
@@ -142,6 +142,15 @@ puts "DSPIP done"
 # The same final netlist (after repair_design and CTS) timed again with no parasitics and an
 # ideal clock: what the wires and the clock tree cost, with the delay engine and the gate
 # sizes held equal. (ABC's number differs from it by both its own timing model and sizing.)
+# --stop-after place: the same flow cut after detailed placement (no CTS, no global route),
+# for designs whose global route does not fit in memory; the placed slack is then the result
+_PLACED = 'puts "DSPIP placed_wns [sta::worst_slack -max]"\n'
+TCL_PLACE = TCL[:TCL.index(_PLACED) + len(_PLACED)] + """\
+report_checks -path_delay max -format full_clock_expanded -digits 1
+report_design_area
+write_verilog {final}
+puts "DSPIP done"
+"""
 TCL_IDEAL = """\
 read_lef {platform}/lef/NangateOpenCellLibrary.tech.lef
 read_lef {platform}/lef/NangateOpenCellLibrary.macro.mod.lef
@@ -157,7 +166,8 @@ puts "DSPIP done"
 
 
 def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: float,
-        util: int, density: float, repair_timing: bool = False, hier: bool = False) -> dict:
+        util: int, density: float, repair_timing: bool = False, hier: bool = False,
+        stop_after: str | None = None) -> dict:
     spec = load_ipspec(IP_ROOT / ip)
     set_dir = spec.set_dir(set_name)
     top = module or spec.top
@@ -165,12 +175,13 @@ def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: flo
         params = {**SY.ip_synth_params(spec, set_dir), **params}
     ptag = "_".join(f"{k}{v}" for k, v in sorted(params.items()) if SY._is_int(v))
     work = RESULTS / "work" / ip / (f"{set_name}__{top}" + (f"__{ptag}" if ptag else "")
-                                     + ("__rt" if repair_timing else "") + ("__hier" if hier else ""))
+                                     + ("__rt" if repair_timing else "") + ("__hier" if hier else "")
+                                     + (f"__{stop_after}" if stop_after else ""))
     t0 = time.time()
     nl, abc_ps = netlist(spec, set_dir, top, params, work, hier)
     lib = SY.LIBS["nangate45"]["path"]
     final = work / f"{top}_final.v"
-    tcl = TCL.format(platform=PLATFORM, lib=lib, netlist=nl, top=top, period=period_ns,
+    tcl = (TCL_PLACE if stop_after == "place" else TCL).format(platform=PLATFORM, lib=lib, netlist=nl, top=top, period=period_ns,
                      util=util, density=density, site=SITE, final=final,
                      repair_timing=("estimate_parasitics -placement\nrepair_timing -setup\n"
                                     if repair_timing else ""))
@@ -225,6 +236,17 @@ def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: flo
     # wire + clock-tree penalty on the same netlist and the same timer: ideal / routed f
     rep["wire_penalty"] = round(rep["ideal_f_est_mhz"] / rep["routed_f_est_mhz"] - 1, 4) \
         if not math.isnan(rep["routed_f_est_mhz"]) else None
+    if stop_after == "place":
+        rep["stopped_after"] = "place"
+        rep["placed_penalty"] = round(rep["ideal_f_est_mhz"] / rep["placed_f_est_mhz"] - 1, 4)
+        rep["method"] = ("yosys (synth.py flow, sopb) -> OpenROAD floorplan / place / repair_design "
+                         "/ detailed placement, stopped there (no CTS, no global route); worst "
+                         "slack with placement parasitics (setRC.tcl), no repair_timing; "
+                         "f_est = 1 / (period - WNS)")
+        for k in ("routed_wns_ns", "routed_tns_ns", "routed_f_est_mhz", "wire_penalty"):
+            rep[k] = None
+        m = re.search(r"Startpoint: (\S+).*?Endpoint: (\S+)", log, flags=re.S)
+        rep["critical_path"] = {"start": m.group(1), "end": m.group(2)} if m else None
     return rep
 
 
@@ -242,6 +264,9 @@ def main(argv=None) -> int:
     ap.add_argument("--hier", action="store_true",
                     help="map the IP's own modules separately (synth.py --mode hier), then "
                          "flatten the mapped netlist; for designs too big for flat ABC")
+    ap.add_argument("--stop-after", choices=["place"],
+                    help="cut the flow after detailed placement (when global route does not fit "
+                         "in memory); the JSON then has no routed numbers")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if not OPENROAD.exists():
@@ -249,19 +274,21 @@ def main(argv=None) -> int:
         return 2
     params = dict(kv.split("=", 1) for kv in args.param)
     rep = run(args.ip, args.set_name, args.module, params, args.period, args.util, args.density,
-              args.repair_timing, args.hier)
+              args.repair_timing, args.hier, args.stop_after)
     RESULTS.mkdir(parents=True, exist_ok=True)
     ptag = "_".join(f"{k}{v}" for k, v in sorted(rep["params"].items()))
     out = args.out or RESULTS / (f"{args.ip}__{rep['module']}{'__' + ptag if ptag else ''}"
                                  + ("__rt" if args.repair_timing else "")
-                                 + ("__hier" if args.hier else "") + ".json")
+                                 + ("__hier" if args.hier else "")
+                                 + (f"__{args.stop_after}" if args.stop_after else "") + ".json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
+    routed = (f"routed WNS {rep['routed_wns_ns']:.3f} ns -> {rep['routed_f_est_mhz']} MHz "
+              f"(wire penalty {100 * rep['wire_penalty']:.1f} %)") if not args.stop_after else \
+        f"stopped after placement (placement penalty {100 * rep['placed_penalty']:.1f} %)"
     print(f"[estimate] {args.ip}/{rep['module']}: ABC {rep['abc_delay_ps']:.0f} ps -> "
           f"{rep['abc_f_est_mhz']} MHz; final netlist, ideal wires -> {rep['ideal_f_est_mhz']} MHz; "
-          f"placed WNS {rep['placed_wns_ns']:.3f} ns -> "
-          f"{rep['placed_f_est_mhz']} MHz; routed WNS {rep['routed_wns_ns']:.3f} ns -> "
-          f"{rep['routed_f_est_mhz']} MHz (wire penalty {100 * rep['wire_penalty']:.1f} %); "
+          f"placed WNS {rep['placed_wns_ns']:.3f} ns -> {rep['placed_f_est_mhz']} MHz; {routed}; "
           f"area {rep['area_um2']} um^2  [{rep['runtime_s']}s]\n"
           f"  -> {out}")
     return 0

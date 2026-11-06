@@ -1,5 +1,4 @@
-// Vendored from Halo_Serdes@5366b75: rtl/tb_viterbi_mlsd.sv
-// Adapted-copy policy: see src/dspip/vendor/__init__.py
+// Vendored from Halo_Serdes@c59c2c8: rtl/tb_viterbi_mlsd.sv
 // Lockstep testbench for viterbi_mlsd.sv against the vectors
 // halo_serdes.dsp.fixed_viterbi.dump_viterbi_vectors wrote. Exits non-zero
 // on any mismatch.

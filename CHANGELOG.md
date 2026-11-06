@@ -1,5 +1,13 @@
 # CHANGELOG（按里程碑）
 
+## Halo 三种 MLSD 的流式形式（2026-11-06）
+
+- **Halo_Serdes#148**（本库提出，叠在 #147 上，等用户合并）：`viterbi_stream.sv` / `sliding_stream.sv` / `dfse_stream.sv` 与补上的平局 / 边界向量集。本库全部 Halo 文件 pin 在 `c59c2c8`。
+- 新 IP `halo_viterbi_stream`、`halo_sliding_stream`、`halo_dfse_stream`：两组向量 × 3 点（存储 / 窄字宽、空拍），两仿真器全过。
+- 综合与布局布线（estimate）：滑窗 MLSD 布线后 285 MHz，DFSE 160 MHz；Viterbi 综合待补。
+- `tools/synth.py` / `pnr.py`：`ip.yaml synth_chparam: set`（绕开 yosys 0.70 的一个断言）；`pnr.py --stop-after place`（全局布线放不下内存时停在布局）。
+- `synth_dims` 也读 `localparam longint`。
+
 ## Halo 判决环展开、流式块布局布线（2026-11-06）
 
 - **Halo_Serdes#147**（本库提出，等用户合并）：`ffe_dfe_stream.sv` 新增 `LOOKAHEAD`（默认 0 与之前门级同）与 tb 的 `GAPS`（码之间插空拍）。本库全部 Halo 文件 pin 在 PR 头 `5366b75`。

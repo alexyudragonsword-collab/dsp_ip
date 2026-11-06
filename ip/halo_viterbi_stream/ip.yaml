@@ -1,0 +1,27 @@
+name: halo_viterbi_stream
+top: viterbi_stream
+rtl:
+  - rtl/viterbi_stream.sv
+tb: rtl/tb_viterbi_stream.sv
+check: tb                              # Halo's tb self-checks: VITERBI STREAM LOCKSTEP PASS/FAIL
+pass_pattern: "VITERBI STREAM LOCKSTEP PASS"
+params: {}
+param_points:                          # storage width (64) and 12-bit words; idle clocks
+  - {}
+  - {Y_W: 12, EX_W: 12}
+  - {Y_W: 12, EX_W: 12, GAPS: 1}
+vector_sets:
+  - {name: vit, source: committed, dir: vectors/vit}
+  - {name: vit_tie, source: committed, dir: vectors/vit_tie}
+mutation_file: vit_dec.txt
+synth_dims: [NL, NS, SQ_SHIFT, METRIC_MAX]
+synth_params: {Y_W: 12, EX_W: 12, KW: 12}   # |y|, |expected| < 2^11; 3000 symbols < 2^12
+latency_note: >
+  One slicer word per clock in; after the block's last symbol (in_last) one clock to pick the
+  best state, then one decision per clock from the last symbol back to the first (out_k says
+  which), two clocks after its read request. The survivor memory is outside the module.
+note: >
+  Halo_Serdes rtl/viterbi_stream.sv + tb_viterbi_stream.sv vendored verbatim: the streaming,
+  synthesizable form of the Viterbi MLSD (halo_viterbi_mlsd is the whole-block model of the
+  same arithmetic). Halo's committed vectors: the 16-state set (1 + 0.6D + 0.2D^2) and vit_tie
+  (4 states whose path metrics tie, which the 16-state set never does).

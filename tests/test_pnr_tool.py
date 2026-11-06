@@ -32,6 +32,11 @@ def test_flow_script_steps_in_order(pnr):
     assert pos == sorted(pos)
     assert "{repair_timing}" in t and "repair_timing" not in t.replace("{repair_timing}", "")
     assert "estimate_parasitics" not in pnr.TCL_IDEAL     # the ideal-wire run has no wires
+    # --stop-after place: the same flow up to the placed slack, then the netlist; no CTS / route
+    tp = pnr.TCL_PLACE
+    assert tp.startswith(t[:t.index("DSPIP placed_wns")])
+    assert "write_verilog" in tp and "DSPIP done" in tp
+    assert "clock_tree_synthesis" not in tp and "global_route" not in tp
 
 
 def test_committed_results_are_estimates_from_the_pinned_tools(pnr):

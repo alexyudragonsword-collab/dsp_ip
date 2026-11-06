@@ -313,3 +313,17 @@ def test_synth_dims_and_params_from_ip_yaml(sy):
     spec.extra["synth_dims"] = ["NOPE"]
     with pytest.raises(ValueError, match="NOPE"):
         sy.ip_synth_params(spec, spec.root / "vectors" / "delta")
+
+
+def test_chparam_args_default_and_set(sy):
+    """Integers go through hierarchy -chparam and strings through chparam -set, unless the IP
+    asks for chparam -set for everything (synth_chparam: set; a yosys 0.70 assertion)."""
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "halo_ffe_dfe_stream")
+    chp, strs = sy.chparam_args(spec, {"NF": "15", "ROM": "a.memh"})
+    assert chp == "-chparam NF 15" and strs == '-set ROM "a.memh"'
+    spec = load_ipspec(IP_ROOT / "halo_sliding_stream")
+    assert spec.extra["synth_chparam"] == "set"
+    chp, strs = sy.chparam_args(spec, {"V_W": "12", "ROM": "a.memh"})
+    assert chp == "" and strs == '-set V_W 12 -set ROM "a.memh"'

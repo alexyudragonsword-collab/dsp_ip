@@ -1,0 +1,43 @@
+{
+ "kind": "estimate",
+ "ip": "halo_dfse_stream",
+ "set": "dfse",
+ "module": "dfse_stream",
+ "params": {
+  "NL": "4",
+  "NS": "4",
+  "K": "1",
+  "T": "2",
+  "C_FL": "8",
+  "SQ_SHIFT": "3",
+  "METRIC_MAX": "1048575",
+  "Y_W": "12",
+  "ACC_W": "20",
+  "FB_W": "17",
+  "KW": "12"
+ },
+ "tool": {
+  "openroad": "2.0-12381-g01bba3695",
+  "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
+  "abc": "sopb",
+  "platform": "OpenROAD-flow-scripts@e5cc6e7 nangate45"
+ },
+ "period_ns": 9.0,
+ "utilization_pct": 40,
+ "place_density": 0.6,
+ "repair_timing": false,
+ "synth": "flat",
+ "abc_delay_ps": 8918.24,
+ "abc_f_est_mhz": 110.2,
+ "ideal_wns_ns": 3.318493573862418,
+ "placed_wns_ns": 2.8629988079535047,
+ "routed_wns_ns": 2.7538638815463052,
+ "ideal_f_est_mhz": 176.0,
+ "routed_tns_ns": 0.0,
+ "placed_f_est_mhz": 162.9,
+ "routed_f_est_mhz": 160.1,
+ "area_um2": 41480.0,
+ "runtime_s": 182.2,
+ "method": "yosys (synth.py flow, sopb) -> OpenROAD floorplan / place / repair_design / CTS / global_route; worst slack with global-route parasitics (setRC.tcl), no repair_timing, no detailed route; f_est = 1 / (period - WNS)",
+ "wire_penalty": 0.0993
+}

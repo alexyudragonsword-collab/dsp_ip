@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@5366b75: rtl/tb_ffe_dfe_stream.sv
+// Vendored from Halo_Serdes@c59c2c8: rtl/tb_ffe_dfe_stream.sv
 // Lockstep testbench for the streaming datapath (ffe_dfe_stream.sv): the same golden vectors as
 // tb_ffe_dfe.sv, but the ADC words go in one per clock through the ports and every (v, dec)
 // that comes out with out_valid is checked against the Python golden in order. Exits non-zero

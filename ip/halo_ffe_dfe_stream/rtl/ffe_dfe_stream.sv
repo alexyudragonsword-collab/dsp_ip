@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@5366b75: rtl/ffe_dfe_stream.sv
+// Vendored from Halo_Serdes@c59c2c8: rtl/ffe_dfe_stream.sv
 // Streaming FFE + DFE + slicer — the synthesizable form of ffe_dfe_datapath.sv.
 //
 // Same arithmetic as ffe_dfe_datapath.sv / halo_serdes.dsp.fixed_datapath._ffe_dfe_pr_fixed_py

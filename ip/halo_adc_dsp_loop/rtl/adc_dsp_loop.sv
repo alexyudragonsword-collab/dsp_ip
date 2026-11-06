@@ -1,5 +1,4 @@
-// Vendored from Halo_Serdes@5366b75: rtl/adc_dsp_loop.sv
-// Adapted-copy policy: see src/dspip/vendor/__init__.py
+// Vendored from Halo_Serdes@c59c2c8: rtl/adc_dsp_loop.sv
 // Fixed-point ADC receiver back end WITH its clock recovery: FFE + DFE +
 // slicer + Mueller-Muller phase detector + loop filter + phase register.
 //

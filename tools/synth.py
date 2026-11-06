@@ -318,14 +318,15 @@ def _is_int(v) -> bool:
 
 def ip_synth_params(spec, set_dir: Path) -> dict:
     """ip.yaml ``synth_params`` (e.g. ROM init files, word widths), ``{set_dir}`` expanded,
-    plus ``synth_dims``: the named ``localparam int`` of the set's ``*.svh`` (for a module that
+    plus ``synth_dims``: the named ``localparam int`` / ``longint`` of the set's ``*.svh`` (for a module that
     takes as parameters what its testbench reads from the vector set's dims)."""
     out = {}
     names = spec.extra.get("synth_dims") or []
     if names:
         found = {}
         for svh in sorted(Path(set_dir).glob("*.svh")):
-            found.update(re.findall(r"localparam\s+int\s+(\w+)\s*=\s*(-?\d+)\s*;", svh.read_text()))
+            found.update(re.findall(r"localparam\s+(?:int|longint)\s+(\w+)\s*=\s*(-?\d+)\s*;",
+                                    svh.read_text()))
         missing = [n for n in names if n not in found]
         if missing:
             raise ValueError(f"{spec.name}: synth_dims {missing} not in {set_dir}/*.svh")
@@ -333,6 +334,19 @@ def ip_synth_params(spec, set_dir: Path) -> dict:
     out.update({k: str(v).replace("{set_dir}", str(set_dir))
                 for k, v in (spec.extra.get("synth_params") or {}).items()})
     return out
+
+
+def chparam_args(spec, params: dict) -> tuple[str, str]:
+    """(``hierarchy -chparam`` options, ``chparam -set`` options) for the top's parameters.
+    Integers normally go through ``hierarchy -chparam``; strings through ``chparam -set``
+    (``hierarchy`` cannot decode a string). ip.yaml ``synth_chparam: set`` sends integers
+    through ``chparam -set`` too: yosys 0.70 asserts (rtlil_bufnorm.cc:679) when ``hierarchy``
+    derives a top whose generate loop instantiates a module it also has to derive."""
+    as_set = spec.extra.get("synth_chparam") == "set"
+    chp = " ".join(f"-chparam {k} {v}" for k, v in params.items() if _is_int(v) and not as_set)
+    strs = " ".join((f"-set {k} {v}" if _is_int(v) else f'-set {k} "{v}"')
+                    for k, v in params.items() if as_set or not _is_int(v))
+    return chp, strs
 
 
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,
@@ -344,11 +358,12 @@ def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_scri
     srcs = " ".join(str(p) for p in spec.rtl_paths())
     # integers through hierarchy -chparam; strings (e.g. ROM init files) through chparam -set,
     # which takes a Verilog string where hierarchy -chparam cannot decode one
-    chp = " ".join(f"-chparam {k} {v}" for k, v in params.items() if _is_int(v))
-    strs = " ".join(f'-set {k} "{v}"' for k, v in params.items() if not _is_int(v))
+    chp, strs = chparam_args(spec, params)
     lines = [f"read_verilog -sv -I {set_dir} {srcs}",
              f"chparam {strs} {top}" if strs else "",
-             f"hierarchy -top {top} {chp}"]
+             f"hierarchy -top {top} {chp}",
+             # chparam -set on a top with sub-modules leaves it as $paramod$...: name it back
+             f"rename -top {top}" if spec.extra.get("synth_chparam") == "set" else ""]
     if flatten:
         lines += synth_lines(top, True, flow)
     else:

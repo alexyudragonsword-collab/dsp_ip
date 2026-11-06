@@ -1,5 +1,15 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · Halo 三种 MLSD 流式化（Halo_Serdes#148）；adc_dsp_loop 未做
+
+- Viterbi / 滑窗 / DFSE 流式形式，四个仿真器逐位同，有 / 无空拍。三个新 IP（`halo_*_stream`）× 两组向量 × 3 点全过。
+- **被推翻的判断**："Halo 的向量足够检验"——平局 / 边界变体在原集合上全过。Halo 补 `vit_tie` / `mlsd_tie` / `dfse_k2`（金值生成），变体在新集合上 1–363 个错。
+- 综合 + 布线：滑窗 227 → 285 MHz、DFSE 110 → 160 MHz（ABC → 布线）。Viterbi 的 ABC（sopb）本机跑了 > 20 分钟未完（第一次还被 OOM 杀掉一次），数字待补。
+- yosys 0.70 断言：`hierarchy -chparam` 推导"generate 里例化子模块"的顶层失败；`ip.yaml synth_chparam: set` 改走 `chparam -set` + `rename -top`（其余 IP 脚本不变）。
+- **我自己的失误**：上一次改 SOURCE.md 措辞只重锁了一个 IP，CI lockstep 报 5 个 IP LOCK（`ccbd73b` 修）；本地快测不跑 lockstep，抓不到。
+- #148 叠在 #147 上（一个 SHA 管全部 Halo 文件）；第一次 rebase 把冲突标记提交进本地提交，跑测试才发现，改推新分支名 `feat/rtl-mlsd-stream-on-147`（强推被拒，旧分支留在远端）。
+- `adc_dsp_loop` 没做：逐码元自适应闭环，记 ROADMAP。
+
 ## 2026-11-06 · Halo 判决环展开（Halo_Serdes#147）与流式块的布局布线
 
 - 用户选"展开 Halo 判决环"。`LOOKAHEAD=1`：第 2 级为上一个判决的 NL+1 种取值各算一份判决器结果，第 3 级按刚寄存的判决挑。默认 0 门级不变（3977.09 ps / 16 048 µm² / 12 774 单元）。
