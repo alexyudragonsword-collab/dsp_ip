@@ -58,7 +58,11 @@ Other IPs, each against its own required rate (`target_rate_msps` in its ip.yaml
 
 | IP | set | mode | critical path (ps) | f_est (MHz) | required (MSPS) | margin | area (µm²) | cells |
 |---|---|---|---|---|---|---|---|---|
+| `cfr_clip` | mixed | full | 85 | 4190 | 640 | 6.5× | 73 | 27 |
 | `dp_cal_lms` | ble_5pct | full | 1736 | 529 | 32 | 16.5× | 1398 | 1104 |
+| `dpa_thermo_decode` | all_codes | full | 394 | 1827 | 640 | 2.9× | 766 | 322 |
 | `dtc_dither` | ramp | full | 363 | 1936 | 640 | 3.0× | 222 | 141 |
+| `dtc_phase_acc` | random | full | 368 | 1918 | 640 | 3.0× | 230 | 161 |
+| `polar_datapath` | wifi20 | full | 482 | 1573 | 640 | 2.5× | 2061 | 1274 |
 | `polar_dpd_lut` | wifi20 | full | 422 | 1736 | 640 | 2.7× | 645 | 542 |
 

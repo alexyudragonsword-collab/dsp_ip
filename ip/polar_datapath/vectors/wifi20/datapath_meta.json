@@ -1,0 +1,24 @@
+{
+ "addr_used": 192,
+ "clip_fraction": 0.008386948529411764,
+ "command": "python -m polartx.export.rtl_vectors datapath OUTDIR",
+ "dpa": {
+  "amam": [
+   "rapp",
+   2.5,
+   1.1
+  ],
+  "ampm_deg_poly": [
+   0.0,
+   2.0,
+   3.0
+  ],
+  "n_bits": 10,
+  "n_thermo": 7,
+  "sigma_cell": 0.01
+ },
+ "n": 8704,
+ "set": "datapath",
+ "stages": "cfr_clip -> dpd amp LUT -> dpa thermo decode; phase_acc - dpd AM-PM correction -> efm1 (rtl_vectors.datapath_golden)",
+ "threshold": 3071
+}

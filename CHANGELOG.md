@@ -1,5 +1,18 @@
 # CHANGELOG（按里程碑）
 
+## polar_tx 数字链补齐：三个块 + 整条通路（2026-11-06）
+
+- **新 IP**（参考都从 polar_tx 原样 vendor；四个仿真器第一次跑就 0 不匹配）：
+  - `cfr_clip`：9728 字；突发上 PAPR 9.20 → 6.73 dB，0.84 % 削顶。估计 85 ps / 73 µm²。
+  - `dtc_phase_acc`：2048 字，与浮点相位和逐值相等。估计 368 ps / 230 µm²。
+  - `dpa_thermo_decode`：全部 1024 码，单元权重之和还原码值，相邻码最多翻一个温度计段。估计 394 ps / 766 µm²。
+  - **`polar_datapath`**：用本库五个块 IP 组装的整条链，两路延迟都是 3。WiFi-20 突发 8704 样本 × 三路输出全对。
+    - 规则 2：DPA 码相对浮点预失真幅度 −0.88…+0.12 LSB（取高位造成 −0.37 偏置），DTC 码相对浮点相位减 AM-PM 校正 ±1.04 LSB、均值 −0.0006。
+    - 估计 482 ps → 1573 MHz / 2061 µm²；布局布线后 1493 MHz（线网代价 9.0 %），相对 640 MSPS 余量 2.3×。
+- 上游：polar_tx#18 新增 `datapath_golden` 与 cfr_clip / phase_acc / thermo / datapath 四组导出，**等用户合并**。
+  - 本库按 PR 头 `e10bc38` pin 全部 polar_tx 文件，新增 vendored `rtl_vectors.py`（只用 `datapath_golden`）。
+  - `check_polartx_export` 现查 11 组。
+
 ## 布局布线估计：OpenROAD 进流程（2026-11-06）
 
 - **`tools/get_openroad.sh`**：固定版本的 OpenROAD（litex-hub `openroad-2.0_12381_g01bba3695`，按频道索引核对 sha256）。

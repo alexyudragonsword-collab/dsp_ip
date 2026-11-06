@@ -1,0 +1,6 @@
+{
+ "command": "python -m polartx.export.rtl_vectors phase_acc OUTDIR",
+ "n": 2048,
+ "set": "phase_acc",
+ "w": 16
+}

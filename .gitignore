@@ -8,6 +8,10 @@ ip/*/vectors/*
 !ip/dp_cal_lms/vectors/*
 !ip/dtc_dither/vectors/*
 !ip/polar_dpd_lut/vectors/*
+!ip/cfr_clip/vectors/*
+!ip/dtc_phase_acc/vectors/*
+!ip/dpa_thermo_decode/vectors/*
+!ip/polar_datapath/vectors/*
 # lockstep's per-IP flock file (tools/lockstep.py vectors_lock)
 ip/*/vectors/.lockstep.lock
 # simulation / synthesis outputs (CI uploads them as artifacts)

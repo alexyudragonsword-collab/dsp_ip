@@ -1,5 +1,13 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · polar_tx 数字链：cfr_clip / dtc_phase_acc / dpa_thermo_decode / polar_datapath
+
+- polar_tx#18：`datapath_golden` 第一次写下五个块之间的级间位宽（取高位、AM-PM 校正左移 5 位相减，与 `chain.py` 同号），**请用户在 PR 里审**。
+- 四个新 IP 第一次跑就全过（四个仿真器）；整条链两路延迟都是 3，用 out_valid 对齐，tb 不靠延迟数字比较。
+- 数字：突发 PAPR 9.20 → 6.73 dB；DPA 码误差 −0.88…+0.12 LSB（截高位偏置 −0.37）；DTC 码 ±1.04 LSB；通路 1573 MHz（ABC）/ 1493 MHz（布线）。
+- 级联约定的副作用：CFR 门限 0.75 FS 加取高 8 位，LUT 上 1/4 地址整条链永远不访问（192 / 256），已写进 PR 描述。
+- 下一步：Halo 模块流式化；polar_tx#18 合并后改 pin。
+
 ## 2026-11-06 · OpenROAD 布局布线：乘法级线网代价 8–12 %，P=1 回到边缘
 
 - 用户选 litex-hub 包。频道依赖要 Anaconda `defaults` 的 libboost 1.73（另有条款，不用），conda-forge 上三者一起无解，Python 3.10 还被解成 GraalPy（没有 libpython）。

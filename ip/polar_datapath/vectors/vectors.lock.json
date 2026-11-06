@@ -1,0 +1,19 @@
+{
+ "sets": {
+  "wifi20": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "64bfbcca948270beb2dba248cb4ff0a30f4b1da25a43be66d1e7f2f98e712d1f",
+    "bin.txt": "17edf7c735ddd1898532059d586aaf13bd8cc846ff8e9d3e61742aea669e175c",
+    "datapath_dims.svh": "f38ca76ce52496a5b49c2dab648d00d49947cd0f6dc735387023e01f22c7507f",
+    "datapath_meta.json": "8298787cc48aaad5f5db8c48552a2ce04bf61a3500f26021083ed76b1b094fcf",
+    "dpd_amp.memh": "a62bd3b496ccfc68a2b2fd043076d975a811d610e8fea474e77c0148c3c51cfe",
+    "dpd_ph.memh": "2c95524d3901f5d30f51b1dc2827f8cdb9b70c7b1eaa2ca2099110e7fc23e768",
+    "dtc_code.txt": "404e7a9979a3791c1541c45fb19d492ebaec4b5ae24c20d2f4993e4f96cdb568",
+    "env.txt": "9eeca438bb6929ed8fbb589c1410a76a96a3aec200d999ab9ccc64e3fae44ecc",
+    "finc.txt": "80e93a0e8b4d79969ef0b21d72c32c273360c35bd0936b4bebd58396cf8d456c",
+    "thermo.txt": "fc9b93273369eeacecfe65754c223fbd70f7496faefb1c4dddbc0622e4cbe63f"
+   }
+  }
+ }
+}

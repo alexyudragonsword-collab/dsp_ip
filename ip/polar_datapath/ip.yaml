@@ -1,0 +1,32 @@
+name: polar_datapath
+top: polar_datapath
+rtl:
+  - ../cfr_clip/rtl/cfr_clip.sv
+  - ../polar_dpd_lut/rtl/polar_dpd_lut.sv
+  - ../dpa_thermo_decode/rtl/dpa_thermo_decode.sv
+  - ../dtc_phase_acc/rtl/dtc_phase_acc.sv
+  - ../dtc_dither/rtl/dtc_efm1.sv
+  - rtl/polar_datapath.sv
+tb: rtl/tb_polar_datapath.sv
+check: python
+params: {}
+probe: dspip.ip.polar_datapath.ref:probe
+vector_sets:
+  - {name: wifi20, source: committed, dir: vectors/wifi20}
+compare:
+  - {golden: thermo.txt, rtl: rtl_thermo.txt}
+  - {golden: bin.txt, rtl: rtl_bin.txt}
+  - {golden: dtc_code.txt, rtl: rtl_dtc_code.txt}
+mutation_file: dtc_code.txt
+target_rate_msps: 640    # one sample per clock (polar_tx wifi_dtc: 160 MHz x 4)
+synth_params:
+  AMP_INIT: "{set_dir}/dpd_amp.memh"
+  PH_INIT: "{set_dir}/dpd_ph.memh"
+latency_note: >
+  One sample per valid clock; LATENCY = 3 on both paths (amplitude: cfr, lut, decoder;
+  phase: accumulator, alignment register, EFM1). out_valid = valid delayed by 3.
+note: >
+  The whole digital polar datapath polar_tx ships (CFR clip -> DPD LUT -> DPA decoder; phase
+  accumulator -> minus AM-PM correction -> EFM1 dither), built from this library's five
+  block IPs and wired as polar_tx rtl_vectors.datapath_golden (vendored) defines it.
+  Vectors: polar_tx's WiFi-20 burst through the chain (8704 samples).

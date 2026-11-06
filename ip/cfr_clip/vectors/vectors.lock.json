@@ -1,0 +1,15 @@
+{
+ "sets": {
+  "mixed": {
+   "command": "committed (see ip.yaml / EXPORT.md)",
+   "files": {
+    "SOURCE.md": "6a807c4afdb07de929afd4a732d4e0aaf36ee4f0a3b10a5cc9016ce6b57ef5b1",
+    "cfr_dims.svh": "d3016f059e607a664478f5773fa2915c1564f0b41ab050c6aa314119fa90acd0",
+    "cfr_meta.json": "0bd45b3372c9260b73fadb8f6cba1117cc7cf2fbfacb8c943ec592654e0fbfa9",
+    "clipped.txt": "7122ac269ab581f5f8d2e4c4fa1dd48f3712f30546fcd897885ca89d5a536d42",
+    "env.txt": "d05d71695cc8de1fec2231a247afe6ba62ba55dd10b00d7600b8ecedb9f1746a",
+    "env_clip.txt": "b460766543abd312e1fea0b35698661a09d6e179b08dc147d27cdedc801d5b1b"
+   }
+  }
+ }
+}

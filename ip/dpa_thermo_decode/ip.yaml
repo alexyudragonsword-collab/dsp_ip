@@ -1,0 +1,18 @@
+name: dpa_thermo_decode
+top: dpa_thermo_decode
+rtl:
+  - rtl/dpa_thermo_decode.sv
+tb: rtl/tb_dpa_thermo_decode.sv
+check: python
+params: {}
+probe: dspip.ip.dpa_thermo_decode.ref:probe
+vector_sets:
+  - {name: all_codes, source: committed, dir: vectors/all_codes}
+compare:
+  - {golden: thermo.txt, rtl: rtl_thermo.txt}
+  - {golden: bin.txt, rtl: rtl_bin.txt}
+target_rate_msps: 640    # one DPA code per clock (polar_tx wifi_dtc: 160 MHz x 4)
+latency_note: One code per clock; thermometer and binary words registered (LATENCY = 1).
+note: >
+  Segmented DPA decoder (7 thermometer MSBs -> 127 unary segments, 3 binary LSBs), RTL of
+  polar_tx export/rtl.py thermo_decode_golden (vendored). Vectors: every 10-bit code.

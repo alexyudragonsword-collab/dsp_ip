@@ -1,0 +1,8 @@
+{
+ "command": "python -m polartx.export.rtl_vectors thermo OUTDIR",
+ "n": 1024,
+ "n_bits": 10,
+ "n_seg": 127,
+ "n_thermo": 7,
+ "set": "thermo"
+}

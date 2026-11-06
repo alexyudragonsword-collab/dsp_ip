@@ -1,0 +1,17 @@
+name: dtc_phase_acc
+top: dtc_phase_acc
+rtl:
+  - rtl/dtc_phase_acc.sv
+tb: rtl/tb_dtc_phase_acc.sv
+check: python
+params: {}
+probe: dspip.ip.dtc_phase_acc.ref:probe
+vector_sets:
+  - {name: random, source: committed, dir: vectors/random}
+compare:
+  - {golden: phase.txt, rtl: rtl_phase.txt}
+target_rate_msps: 640    # one phase word per clock (polar_tx wifi_dtc: 160 MHz x 4)
+latency_note: One update per valid cycle; phase registered (LATENCY = 1); rst clears it.
+note: >
+  Modulo-2^W phase accumulator of the open-loop DTC, RTL of polar_tx export/rtl.py
+  phase_acc_golden (vendored). Vectors: polar_tx rtl_vectors phase_acc.

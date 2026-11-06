@@ -29,15 +29,20 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ 0e76e3e (merge of polar_tx PR #17,
-which added the vector export entry points; #16 added the fixed-point calibrator):
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ e10bc38 (head of polar_tx PR #18;
+#16 added the fixed-point calibrator, #17 and #18 the vector exports):
 
 - ``dp_cal_fixed.py``: the bit-true sign-sign LMS two-point gain calibrator
   (``golden_trace``, ``step_codes``, ``DpCalFixedConfig``) that ``ip/dp_cal_lms``
   implements in RTL. numpy only.
-- ``export/rtl.py`` (as ``rtl.py``): polar_tx's RTL export, for ``efm1_int_golden`` (the
-  DTC dither ``ip/dtc_dither`` implements) and ``quantize_dpd_luts`` (how the
-  ``ip/polar_dpd_lut`` ROM images are made). numpy only.
+- ``export/rtl.py`` (as ``rtl.py``): polar_tx's RTL export, for the block goldens
+  ``efm1_int_golden`` (``ip/dtc_dither``), ``cfr_clip_golden`` (``ip/cfr_clip``),
+  ``phase_acc_golden`` (``ip/dtc_phase_acc``), ``thermo_decode_golden``
+  (``ip/dpa_thermo_decode``) and ``quantize_dpd_luts`` (how the ``ip/polar_dpd_lut`` ROM
+  images are made). numpy only.
+- ``export/rtl_vectors.py`` (as ``rtl_vectors.py``): for ``datapath_golden``, the
+  stage-to-stage definition of the whole datapath ``ip/polar_datapath`` implements (its
+  other functions import polar_tx modules lazily and are not used here).
 
 Everything else in dspip imports these only through ``dspip.vendor.padpd...`` /
 ``dspip.vendor.polartx...``.

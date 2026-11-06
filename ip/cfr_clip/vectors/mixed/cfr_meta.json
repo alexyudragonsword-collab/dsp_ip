@@ -1,0 +1,8 @@
+{
+ "clip_fraction": 0.03125,
+ "command": "python -m polartx.export.rtl_vectors cfr_clip OUTDIR",
+ "n": 9728,
+ "set": "cfr_clip",
+ "threshold": 3071,
+ "w": 12
+}

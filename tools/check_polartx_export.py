@@ -37,6 +37,10 @@ SETS = [
     ("dtc_dither", "random", "polartx.export.rtl_vectors", ["dtc_random"]),
     ("dtc_dither", "ramp", "polartx.export.rtl_vectors", ["dtc_ramp"]),
     ("polar_dpd_lut", "wifi20", "polartx.export.rtl_vectors", ["dpd_lut"]),
+    ("cfr_clip", "mixed", "polartx.export.rtl_vectors", ["cfr_clip"]),
+    ("dtc_phase_acc", "random", "polartx.export.rtl_vectors", ["phase_acc"]),
+    ("dpa_thermo_decode", "all_codes", "polartx.export.rtl_vectors", ["thermo"]),
+    ("polar_datapath", "wifi20", "polartx.export.rtl_vectors", ["datapath"]),
 ]
 FLOAT_KEYS = ("tail_mean", "evm_pct")
 
