@@ -1,8 +1,8 @@
 # Committed vector set: polar_tx export (dp_cal_lms / narrow)
 
-Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `e928557e1d6c77cab891869f7eff3d5d75a7098d`
-(head of polar_tx PR #17, which added the export entry points for these sets; re-pinned to the
-merge commit once merged) with
+Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `0e76e3e7e15a7aab33b512daad51784c5a70f228`
+(the merge of polar_tx PR #17, which added the export entry points for these sets; first
+exported from its head e928557, src/ identical) with
 
     python -m polartx.export.dp_cal_vectors OUTDIR --variant narrow    # in a polar_tx checkout, pip install -e .
 

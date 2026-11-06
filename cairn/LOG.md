@@ -1,5 +1,11 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · polar_tx#17 合并（0e76e3e），全部 polar_tx 文件改 pin
+
+- 用户选"合并 #17 并改 pin"。合并提交的 src/ 与 PR 头 `e928557` 相同（PR 头之后只有 Windows 换行的测试修复 `b26e8ae`）。
+- 本库改 pin：两个 vendored 头注释、`vendor/__init__.py`、`ci.yml` `POLAR_TX_SHA`、7 个 SOURCE.md；`check_polartx_export` 7/7 逐字节一致，vendor_check 24/24，三个 IP lockstep 全过，重锁。
+- 下一步（用户已选）：polar_tx 数字链补齐、Halo 模块流式化、OpenROAD（litex-hub 包）布局布线。
+
 ## 2026-11-05 · 新 IP dtc_dither / polar_dpd_lut，dp_cal_lms 加三组，指纹全覆盖；余量不换阶数；sky130 交叉
 
 - polar_tx#17：`export/rtl_vectors.py` + `dp_cal_vectors --variant`，CI 待看，**等用户合并**。本库 pin 在 PR 头 `e928557`。

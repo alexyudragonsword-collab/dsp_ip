@@ -29,7 +29,7 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ e928557 (head of polar_tx PR #17,
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ 0e76e3e (merge of polar_tx PR #17,
 which added the vector export entry points; #16 added the fixed-point calibrator):
 
 - ``dp_cal_fixed.py``: the bit-true sign-sign LMS two-point gain calibrator

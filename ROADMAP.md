@@ -14,9 +14,7 @@
 
 ## 推回上游
 
-- [ ] **polar_tx#17（rtl_vectors 导出 + dp_cal 变体）等用户审阅合并**。本库 `dtc_dither`、`polar_dpd_lut` 与 `dp_cal_lms` 的全部 polar_tx 文件 pin 在 PR 头 `e928557`。合并后改 pin：vendored 头注释 ×2、`vendor/__init__.py`、`ci.yml` `POLAR_TX_SHA`、7 个 SOURCE.md、重锁，再跑 `vendor_check --strict` + `tools/check_polartx_export.py`。
-
-（无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）已合并为 `f43cd4f` 并重新 pin；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
+（无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）与 #17（rtl_vectors 导出、dp_cal 变体）已合并，现 pin 在 `0e76e3e`；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
 
 ## 被外部阻塞
 

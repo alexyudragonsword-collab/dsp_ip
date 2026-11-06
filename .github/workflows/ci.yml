@@ -9,7 +9,7 @@ env:
   PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
   HALO_SHA: aca61232855e6458109242f984a82d1d3610a806
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
-  POLAR_TX_SHA: e928557e1d6c77cab891869f7eff3d5d75a7098d   # polar_tx#17 head; re-pin on merge
+  POLAR_TX_SHA: 0e76e3e7e15a7aab33b512daad51784c5a70f228   # merge of polar_tx#17
 
 jobs:
   lint:

@@ -12,7 +12,7 @@
   - 规则 2：幅度、相位码与浮点 LUT 的最大差都是 0.50 LSB；位宽扫描 8–14。
   - 综合（带 ROM 内容，`ip.yaml` `synth_params` 经 `chparam -set` 传入）422 ps / 645 µm²，余量 2.7×。
 - **`ip/dp_cal_lms`** 加三组向量：ble_m5pct（向上收敛）、sat_top（16 位寄存器，39 % 周期顶在上限）、narrow（E 4 位 / R 5 位 / K 8）。四个仿真器、四组都是 0 不匹配。
-- 上游：polar_tx#17 新增 `export/rtl_vectors.py` 与 `dp_cal_vectors --variant`（默认集逐字节不变），**等用户合并**。本库按 PR 头 `e928557` pin 全部 polar_tx 文件。
+- 上游：polar_tx#17 新增 `export/rtl_vectors.py` 与 `dp_cal_vectors --variant`（默认集逐字节不变），用户指示后合并为 `0e76e3e` 并改 pin（src/ 与 PR 头 `e928557` 相同，重新导出逐字节一致）。
   `tools/check_polartx_export.py` 取代 `check_dp_cal_export.py`，在 CI 重新导出全部 7 组 polar_tx 向量逐字节比对。
 - **指纹全覆盖**：`tools/fingerprint.py record` 覆盖 `ip/` 下每个 IP。有 Python 参考的记参考输出，Halo 这类记提交金标的哈希；共 250 值，6 s；新增测试保证新 IP 自动被覆盖。
 - **时序余量换阶数：不换**。把 env / pow / term 退回重分级前的版本，在 `sopb` 下分别是 1403 / 1375 / 1543–1770 ps（上限 1409），term 破 P=1，面积只省 1–3 %。
