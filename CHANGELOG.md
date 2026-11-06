@@ -8,6 +8,9 @@
   关键路径是一拍判决环；这是每通道每拍一个码元的数，不是链路速率（32 GBd 约需 133 路并行），不挂 640 MSPS 目标。
 - 全部 Halo IP 改 pin 到 `56b92c2`：Halo `main` 在 `aca6123` 之后变过（`ffe_dfe_datapath.sv` 61 行，向量随 #144 重新生成），vendor_check 报出 stale pin。
   12 个 `.sv` 与 13 个向量集重新拷贝重锁，六个 Halo IP 在四个仿真器上全过。
+- CI 修复：
+  - `tools/pnr.py --out` 先建目录。
+  - `check_polartx_export` 对 `*_meta.json` 中任意位置的浮点用 1e-9 容差，整数仍逐字节比较。起因是 CI 上 `polar_dpd_lut` 浮点 LUT 末位不同，ROM 相同。
 - 脚手架：`ip.yaml` `param_points`（显式参数点，不做笛卡尔积）、`synth_dims`（综合参数取自向量集的 `dims.svh`）；各有测试。
 
 ## polar_tx 数字链补齐：三个块 + 整条通路（2026-11-06）

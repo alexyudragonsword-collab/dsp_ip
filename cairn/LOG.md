@@ -1,5 +1,15 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · CI 修两处：pnr 输出目录、polar_dpd_lut 浮点 LUT 末位
+
+- 三次推送（dae4f0a / 5db4faa / 0ea46e2）CI 都红，两个 job：
+  - `pnr`：`--out results/pnr-ci/…` 的目录不存在，OpenROAD 跑完写 JSON 时 FileNotFoundError（本机写的是默认 `results/pnr/`，没撞到）。`pnr.py` 现先建父目录。
+  - `vendor-drift`：`polar_dpd_lut/wifi20` 的 `dpd_meta.json` 里 `amp_float` / `ph_float_rad` 不同；同一次运行里 ROM 与整数流逐字节相同。
+    浮点 LUT 是说明性的，末位随 CPU / numpy 构建变。**被推翻的判断**：meta 里只有两个摘要浮点（`FLOAT_KEYS`）需要容差。
+    现在 meta 里任何位置的浮点都按 1e-9 相对 / 1e-12 绝对比较；整数、字符串、结构仍要求严格相等。新测试：1e-15 噪声通过，1e-6 与整数改动报出。
+- 11 个 SOURCE.md 的"逐字节比较"改为如实描述，7 个 IP 重锁（只变 SOURCE.md 哈希）。
+- 下一步：CI 绿后推 main；等用户合并 polar_tx#18 / Halo#145 后改 pin。
+
 ## 2026-11-06 · Halo 第一个可综合块（halo_ffe_dfe_stream）；Halo IP 全部改 pin 到 56b92c2
 
 - Halo_Serdes#145：流式 FFE + DFE + 判决器，四种目标 × 两套位宽逐位同（Icarus 12 / 14、Verilator 5.020 / 5.053）。

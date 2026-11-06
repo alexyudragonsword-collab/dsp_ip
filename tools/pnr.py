@@ -240,6 +240,7 @@ def main(argv=None) -> int:
     ptag = "_".join(f"{k}{v}" for k, v in sorted(rep["params"].items()))
     out = args.out or RESULTS / (f"{args.ip}__{rep['module']}{'__' + ptag if ptag else ''}"
                                  + ("__rt" if args.repair_timing else "") + ".json")
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
     print(f"[estimate] {args.ip}/{rep['module']}: ABC {rep['abc_delay_ps']:.0f} ps -> "
           f"{rep['abc_f_est_mhz']} MHz; final netlist, ideal wires -> {rep['ideal_f_est_mhz']} MHz; "

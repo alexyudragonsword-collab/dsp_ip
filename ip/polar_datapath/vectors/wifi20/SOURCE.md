@@ -12,5 +12,6 @@ Files: `bin.txt`, `datapath_dims.svh`, `datapath_meta.json`, `dpd_amp.memh`, `dp
 
 dsp_ip does not regenerate them locally (rule 3: the consumer's export, pinned); the CI
 `vendor-drift` job re-exports every polar_tx set at the pinned SHA
-(`tools/check_polartx_export.py`) and compares byte for byte; sha256 of every file is in
+(`tools/check_polartx_export.py`) and compares: integer files byte for byte, floats in the
+`*_meta.json` to 1e-9 relative; sha256 of every file is in
 `../vectors.lock.json`.

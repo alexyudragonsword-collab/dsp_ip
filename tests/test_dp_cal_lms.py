@@ -140,3 +140,29 @@ def test_export_check_catches_a_changed_code(tmp_path):
     (fresh / "dp_cal_meta.json").write_text(json.dumps(meta))
     probs = mod.compare(fresh, SET)
     assert any("dp_cal_value.txt" in p for p in probs) and any("evm_pct" in p for p in probs)
+
+
+def test_export_check_tolerates_float_ulps_only(tmp_path):
+    """polar_dpd_lut's meta carries the float LUT next to the integer ROMs; its last ulp follows
+    the CPU / numpy build (CI drifted on amp_float, ROMs identical). Float noise at 1e-15 passes,
+    1e-6 and any integer change do not."""
+    import importlib.util
+    import shutil
+
+    spec = importlib.util.spec_from_file_location(
+        "check_polartx_export", REPO / "tools" / "check_polartx_export.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    lut = REPO / "ip" / "polar_dpd_lut" / "vectors" / "wifi20"
+    fresh = tmp_path / "fresh"
+    shutil.copytree(lut, fresh)
+    meta = json.loads((fresh / "dpd_meta.json").read_text())
+    meta["amp_float"] = [v * (1 + 1e-15) for v in meta["amp_float"]]
+    (fresh / "dpd_meta.json").write_text(json.dumps(meta))
+    assert mod.compare(fresh, lut) == []
+    meta["amp_float"][100] *= 1 + 1e-6
+    meta["dpa"]["n_bits"] += 1
+    (fresh / "dpd_meta.json").write_text(json.dumps(meta))
+    probs = mod.compare(fresh, lut)
+    assert any("amp_float" in p for p in probs) and any("dpa" in p for p in probs)
+    assert not mod.same(1, 1.0 + 1e-6) and mod.same(3, 3) and not mod.same(True, 1)

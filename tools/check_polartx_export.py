@@ -8,8 +8,10 @@ the pinned SHA and compare it with the committed one.
 Each set is produced by one polar_tx command (``SETS`` below, the same command its SOURCE.md
 names), run from that checkout (it must be importable: ``pip install -e <checkout>``).
 Integer streams, ROM images and ``*_dims.svh`` must match byte for byte; in the ``*_meta.json``
-every key must match exactly except the measured summary floats (``FLOAT_KEYS``), which must
-agree within 1e-9 relative. ``--write`` copies the fresh export over the committed files
+integers, strings and structure must match exactly and every float (scalar or inside a list,
+e.g. the float LUT polar_dpd_lut documents next to its ROMs) within 1e-9 relative / 1e-12
+absolute: those are informative and their last ulp follows the CPU and numpy build, the
+integers the RTL is checked against do not. ``--write`` copies the fresh export over the committed files
 (SOURCE.md is never touched) for a deliberate re-pin; re-lock afterwards with
 ``tools/lockstep.py <ip> --update-lock``.
 """
@@ -42,7 +44,21 @@ SETS = [
     ("dpa_thermo_decode", "all_codes", "polartx.export.rtl_vectors", ["thermo"]),
     ("polar_datapath", "wifi20", "polartx.export.rtl_vectors", ["datapath"]),
 ]
-FLOAT_KEYS = ("tail_mean", "evm_pct")
+REL_TOL, ABS_TOL = 1e-9, 1e-12
+
+
+def same(a, b) -> bool:
+    """Equal, except floats (anywhere in the structure) only need to agree within tolerance."""
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b
+    if isinstance(a, float) or isinstance(b, float):
+        return (isinstance(a, (int, float)) and isinstance(b, (int, float))
+                and math.isclose(a, b, rel_tol=REL_TOL, abs_tol=ABS_TOL))
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(same(a[k], b[k]) for k in a)
+    return type(a) is type(b) and a == b
 
 
 def command(module: str, args: list[str], outdir: str) -> list[str]:
@@ -63,10 +79,9 @@ def compare(fresh: Path, committed: Path) -> list[str]:
         elif name.endswith("_meta.json"):
             ja, jb = json.loads(a.read_text()), json.loads(b.read_text())
             for k in sorted(set(ja) | set(jb)):
-                if k in FLOAT_KEYS:
-                    if not math.isclose(ja.get(k, math.nan), jb.get(k, math.nan), rel_tol=1e-9):
-                        problems.append(f"{name} {k}: {ja.get(k)} != {jb.get(k)}")
-                elif ja.get(k) != jb.get(k):
+                if k not in ja or k not in jb:
+                    problems.append(f"{name} {k}: only in {'fresh' if k in ja else 'committed'}")
+                elif not same(ja[k], jb[k]):
                     problems.append(f"{name} {k}: differs")
         elif a.read_bytes() != b.read_bytes():
             problems.append(f"{name}: differs from the committed file")
