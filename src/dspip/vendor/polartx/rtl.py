@@ -1,4 +1,4 @@
-# Vendored from polar_tx@e10bc38: src/polartx/export/rtl.py
+# Vendored from polar_tx@7057738: src/polartx/export/rtl.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """RTL export: the polar-DPD dual LUT as synthesizable Verilog.
 

@@ -7,7 +7,7 @@
 
 ## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
-- [ ] **Halo 其余四个模型的流式形式**（`adc_dsp_loop`、三种 MLSD 仍是整块行为模型，只做 lockstep）。第一个已做：`halo_ffe_dfe_stream`（Halo_Serdes#145）。
+- [ ] **Halo 其余四个模型的流式形式**（`adc_dsp_loop`、三种 MLSD 仍是整块行为模型，只做 lockstep）。第一个已做：`halo_ffe_dfe_stream`（Halo_Serdes#145，已合并）。
       它的判决环是关键路径（3977–4987 ps）；展开判决环是 Halo ROADMAP P3 #13。发现的问题推回 Halo，本库不分叉。
 
 ## 候选 IP（未排期）
@@ -16,11 +16,7 @@
 
 ## 推回上游
 
-- [ ] **Halo_Serdes#145（流式 FFE + DFE + 判决器）等用户审阅合并**。本库全部 Halo 文件 pin 在 PR 头 `56b92c2`；合并后改 pin：12 个 `.sv` 头注释、13 个 SOURCE.md、`ci.yml` `HALO_SHA`，重锁，再跑 `vendor_check --strict`。
-
-- [ ] **polar_tx#18（整条数字链金向量 `datapath_golden` + 三个块的导出）等用户审阅合并**。PR 里请审级间位宽约定。本库全部 polar_tx 文件 pin 在 PR 头 `e10bc38`；合并后改 pin：三个 vendored 头注释、`vendor/__init__.py`、`ci.yml`、11 个 SOURCE.md，重锁，再跑 `vendor_check --strict` + `tools/check_polartx_export.py`。
-
-（无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）与 #17（rtl_vectors 导出、dp_cal 变体）已合并，现 pin 在 `0e76e3e`；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
+（无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）、#17（rtl_vectors 导出、dp_cal 变体）、#18（整条数字链导出）已合并，现 pin 在 `7057738`；Halo_Serdes#145（流式 FFE + DFE）已合并，Halo 现 pin 在 `acf6220`；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
 
 ## 被外部阻塞
 

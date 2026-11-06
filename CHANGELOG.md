@@ -1,5 +1,10 @@
 # CHANGELOG（按里程碑）
 
+## 上游合并：polar_tx#18、Halo_Serdes#145（2026-11-06）
+
+- 全部 polar_tx 文件改 pin 到合并提交 `7057738`（文件树与 PR 头相同），全部 Halo 文件改 pin 到 `acf6220`（比 PR 头多一笔文档更正）。
+- 重锁 15 个 IP，只有 SOURCE.md 哈希变化；`vendor_check --strict`、重新导出比对、lockstep 全过。
+
 ## Halo 的第一个可综合块：halo_ffe_dfe_stream（2026-11-06）
 
 - **Halo_Serdes#145**（本库提出，**等用户合并**）：`rtl/ffe_dfe_stream.sv` 是 FFE + DFE + 判决器的流式、可综合形式，四种目标在两套位宽下逐位同。

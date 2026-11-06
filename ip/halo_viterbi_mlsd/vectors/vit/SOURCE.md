@@ -1,6 +1,6 @@
 # Committed vector set: Halo_Serdes `rtl/vectors/` (halo_viterbi_mlsd / vit)
 
-Copied unchanged from `alexyudragonsword-collab/Halo_Serdes` @ `56b92c2692e336ab5427d184d5ccf4ecd1342b87`
+Copied unchanged from `alexyudragonsword-collab/Halo_Serdes` @ `acf622010d706303eaf7c9ef9b69287e0aec5f6d`
 (`rtl/vectors/{vit_*.txt, vit_dims.svh}`), Halo's committed snapshot of
 
     PYTHONPATH=src HALO_NO_JIT=1 python rtl/gen_vectors.py rtl/vectors   # in a Halo checkout

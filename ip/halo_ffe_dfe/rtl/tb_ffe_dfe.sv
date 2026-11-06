@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@56b92c2: rtl/tb_ffe_dfe.sv
+// Vendored from Halo_Serdes@acf6220: rtl/tb_ffe_dfe.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Lockstep testbench: load the golden vectors dumped by
 // halo_serdes.dsp.fixed_datapath (dump_vectors + dump_sv_package), run the

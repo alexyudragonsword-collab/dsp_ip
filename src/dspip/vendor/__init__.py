@@ -15,7 +15,7 @@ and is byte-identical to upstream below the header (``tools/vendor_check.py``
 re-derives this against a sibling checkout and fails CI on any undeclared
 edit; the same tool scans ``ip/*/rtl/*.sv`` for ``// Vendored from`` headers
 so milestone 2 can vendor Halo_Serdes' RTL under the same policy; every Halo file is now at
-Halo_Serdes@56b92c2, PR #145's head).
+Halo_Serdes@acf6220, the merge commit of PR #145).
 
 ``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 5718b83 (the commit
 whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
@@ -30,7 +30,7 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ e10bc38 (head of polar_tx PR #18;
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ 7057738 (merge commit of polar_tx PR #18;
 #16 added the fixed-point calibrator, #17 and #18 the vector exports):
 
 - ``dp_cal_fixed.py``: the bit-true sign-sign LMS two-point gain calibrator

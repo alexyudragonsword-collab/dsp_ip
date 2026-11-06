@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@56b92c2: rtl/tb_ffe_dfe_stream.sv
+// Vendored from Halo_Serdes@acf6220: rtl/tb_ffe_dfe_stream.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Lockstep testbench for the streaming datapath (ffe_dfe_stream.sv): the same golden vectors as
 // tb_ffe_dfe.sv, but the ADC words go in one per clock through the ports and every (v, dec)

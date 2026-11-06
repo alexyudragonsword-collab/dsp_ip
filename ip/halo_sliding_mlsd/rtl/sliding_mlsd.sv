@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@56b92c2: rtl/sliding_mlsd.sv
+// Vendored from Halo_Serdes@acf6220: rtl/sliding_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Fixed-point sliding-detector MLSD (DragonPHY's error-event post-detector).
 //

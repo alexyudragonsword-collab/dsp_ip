@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@56b92c2: rtl/ffe_dfe_stream.sv
+// Vendored from Halo_Serdes@acf6220: rtl/ffe_dfe_stream.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Streaming FFE + DFE + slicer — the synthesizable form of ffe_dfe_datapath.sv.
 //

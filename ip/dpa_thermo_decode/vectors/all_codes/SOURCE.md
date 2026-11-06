@@ -1,6 +1,6 @@
 # Committed vector set: polar_tx export (dpa_thermo_decode / all_codes)
 
-Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `e10bc383877e48aad0b81ba7362a5e7d44796e3a`
+Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `70577381f678da34da20fcd083c5052afae1c437`
 (head of polar_tx PR #18, which added the datapath and remaining block exports; earlier sets
 are byte-identical to their #16 / #17 exports; re-pinned to the merge commit once merged) with
 

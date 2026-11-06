@@ -1,5 +1,13 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · polar_tx#18、Halo_Serdes#145 合并，全部改 pin 到合并提交
+
+- 用户选"合并并改 pin"。polar_tx `7057738` 的文件树与 PR 头 `e10bc38` 相同；Halo `acf6220` 比 PR 头 `56b92c2` 只多一笔文档更正（`1c6f4bd`）。
+- Halo#145 文档里的综合数在合并前更正过：初版 3.83 / 4.00 / 4.10 / 4.72 ns，只有 delta 与重跑一致；现写 dsp_ip 口径（含触发器）3.98 / 4.01 / 4.15 / 4.99 ns。
+- 改 pin：3 个 vendored polar_tx 头注释、12 个 Halo `.sv`、24 个 SOURCE.md、`ci.yml` 两个 SHA、`vendor/__init__.py`；15 个 IP 重锁（只变 SOURCE.md 哈希）。
+- vendor_check --strict 27/27 verbatim；check_polartx_export 11/11；15 个 IP lockstep 全过；非 lockstep 测试 177 passed。
+- 下一步：P=1 整条通路布局布线；展开 Halo 判决环；Halo 其余四个模型流式化。
+
 ## 2026-11-06 · CI 修两处：pnr 输出目录、polar_dpd_lut 浮点 LUT 末位
 
 - 三次推送（dae4f0a / 5db4faa / 0ea46e2）CI 都红，两个 job：

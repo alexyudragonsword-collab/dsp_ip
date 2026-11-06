@@ -1,4 +1,4 @@
-# Vendored from polar_tx@e10bc38: src/polartx/export/rtl_vectors.py
+# Vendored from polar_tx@7057738: src/polartx/export/rtl_vectors.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Integer golden-vector sets of two RTL blocks, for an external lockstep.
 

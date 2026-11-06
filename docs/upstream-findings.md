@@ -59,7 +59,7 @@ in both blocks, same `e_in`), but it should be stated.
 ## Halo_Serdes @ 6e79c4a — filed as alexyudragonsword-collab/Halo_Serdes#136 (2026-11-02)
 
 **Fixed upstream by Halo_Serdes#142, merged 2026-11-04 as `aca6123`** (dsp_ip was pinned
-there; since 2026-11-06 it is pinned at Halo_Serdes#145's head `56b92c2`, which adds the
+there; since 2026-11-06 it is pinned at Halo_Serdes#145's merge commit `acf6220`, which adds the
 streaming FFE + DFE + slicer, and the vectors are Halo's snapshot as of #144). Every testbench `$fatal`s on a missing file or short read; `rtl/vectors/` carries
 `dfse_*` and was refreshed (it had gone stale on Halo's `main` too: 54 files differed from a
 regeneration at 82ee2c4); `run_lockstep.sh` builds in a temp dir; shift amounts are
