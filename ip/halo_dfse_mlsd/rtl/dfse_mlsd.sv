@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@aca6123: rtl/dfse_mlsd.sv
+// Vendored from Halo_Serdes@56b92c2: rtl/dfse_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Fixed-point reduced-state Viterbi MLSD (decision-feedback sequence
 // estimation).

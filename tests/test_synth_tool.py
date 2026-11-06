@@ -299,3 +299,17 @@ def test_abc_scripts(sy):
     assert sopb.count("&if -g -K 6") == 2 and "&nf -D 1000" in sopb
     assert sopb.index("dc2") < sopb.index("&if -g") < sopb.index("&dch -f") < sopb.index("&nf")
     assert sy.abc_script(False, 800, abc="sopb").count("&nf -D 800") == 1
+
+
+def test_synth_dims_and_params_from_ip_yaml(sy):
+    """``synth_dims`` reads the named localparams from the set's *.svh; ``synth_params`` adds
+    fixed values; a missing name is an error, not a silent default."""
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "halo_ffe_dfe_stream")
+    p = sy.ip_synth_params(spec, spec.root / "vectors" / "pre")
+    assert p["PR_MODE"] == "2" and p["NPL"] == "7" and p["NF"] == "15" and p["CODE_W"] == "8"
+    assert sy.ip_synth_params(spec, spec.root / "vectors" / "delta")["PR_MODE"] == "0"
+    spec.extra["synth_dims"] = ["NOPE"]
+    with pytest.raises(ValueError, match="NOPE"):
+        sy.ip_synth_params(spec, spec.root / "vectors" / "delta")

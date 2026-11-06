@@ -7,7 +7,7 @@ on:
 
 env:
   PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
-  HALO_SHA: aca61232855e6458109242f984a82d1d3610a806
+  HALO_SHA: 56b92c2692e336ab5427d184d5ccf4ecd1342b87   # Halo_Serdes#145 head; re-pin on merge
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
   POLAR_TX_SHA: e10bc383877e48aad0b81ba7362a5e7d44796e3a   # polar_tx#18 head; re-pin on merge
 

@@ -253,6 +253,11 @@ def run_point(spec: IpSpec, set_name: str, sim: str, params: dict, *, generate: 
 
 
 def param_points(spec: IpSpec, overrides: dict | None) -> list[dict]:
+    """The tb parameter points: ip.yaml ``param_points`` (an explicit list of dicts, for
+    parameters that only make sense together, e.g. a set of word widths) when given and no
+    override is asked for; otherwise the cross product of ``params`` with the overrides."""
+    if spec.extra.get("param_points") and not overrides:
+        return [dict(p) for p in spec.extra["param_points"]]
     params = dict(spec.params)
     if overrides:
         for k, v in overrides.items():

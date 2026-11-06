@@ -1,5 +1,15 @@
 # CHANGELOG（按里程碑）
 
+## Halo 的第一个可综合块：halo_ffe_dfe_stream（2026-11-06）
+
+- **Halo_Serdes#145**（本库提出，**等用户合并**）：`rtl/ffe_dfe_stream.sv` 是 FFE + DFE + 判决器的流式、可综合形式，四种目标在两套位宽下逐位同。
+- **`ip/halo_ffe_dfe_stream`**：原样 vendor；四组 Halo 提交向量 × 两套字宽（存储 32 位；Halo 数值配置 ADC Q8.0、权重 Q10.8、12 位电平），共 8 点。四个仿真器全过，mutation 覆盖。
+- 综合（estimate，NanGate45，`sopb`）：delta 3977 ps / 242 MHz / 16 048 µm²；PR 4009 / 4154 ps；预编码 4987 ps。
+  关键路径是一拍判决环；这是每通道每拍一个码元的数，不是链路速率（32 GBd 约需 133 路并行），不挂 640 MSPS 目标。
+- 全部 Halo IP 改 pin 到 `56b92c2`：Halo `main` 在 `aca6123` 之后变过（`ffe_dfe_datapath.sv` 61 行，向量随 #144 重新生成），vendor_check 报出 stale pin。
+  12 个 `.sv` 与 13 个向量集重新拷贝重锁，六个 Halo IP 在四个仿真器上全过。
+- 脚手架：`ip.yaml` `param_points`（显式参数点，不做笛卡尔积）、`synth_dims`（综合参数取自向量集的 `dims.svh`）；各有测试。
+
 ## polar_tx 数字链补齐：三个块 + 整条通路（2026-11-06）
 
 - **新 IP**（参考都从 polar_tx 原样 vendor；四个仿真器第一次跑就 0 不匹配）：

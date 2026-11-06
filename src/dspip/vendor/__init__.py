@@ -14,7 +14,8 @@ Each file carries a header naming its origin::
 and is byte-identical to upstream below the header (``tools/vendor_check.py``
 re-derives this against a sibling checkout and fails CI on any undeclared
 edit; the same tool scans ``ip/*/rtl/*.sv`` for ``// Vendored from`` headers
-so milestone 2 can vendor Halo_Serdes' RTL under the same policy).
+so milestone 2 can vendor Halo_Serdes' RTL under the same policy; every Halo file is now at
+Halo_Serdes@56b92c2, PR #145's head).
 
 ``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 5718b83 (the commit
 whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):

@@ -1,5 +1,13 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · Halo 第一个可综合块（halo_ffe_dfe_stream）；Halo IP 全部改 pin 到 56b92c2
+
+- Halo_Serdes#145：流式 FFE + DFE + 判决器，四种目标 × 两套位宽逐位同（Icarus 12 / 14、Verilator 5.020 / 5.053）。
+- 写的时候踩了三个坑：`?:` 的无符号 `'0` 臂让乘法变无符号；上下文位宽造出 23×23 乘法器；15 个积融成 `$macc_v2` 时 ABC `&fraig -x` 四分钟不收敛（积先寄存后 4.6 s）。
+- 估计：delta 3977 ps，预编码 4987 ps；关键路径是判决环约 32 级门。**被推翻的判断**：判决器比较链是瓶颈——改成树反而 4.29 ns，已退回。
+- vendor_check 报 Halo main 已动（aca6123 之后 61 行 + 向量重生成），六个 Halo IP 一并改 pin 到 `56b92c2`，全部通过。
+- 下一步：Halo#145、polar_tx#18 合并后改 pin；Halo 其余四个模型流式化（ROADMAP）。
+
 ## 2026-11-06 · polar_tx 数字链：cfr_clip / dtc_phase_acc / dpa_thermo_decode / polar_datapath
 
 - polar_tx#18：`datapath_golden` 第一次写下五个块之间的级间位宽（取高位、AM-PM 校正左移 5 位相减，与 `chain.py` 同号），**请用户在 PR 里审**。

@@ -7,13 +7,16 @@
 
 ## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
-- [ ] **yosys 估计要等这些整块向量的行为模型改成流式后**（`always_comb`/`task run()` 风格，不可综合）。发现的问题推回 Halo，本库不分叉。
+- [ ] **Halo 其余四个模型的流式形式**（`adc_dsp_loop`、三种 MLSD 仍是整块行为模型，只做 lockstep）。第一个已做：`halo_ffe_dfe_stream`（Halo_Serdes#145）。
+      它的判决环是关键路径（3977–4987 ps）；展开判决环是 Halo ROADMAP P3 #13。发现的问题推回 Halo，本库不分叉。
 
 ## 候选 IP（未排期）
 
 （无。polar_tx 两点增益 LMS 已作为 `ip/dp_cal_lms` 进库，见下。）
 
 ## 推回上游
+
+- [ ] **Halo_Serdes#145（流式 FFE + DFE + 判决器）等用户审阅合并**。本库全部 Halo 文件 pin 在 PR 头 `56b92c2`；合并后改 pin：12 个 `.sv` 头注释、13 个 SOURCE.md、`ci.yml` `HALO_SHA`，重锁，再跑 `vendor_check --strict`。
 
 - [ ] **polar_tx#18（整条数字链金向量 `datapath_golden` + 三个块的导出）等用户审阅合并**。PR 里请审级间位宽约定。本库全部 polar_tx 文件 pin 在 PR 头 `e10bc38`；合并后改 pin：三个 vendored 头注释、`vendor/__init__.py`、`ci.yml`、11 个 SOURCE.md，重锁，再跑 `vendor_check --strict` + `tools/check_polartx_export.py`。
 

@@ -317,9 +317,22 @@ def _is_int(v) -> bool:
 
 
 def ip_synth_params(spec, set_dir: Path) -> dict:
-    """ip.yaml ``synth_params`` (e.g. ROM init files), ``{set_dir}`` expanded."""
-    return {k: str(v).replace("{set_dir}", str(set_dir))
-            for k, v in (spec.extra.get("synth_params") or {}).items()}
+    """ip.yaml ``synth_params`` (e.g. ROM init files, word widths), ``{set_dir}`` expanded,
+    plus ``synth_dims``: the named ``localparam int`` of the set's ``*.svh`` (for a module that
+    takes as parameters what its testbench reads from the vector set's dims)."""
+    out = {}
+    names = spec.extra.get("synth_dims") or []
+    if names:
+        found = {}
+        for svh in sorted(Path(set_dir).glob("*.svh")):
+            found.update(re.findall(r"localparam\s+int\s+(\w+)\s*=\s*(-?\d+)\s*;", svh.read_text()))
+        missing = [n for n in names if n not in found]
+        if missing:
+            raise ValueError(f"{spec.name}: synth_dims {missing} not in {set_dir}/*.svh")
+        out.update({n: found[n] for n in names})
+    out.update({k: str(v).replace("{set_dir}", str(set_dir))
+                for k, v in (spec.extra.get("synth_params") or {}).items()})
+    return out
 
 
 def run_yosys(spec, set_dir: Path, lib: Path, params: dict, work: Path, abc_script: str,

@@ -251,6 +251,30 @@ What this says:
   half the routed figure, so it is the robust choice. Settling P = 1 needs place-and-route of the whole P = 1
   datapath (1.6 M cells), which this flow has not been run on.
 
+## Halo's FFE + DFE + slicer, streaming form (2026-11-06)
+
+Halo's five RTL models are whole-block behavioural models (lockstep only). Halo_Serdes#145
+adds `rtl/ffe_dfe_stream.sv`, the first streaming, synthesizable one. It was written for this
+library's estimates and is vendored here as `ip/halo_ffe_dfe_stream`. It handles one symbol
+per clock per lane, at Halo's numeric widths: ADC Q8.0, weights Q10.8, 12-bit levels. Default
+flow (`sopb`, NanGate45, no wire load); module parameters come from each set's `dims.svh`
+(`synth_dims`).
+
+| target (set) | critical path | f_est | area (µm²) | cells |
+|---|---|---|---|---|
+| delta | 3977 ps | 242 MHz | 16 048 | 12 774 |
+| 1 + aD + bD² (`pr`) | 4009 ps | 240 MHz | 24 558 | 19 922 |
+| + cD³ (`pr4`) | 4154 ps | 232 MHz | 28 525 | 23 173 |
+| precoded 1 + D (`pre`) | 4987 ps | 194 MHz | 16 434 | 13 114 |
+
+The critical path is the one-cycle decision loop, about 32 gate levels. It runs from the
+history register through the selected pre-multiplied feedback term, then add, round,
+saturate and slice, and back to the register. The FFE is pipelined outside the loop. These
+are not link rates. At one symbol per clock, a 32 GBd NRZ lane at about 240 MHz would need
+about 133 parallel slices, which is how SerDes receivers are built. The loop is what limits a
+slice. Unrolling it over the previous decision is Halo's ROADMAP P3 #13. No 640 MSPS target
+is attached to this IP.
+
 ## How to read `results/synth/*.json`
 
 Every file has `"kind": "estimate"`, the `method` string, the library name and sha256, the

@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@aca6123: rtl/viterbi_mlsd.sv
+// Vendored from Halo_Serdes@56b92c2: rtl/viterbi_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Fixed-point Viterbi MLSD over the residual ISI.
 //

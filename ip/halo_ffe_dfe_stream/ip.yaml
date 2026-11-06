@@ -1,0 +1,27 @@
+name: halo_ffe_dfe_stream
+top: ffe_dfe_stream
+rtl:
+  - rtl/ffe_dfe_stream.sv
+tb: rtl/tb_ffe_dfe_stream.sv
+check: tb                              # Halo's tb self-checks: STREAM LOCKSTEP PASS/FAIL + $fatal
+pass_pattern: "STREAM LOCKSTEP PASS"
+params: {}
+param_points:                          # storage width (32) and the numeric config's widths
+  - {}
+  - {CODE_W: 8, WF_W: 10, WD_W: 10, LV_W: 12, PR_W: 10}
+vector_sets:
+  - {name: delta, source: committed, dir: vectors/delta}
+  - {name: pr, source: committed, dir: vectors/pr}
+  - {name: pr4, source: committed, dir: vectors/pr4}
+  - {name: pre, source: committed, dir: vectors/pre}
+mutation_file: v_out.txt
+synth_dims: [NF, ND, NL, N_PRE, FFE_SHIFT, DFE_SHIFT, OUT_BITS, DO_ROUND, PR_MODE, PR_NT, PR_FL, NPL]
+synth_params: {CODE_W: 8, WF_W: 10, WD_W: 10, LV_W: 12, PR_W: 10}   # Halo numeric: ADC Q8.0, weights Q10.8
+latency_note: >
+  One ADC word per clock; (v, dec) of symbol s three clocks after code s + N_PRE (FFE
+  products, FFE sum, decision stage), with out_valid; the tb checks them in order.
+note: >
+  Halo_Serdes rtl/ffe_dfe_stream.sv + tb_ffe_dfe_stream.sv vendored verbatim (Halo_Serdes
+  PR #145): the streaming, synthesizable form of the FFE + DFE + slicer (halo_ffe_dfe is the
+  whole-block model of the same arithmetic). Halo's committed vectors for all four targets
+  (delta, 1 + aD + bD^2, + cD^3, precoded 1 + D), at two sets of word widths.

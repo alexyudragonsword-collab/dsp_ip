@@ -129,3 +129,14 @@ def test_concurrent_regeneration_is_safe(ls, tmp_path):
     (set_dir / "y.txt").write_text("1\n")
     assert ls.ensure_vectors(spec, name)[1] == []
     assert (set_dir / "y.txt").read_text() != "1\n"
+
+
+def test_param_points_explicit_list(ls):
+    """ip.yaml ``param_points`` gives the points verbatim (parameters that only make sense
+    together, e.g. a set of word widths); an explicit override still wins."""
+    from dspip.ipspec import IP_ROOT, load_ipspec
+
+    spec = load_ipspec(IP_ROOT / "halo_ffe_dfe_stream")
+    pts = ls.param_points(spec, None)
+    assert pts == [{}, {"CODE_W": 8, "WF_W": 10, "WD_W": 10, "LV_W": 12, "PR_W": 10}]
+    assert ls.param_points(spec, {"CODE_W": ["9"]}) == [{"CODE_W": "9"}]
