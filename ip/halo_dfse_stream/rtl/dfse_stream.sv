@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@c59c2c8: rtl/dfse_stream.sv
+// Vendored from Halo_Serdes@32d562e: rtl/dfse_stream.sv
 // Streaming reduced-state Viterbi (DFSE) — the synthesizable form of dfse_mlsd.sv.
 //
 // Same arithmetic as dfse_mlsd.sv / halo_serdes.dsp.fixed_viterbi._dfse_fixed_py (bit-exact

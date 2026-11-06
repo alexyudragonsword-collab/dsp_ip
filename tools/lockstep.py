@@ -131,12 +131,24 @@ def _ensure_vectors(spec: IpSpec, set_name: str, *, generate: bool,
 # --- build & run ------------------------------------------------------------------------
 
 
+def fresh_obj(obj: Path, version: str) -> None:
+    """Empty a Verilator output directory built by another Verilator. Verilator's own
+    dependency tracking does not look at its version, so switching simulators (--sim-bin /
+    DSPIP_SIM_BIN) reused the old binary and reported its result as the new version's."""
+    stamp = obj.parent / "obj.version"
+    if obj.exists() and (not stamp.exists() or stamp.read_text() != version):
+        shutil.rmtree(obj)
+    obj.parent.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(version)
+
+
 def build(spec: IpSpec, set_dir: Path, sim: str, params: dict, work: Path) -> tuple[list[str], str]:
     """Compile; returns (run command, compile log)."""
     work.mkdir(parents=True, exist_ok=True)
     srcs = [str(p) for p in spec.rtl_paths()] + [str(spec.tb_path)]
     if sim == "verilator":
         obj = work / "obj"
+        fresh_obj(obj, S.version("verilator") or "")
         cmd = [S.exe("verilator"), "--binary", "--timing", "-Wno-fatal", "-Wno-WIDTH", "-Wno-UNUSED",
                "-Wno-UNOPTFLAT", "--top-module", spec.tb_module, f"+incdir+{set_dir}",
                "--Mdir", str(obj), "-j", str(min(4, os.cpu_count() or 1))]

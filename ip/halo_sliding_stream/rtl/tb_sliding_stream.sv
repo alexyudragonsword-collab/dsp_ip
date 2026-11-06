@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@c59c2c8: rtl/tb_sliding_stream.sv
+// Vendored from Halo_Serdes@32d562e: rtl/tb_sliding_stream.sv
 // Lockstep testbench for the streaming sliding-detector MLSD (sliding_stream.sv): the same
 // golden vectors as tb_sliding_mlsd.sv, (v, dec0) in one per clock through the ports, every
 // decision that comes out with out_valid checked in order against the golden. Exits non-zero

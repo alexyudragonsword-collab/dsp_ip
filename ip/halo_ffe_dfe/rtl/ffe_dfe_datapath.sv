@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@c59c2c8: rtl/ffe_dfe_datapath.sv
+// Vendored from Halo_Serdes@32d562e: rtl/ffe_dfe_datapath.sv
 // Fixed-point FFE + DFE + slicer datapath — RTL golden-model reimplementation.
 //
 // An INDEPENDENT SystemVerilog implementation of

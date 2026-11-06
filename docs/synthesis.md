@@ -327,9 +327,9 @@ Default flow; the parameters come from each set's dims. P&R uses `tools/pnr.py`;
 
 | block | ABC | routed | area, routed (µm²) | what limits it |
 |---|---|---|---|---|
-| sliding MLSD, 2 passes (`mlsd`) | 4243 ps / 227 MHz | 285 MHz | 34 299 | one step per symbol: residuals, squares, two hypotheses, compare, write back |
+| sliding MLSD, 2 passes (`mlsd`) | 4084 ps / 236 MHz | 277.5 MHz | 33 943 | one step per symbol: residuals, squares, two hypotheses, compare, write back |
 | DFSE, 4 states, 2 fed back (`dfse`) | 8918 ps / 110 MHz | 160 MHz | 41 480 | per-survivor feedback: the expected word, its square and the ACS in one cycle |
-| Viterbi, 16 states (`vit`) | synthesis did not finish here (see below) | | | |
+| Viterbi, 16 states (`vit`) | did not finish: ABC > 50 min (`sopb`), > 40 min (`nf`) | | | 64 add-compare-selects and a 16-way minimum in one cycle |
 
 The Viterbi's survivor memory is outside the module, as an SRAM macro would be, so its area
 is not in these numbers. Its branch metrics depend only on the input, so they are registered

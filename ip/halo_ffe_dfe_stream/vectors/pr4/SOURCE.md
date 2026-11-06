@@ -1,6 +1,6 @@
 # Committed vector set: Halo_Serdes `rtl/vectors/pr4/` (halo_ffe_dfe_stream / pr4)
 
-Copied unchanged from `alexyudragonsword-collab/Halo_Serdes` @ `c59c2c834cbb226ef9d009f61270ec48eabd4692`
+Copied unchanged from `alexyudragonsword-collab/Halo_Serdes` @ `32d562e0fb2148f7f317cf4815a7ee9aafeb491d`
 (`rtl/vectors/pr4/{codes.txt, w_ffe_int.txt, w_dfe_int.txt, levels_out.txt, dec.txt, v_out.txt, dims.svh, pr_abc.txt, pr_lv.txt}`), Halo's committed snapshot of
 
     PYTHONPATH=src HALO_NO_JIT=1 python rtl/gen_vectors.py rtl/vectors   # in a Halo checkout

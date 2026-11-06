@@ -142,3 +142,19 @@ def test_param_points_explicit_list(ls):
     assert pts == [{}, nw, {**nw, "GAPS": 1}, {**nw, "LOOKAHEAD": 1},
                    {**nw, "LOOKAHEAD": 1, "GAPS": 1}]
     assert ls.param_points(spec, {"CODE_W": ["9"]}) == [{"CODE_W": "9"}]
+
+
+def test_fresh_obj_rebuilds_for_another_verilator(ls, tmp_path):
+    """A Verilator obj dir built by another version is emptied (Verilator would reuse it and
+    the report would carry the new version's name over the old binary's result)."""
+    obj = tmp_path / "w" / "obj"
+    obj.mkdir(parents=True)
+    (obj / "Vtb").write_text("old binary")
+    ls.fresh_obj(obj, "Verilator 5.032")          # no stamp yet: unknown builder, emptied
+    assert not obj.exists()
+    obj.mkdir()
+    (obj / "Vtb").write_text("5.032 binary")
+    ls.fresh_obj(obj, "Verilator 5.032")          # same version: kept
+    assert (obj / "Vtb").read_text() == "5.032 binary"
+    ls.fresh_obj(obj, "Verilator 5.020")          # another version: emptied
+    assert not obj.exists() and (tmp_path / "w" / "obj.version").read_text() == "Verilator 5.020"

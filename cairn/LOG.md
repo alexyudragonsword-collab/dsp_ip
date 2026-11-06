@@ -1,5 +1,12 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · CI 发行版 Verilator 5.032 抓到滑窗流式的错；lockstep 换仿真器沿用旧二进制
+
+- run 59 / 60 `lockstep (distro)` 红：只有 `halo_sliding_stream`，6 点全 abort（rc −6）。runner 的 apt Verilator 已是 5.032（之前 5.020）。
+- conda-forge 装 5.032 复现：8 / 4000 判决错。根因：窗口移位循环里 `wd[i] <= wd[i-1]` 后又 `wd[K+1] <= newd`（同元素两个 NBA）；5.032 排错，Icarus 12 / 14、Verilator 5.020 / 5.053 都对。Halo `32d562e` 改每元素一次赋值，五个仿真器全过。
+- **顺带抓到本库脚手架的错**：第一次用 `DSPIP_SIM_BIN` 换成 5.032 跑，报"3/3 PASS（5.032）"，其实用的是 5.020 编出来的旧二进制（Verilator 自己的依赖跟踪不看版本）。`fresh_obj` 按版本戳清空 obj，加测试。
+- Viterbi 综合：`sopb` 50 分钟、`nf` 40 分钟都超时，无数字（ROADMAP）。滑窗数字随修正更新为 236 / 277.5 MHz。
+
 ## 2026-11-06 · P=1 整条通路布局布线：448 MHz（布局后），P=1 定论为否
 
 - `tools/pnr.py --hier`（按模块映射再展平，200 MB 网表、1.63 M 单元）。第一次全流程在全局布线 OOM（OpenROAD 7.7 → 12.3 GB，连带杀掉一个 yosys）；加 `--stop-after place` 重跑 50 分钟、峰值 8.7 GB。
@@ -11,7 +18,7 @@
 
 - Viterbi / 滑窗 / DFSE 流式形式，四个仿真器逐位同，有 / 无空拍。三个新 IP（`halo_*_stream`）× 两组向量 × 3 点全过。
 - **被推翻的判断**："Halo 的向量足够检验"——平局 / 边界变体在原集合上全过。Halo 补 `vit_tie` / `mlsd_tie` / `dfse_k2`（金值生成），变体在新集合上 1–363 个错。
-- 综合 + 布线：滑窗 227 → 285 MHz、DFSE 110 → 160 MHz（ABC → 布线）。Viterbi 的 ABC（sopb）本机跑了 > 20 分钟未完（第一次还被 OOM 杀掉一次），数字待补。
+- 综合 + 布线：滑窗 236 → 277.5 MHz（修正后的 RTL；修正前 227 → 285）、DFSE 110 → 160 MHz（ABC → 布线）。Viterbi 的 ABC（sopb）本机跑了 > 20 分钟未完（第一次还被 OOM 杀掉一次），数字待补。
 - yosys 0.70 断言：`hierarchy -chparam` 推导"generate 里例化子模块"的顶层失败；`ip.yaml synth_chparam: set` 改走 `chparam -set` + `rename -top`（其余 IP 脚本不变）。
 - **我自己的失误**：上一次改 SOURCE.md 措辞只重锁了一个 IP，CI lockstep 报 5 个 IP LOCK（`ccbd73b` 修）；本地快测不跑 lockstep，抓不到。
 - #148 叠在 #147 上（一个 SHA 管全部 Halo 文件）；第一次 rebase 把冲突标记提交进本地提交，跑测试才发现，改推新分支名 `feat/rtl-mlsd-stream-on-147`（强推被拒，旧分支留在远端）。

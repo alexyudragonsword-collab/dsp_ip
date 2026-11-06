@@ -9,7 +9,9 @@
 
 - **Halo_Serdes#148**（本库提出，叠在 #147 上，等用户合并）：`viterbi_stream.sv` / `sliding_stream.sv` / `dfse_stream.sv` 与补上的平局 / 边界向量集。本库全部 Halo 文件 pin 在 `c59c2c8`。
 - 新 IP `halo_viterbi_stream`、`halo_sliding_stream`、`halo_dfse_stream`：两组向量 × 3 点（存储 / 窄字宽、空拍），两仿真器全过。
-- 综合与布局布线（estimate）：滑窗 MLSD 布线后 285 MHz，DFSE 160 MHz；Viterbi 综合待补。
+- 综合与布局布线（estimate）：滑窗 MLSD 布线后 277.5 MHz，DFSE 160 MHz。Viterbi 的 ABC 在本机 50 分钟（`sopb`）/ 40 分钟（`nf`）内跑不完，没有数字（ROADMAP）。
+- Verilator 5.032（CI 发行版）上滑窗 MLSD 错 8 个判决：同一数组元素两个 NBA 被排错。Halo `32d562e` 改成每元素一次赋值，五个仿真器全对；本库 pin 到 `32d562e`。
+- `tools/lockstep.py`：Verilator 的 obj 目录按仿真器版本打戳，换版本即清空（之前换 `DSPIP_SIM_BIN` 会沿用旧版本编译的二进制、却在报告里写新版本号）。
 - `tools/synth.py` / `pnr.py`：`ip.yaml synth_chparam: set`（绕开 yosys 0.70 的一个断言）；`pnr.py --stop-after place`（全局布线放不下内存时停在布局）。
 - `synth_dims` 也读 `localparam longint`。
 

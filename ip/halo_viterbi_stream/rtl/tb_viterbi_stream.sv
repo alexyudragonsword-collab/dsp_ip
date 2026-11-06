@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@c59c2c8: rtl/tb_viterbi_stream.sv
+// Vendored from Halo_Serdes@32d562e: rtl/tb_viterbi_stream.sv
 // Lockstep testbench for the streaming Viterbi (viterbi_stream.sv): the same golden vectors as
 // tb_viterbi_mlsd.sv, the slicer words in one per clock through the ports, the survivor memory
 // here, and every (out_k, dec) that comes out with out_valid checked against the golden.
