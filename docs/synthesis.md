@@ -267,13 +267,38 @@ flow (`sopb`, NanGate45, no wire load); module parameters come from each set's `
 | + cD³ (`pr4`) | 4154 ps | 232 MHz | 28 525 | 23 173 |
 | precoded 1 + D (`pre`) | 4987 ps | 194 MHz | 16 434 | 13 114 |
 
-The critical path is the one-cycle decision loop, about 32 gate levels. It runs from the
-history register through the selected pre-multiplied feedback term, then add, round,
-saturate and slice, and back to the register. The FFE is pipelined outside the loop. These
-are not link rates. At one symbol per clock, a 32 GBd NRZ lane at about 240 MHz would need
-about 133 parallel slices, which is how SerDes receivers are built. The loop is what limits a
-slice. Unrolling it over the previous decision is Halo's ROADMAP P3 #13. No 640 MSPS target
-is attached to this IP.
+The critical path is the one-cycle decision loop. It runs from the history register through
+the selected pre-multiplied feedback term, then add, round, saturate and slice, and back to
+the register. The FFE is pipelined outside the loop.
+
+**These ABC numbers are pessimistic for this block.** ABC does not buffer. On the delta path,
+one NOR4 with fanout 63 accounts for about 1.6 ns of the 3977 ps (its output slew is 1.4 ns).
+Place and route (`tools/pnr.py`, `--period 4.0`; `results/pnr/halo_ffe_dfe_stream__*.json`)
+runs `repair_design`, which buffers that net:
+
+| target (set) | ABC | ideal wires | routed | routed, `LOOKAHEAD=1` | area LA=0 → 1 (µm²) |
+|---|---|---|---|---|---|
+| delta | 242 MHz | 504 MHz | 454 MHz | **520 MHz** (+15 %) | 18 428 → 20 166 |
+| 1 + aD + bD² (`pr`) | 240 MHz | 424 MHz | 389 MHz | 318 MHz (−18 %) | 28 137 → 34 391 |
+| + cD³ (`pr4`) | 232 MHz | 390 MHz | 355 MHz | 335 MHz (−6 %) | 32 553 → 38 995 |
+| precoded 1 + D (`pre`) | 194 MHz | 353 MHz | 326 MHz | **348 MHz** (+7 %) | 18 839 → 18 793 |
+
+`LOOKAHEAD=1` (Halo_Serdes#147) unrolls the loop over the previous decision. Stage 2
+computes the slicer result for each value the previous decision can take (NL + 1 of them,
+including "none" for the first symbol) from the older history only. Stage 3 picks one by
+the decision just registered. Latency goes up by one clock. All 20 lockstep points pass,
+including idle clocks between codes (`GAPS: 1`).
+
+- **delta and precoded get faster.** Stage 2 depends on no decision at all.
+- **The controlled-cursor targets get slower.** Their cursors and DFE tap use x[j−2] and
+  x[j−3], so stage 2 is still a one-cycle loop, now with NL + 1 copies of the arithmetic.
+
+Choose `LOOKAHEAD` per target. Speculating two levels, or moving the x[j−2] terms out of
+stage 2, is Halo's ROADMAP P3 #13.
+
+These are not link rates. At one symbol per clock, a 32 GBd NRZ lane at about 450 MHz would
+need about 71 parallel slices, which is how SerDes receivers are built. The loop is what
+limits a slice. No 640 MSPS target is attached to this IP.
 
 ## How to read `results/synth/*.json`
 

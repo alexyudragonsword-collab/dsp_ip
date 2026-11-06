@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@acf6220: rtl/tb_dfse_mlsd.sv
+// Vendored from Halo_Serdes@5366b75: rtl/tb_dfse_mlsd.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Lockstep testbench for dfse_mlsd.sv against the vectors
 // halo_serdes.dsp.fixed_viterbi.dump_dfse_vectors wrote. Exits non-zero on

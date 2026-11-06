@@ -1,5 +1,15 @@
 # CHANGELOG（按里程碑）
 
+## Halo 判决环展开、流式块布局布线（2026-11-06）
+
+- **Halo_Serdes#147**（本库提出，等用户合并）：`ffe_dfe_stream.sv` 新增 `LOOKAHEAD`（默认 0 与之前门级同）与 tb 的 `GAPS`（码之间插空拍）。本库全部 Halo 文件 pin 在 PR 头 `5366b75`。
+- `ip/halo_ffe_dfe_stream` 每组向量 5 个参数点（两套位宽 × `LOOKAHEAD` 0 / 1 × 有 / 无空拍），20 点两仿真器全过。
+- 布局布线（estimate，`docs/synthesis.md`）：
+  - ABC 口径偏悲观，因为 ABC 不插缓冲，判决环上一个扇出 63 的门独占约 1.6 ns。
+  - 布线后 `LOOKAHEAD=0`：delta 454、PR 389、PR4 355、预编码 326 MHz。
+  - `LOOKAHEAD=1`：520 / 318 / 335 / 348 MHz。
+- `tools/pnr.py --hier`：大设计按模块映射后再展平给 OpenROAD；JSON 记 `synth: hier|flat`。
+
 ## 上游合并：polar_tx#18、Halo_Serdes#145（2026-11-06）
 
 - 全部 polar_tx 文件改 pin 到合并提交 `7057738`（文件树与 PR 头相同），全部 Halo 文件改 pin 到 `acf6220`（比 PR 头多一笔文档更正）。

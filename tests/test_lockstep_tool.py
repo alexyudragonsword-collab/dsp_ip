@@ -138,5 +138,7 @@ def test_param_points_explicit_list(ls):
 
     spec = load_ipspec(IP_ROOT / "halo_ffe_dfe_stream")
     pts = ls.param_points(spec, None)
-    assert pts == [{}, {"CODE_W": 8, "WF_W": 10, "WD_W": 10, "LV_W": 12, "PR_W": 10}]
+    nw = {"CODE_W": 8, "WF_W": 10, "WD_W": 10, "LV_W": 12, "PR_W": 10}
+    assert pts == [{}, nw, {**nw, "GAPS": 1}, {**nw, "LOOKAHEAD": 1},
+                   {**nw, "LOOKAHEAD": 1, "GAPS": 1}]
     assert ls.param_points(spec, {"CODE_W": ["9"]}) == [{"CODE_W": "9"}]

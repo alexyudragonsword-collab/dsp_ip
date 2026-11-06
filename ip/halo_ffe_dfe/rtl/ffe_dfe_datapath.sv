@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@acf6220: rtl/ffe_dfe_datapath.sv
+// Vendored from Halo_Serdes@5366b75: rtl/ffe_dfe_datapath.sv
 // Adapted-copy policy: see src/dspip/vendor/__init__.py
 // Fixed-point FFE + DFE + slicer datapath — RTL golden-model reimplementation.
 //

@@ -7,7 +7,7 @@ on:
 
 env:
   PA_DPD_SHA: 5718b835f9d6e5cd3680252e5d9046ab08aae7be
-  HALO_SHA: acf622010d706303eaf7c9ef9b69287e0aec5f6d   # Halo_Serdes#145 merge commit
+  HALO_SHA: 5366b7534d921d4cfb2624de0fa1b3f099879818   # Halo_Serdes#147 head; re-pin on merge
   OPENDPD_SHA: a362a8db618cb11249f310e12212a5bf7a6db9f9
   POLAR_TX_SHA: 70577381f678da34da20fcd083c5052afae1c437   # polar_tx#18 merge commit
 

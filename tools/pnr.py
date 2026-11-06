@@ -56,9 +56,13 @@ RESULTS = REPO / "results" / "pnr"
 SITE = "FreePDK45_38x28_10R_NP_162NW_34O"
 
 
-def netlist(spec, set_dir: Path, top: str, params: dict, work: Path) -> tuple[str, float]:
+def netlist(spec, set_dir: Path, top: str, params: dict, work: Path,
+            hier: bool = False) -> tuple[str, float]:
     """Synthesize ``top`` exactly as synth.py does (flattened, sopb) and write the netlist.
-    Returns (netlist path, ABC delay in ps)."""
+    ``hier``: as ``synth.py --mode hier`` instead (the IP's own modules kept, so ABC maps each
+    one separately; the only way a 1.6 M-cell dpd_poly gets through ABC), then the mapped
+    netlist is flattened for OpenROAD. Returns (netlist path, ABC delay in ps, the worst
+    module's when hier)."""
     lib = SY.LIBS["nangate45"]["path"]
     work.mkdir(parents=True, exist_ok=True)
     (work / "abc.script").write_text(SY.abc_script(False, None))
@@ -66,14 +70,21 @@ def netlist(spec, set_dir: Path, top: str, params: dict, work: Path) -> tuple[st
     chp = " ".join(f"-chparam {k} {v}" for k, v in params.items() if SY._is_int(v))
     strs = " ".join(f'-set {k} "{v}"' for k, v in params.items() if not SY._is_int(v))
     out = work / f"{top}.v"
+    keep = " ".join(f"*{m}*" for m in SY.keep_modules(spec))
+    if hier and not keep:
+        raise ValueError(f"{spec.name}: --hier needs the IP's own sub-modules; it has none")
     ys = "\n".join(ln for ln in [
         f"read_verilog -sv -I {set_dir} {srcs}",
         f"chparam {strs} {top}" if strs else "",
         f"hierarchy -top {top} {chp}",
-        *SY.synth_lines(top, True, "default"),
+        *(SY.synth_lines(top, True, "default") if not hier else [
+            "proc",
+            "setattr -mod -set keep_hierarchy 1 " + keep,
+            "flatten", *SY.synth_lines(top, False, "default")]),
         f"dfflibmap -liberty {lib}",
         f"abc -liberty {lib} -script {work / 'abc.script'}",
         "opt_clean",
+        *(["setattr -mod -unset keep_hierarchy", "flatten", "opt_clean"] if hier else []),
         "hilomap -singleton -hicell LOGIC1_X1 Z -locell LOGIC0_X1 Z",
         "setundef -zero",
         "splitnets",
@@ -146,7 +157,7 @@ puts "DSPIP done"
 
 
 def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: float,
-        util: int, density: float, repair_timing: bool = False) -> dict:
+        util: int, density: float, repair_timing: bool = False, hier: bool = False) -> dict:
     spec = load_ipspec(IP_ROOT / ip)
     set_dir = spec.set_dir(set_name)
     top = module or spec.top
@@ -154,9 +165,9 @@ def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: flo
         params = {**SY.ip_synth_params(spec, set_dir), **params}
     ptag = "_".join(f"{k}{v}" for k, v in sorted(params.items()) if SY._is_int(v))
     work = RESULTS / "work" / ip / (f"{set_name}__{top}" + (f"__{ptag}" if ptag else "")
-                                     + ("__rt" if repair_timing else ""))
+                                     + ("__rt" if repair_timing else "") + ("__hier" if hier else ""))
     t0 = time.time()
-    nl, abc_ps = netlist(spec, set_dir, top, params, work)
+    nl, abc_ps = netlist(spec, set_dir, top, params, work, hier)
     lib = SY.LIBS["nangate45"]["path"]
     final = work / f"{top}_final.v"
     tcl = TCL.format(platform=PLATFORM, lib=lib, netlist=nl, top=top, period=period_ns,
@@ -197,7 +208,7 @@ def run(ip: str, set_name: str, module: str | None, params: dict, period_ns: flo
                  "yosys": SY.yosys_version(), "abc": SY.DEFAULT_ABC,
                  "platform": "OpenROAD-flow-scripts@e5cc6e7 nangate45"},
         "period_ns": period_ns, "utilization_pct": util, "place_density": density,
-        "repair_timing": repair_timing,
+        "repair_timing": repair_timing, "synth": "hier" if hier else "flat",
         "abc_delay_ps": abc_ps,
         "abc_f_est_mhz": round(1e6 / (abc_ps + ff["total_ps"]), 1),
         "ideal_wns_ns": ideal, "placed_wns_ns": placed, "routed_wns_ns": routed,
@@ -228,6 +239,9 @@ def main(argv=None) -> int:
     ap.add_argument("--density", type=float, default=0.6, help="global placement density")
     ap.add_argument("--repair-timing", action="store_true",
                     help="also run repair_timing -setup after CTS (timing-driven sizing/buffering)")
+    ap.add_argument("--hier", action="store_true",
+                    help="map the IP's own modules separately (synth.py --mode hier), then "
+                         "flatten the mapped netlist; for designs too big for flat ABC")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
     if not OPENROAD.exists():
@@ -235,11 +249,12 @@ def main(argv=None) -> int:
         return 2
     params = dict(kv.split("=", 1) for kv in args.param)
     rep = run(args.ip, args.set_name, args.module, params, args.period, args.util, args.density,
-              args.repair_timing)
+              args.repair_timing, args.hier)
     RESULTS.mkdir(parents=True, exist_ok=True)
     ptag = "_".join(f"{k}{v}" for k, v in sorted(rep["params"].items()))
     out = args.out or RESULTS / (f"{args.ip}__{rep['module']}{'__' + ptag if ptag else ''}"
-                                 + ("__rt" if args.repair_timing else "") + ".json")
+                                 + ("__rt" if args.repair_timing else "")
+                                 + ("__hier" if args.hier else "") + ".json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1))
     print(f"[estimate] {args.ip}/{rep['module']}: ABC {rep['abc_delay_ps']:.0f} ps -> "
