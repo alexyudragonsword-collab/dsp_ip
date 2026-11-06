@@ -55,11 +55,18 @@ def test_committed_results_are_estimates_from_the_pinned_tools(pnr):
 
 
 def test_p1_conclusion_recorded_in_docs():
-    """The P&R section states the measured dpd_term penalty and the P = 1 verdict."""
+    """The P&R section states the measured dpd_term penalty and the P = 1 verdict, which now
+    comes from placing the whole P = 1 datapath (results/pnr/partial/: stopped after
+    placement, the global route does not fit in memory here)."""
     doc = (REPO / "docs" / "synthesis.md").read_text()
     m = json.loads((RESULTS / "dpd_poly__dpd_term__K11_Q_PAIR15_SH14.json").read_text())
     assert f"{m['routed_f_est_mhz']:.0f} MHz" in doc
-    assert re.search(r"P = 1 .*edge", doc)
+    full = json.loads((RESULTS / "partial" / "dpd_poly__dpd_poly__P1__hier__place.json").read_text())
+    assert full["kind"] == "estimate" and full["stopped_after"] == "place"
+    assert full["synth"] == "hier" and full["tool"]["openroad"] == "2.0-12381-g01bba3695"
+    assert full["routed_f_est_mhz"] is None and full["placed_f_est_mhz"] < 640    # 448.3
+    assert f"{full['placed_f_est_mhz']} MHz" in doc
+    assert re.search(r"P = 1 at 640 MSPS does not close", doc)
 
 
 @pytest.mark.skipif(not (REPO / "third_party/openroad-env/bin/openroad-dspip").exists(),

@@ -245,11 +245,23 @@ What this says:
 - **Timing-driven repair buys about 5 %.** `--repair-timing` (`repair_timing -setup` after
   CTS) does nothing at 640 MHz, where nothing fails. Asked for 690 MHz (1.45 ns), it lifts
   routed `dpd_term` to 674.5 MHz for +14 µm².
-- **P = 1 at 640 MSPS sits at the edge once wires count.** In situ the same `dpd_term` maps
-  5 % slower than alone (1313 vs 1255 ps). Add the ~10 % wire penalty and P = 1 lands near
-  610 MHz. `repair_timing` claws back about 5 %. P = 2 needs only 320 MHz per lane, about
-  half the routed figure, so it is the robust choice. Settling P = 1 needs place-and-route of the whole P = 1
-  datapath (1.6 M cells), which this flow has not been run on.
+- **P = 1 at 640 MSPS does not close: the whole datapath places at 448 MHz.**
+  - *Earlier estimate, superseded below.* In situ the same `dpd_term` maps 5 % slower than
+    alone (1313 vs 1255 ps). Adding the ~10 % wire penalty put P = 1 near 610 MHz, "at the
+    edge".
+  - *Measured* (`tools/pnr.py --hier --stop-after place`,
+    `results/pnr/partial/dpd_poly__dpd_poly__P1__hier__place.json`). The whole DDR P = 1
+    datapath is 2.39 mm² after `repair_design` (7463 buffers, 324 790 resizes). It times at
+    643.5 MHz with ideal wires and 448.3 MHz after detailed placement, a 43.5 % placement
+    penalty. Global route needed more than the 15 GB here (OpenROAD went from 7.7 to over
+    12 GB, then OOM), so there is no routed number. Routing only ever added delay in this
+    flow, so P = 1 is settled without one.
+  - *What limits it.* The worst path is a flop driving a net across the die through seven
+    buffers (`max_length` / `max_cap` / `wire`), about 0.9 ns of wire, then about 1.2 ns of
+    logic. It is broadcast distance, not logic depth, which is why a 4-term slice of the same
+    top places at 635 MHz and routes at 612 MHz. Replicating that register, or giving the
+    broadcast its own pipeline stage, is the lever; that is RTL work, recorded in ROADMAP.
+  - **P = 2 (320 MHz per lane) stays the design point.** 448 MHz placed is 1.4× above it.
 
 ## Halo's FFE + DFE + slicer, streaming form (2026-11-06)
 

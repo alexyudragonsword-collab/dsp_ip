@@ -1,5 +1,10 @@
 # CHANGELOG（按里程碑）
 
+## P=1 整条通路布局（2026-11-06）
+
+- dpd_poly DDR P=1 全通路（1.63 M 单元）布局后 448.3 MHz（理想线网 643.5 MHz，布局代价 43.5 %），到不了 640 MSPS；瓶颈是跨片广播线，不是逻辑深度。全局布线在本机 15 GB 内放不下。
+- 设计点维持 P=2；结果存 `results/pnr/partial/`（无布线数字，不进 `results/pnr/*.json` 的测试）。
+
 ## Halo 三种 MLSD 的流式形式（2026-11-06）
 
 - **Halo_Serdes#148**（本库提出，叠在 #147 上，等用户合并）：`viterbi_stream.sv` / `sliding_stream.sv` / `dfse_stream.sv` 与补上的平局 / 边界向量集。本库全部 Halo 文件 pin 在 `c59c2c8`。
