@@ -1,0 +1,30 @@
+{
+ "kind": "estimate",
+ "ip": "dp_cal_lms",
+ "set": "ble_5pct",
+ "module": "dp_cal_lms",
+ "params": {},
+ "tool": {
+  "openroad": "2.0-12381-g01bba3695",
+  "yosys": "Yosys 0.70+219 (git sha1 5053d0e26, Release, Clang /usr/bin/clang++ 21.1.8)",
+  "abc": "sopb",
+  "platform": "OpenROAD-flow-scripts@e5cc6e7 nangate45"
+ },
+ "period_ns": 1.5625,
+ "utilization_pct": 40,
+ "place_density": 0.6,
+ "repair_timing": false,
+ "abc_delay_ps": 1736.41,
+ "abc_f_est_mhz": 529.0,
+ "ideal_wns_ns": 0.14549273309049796,
+ "placed_wns_ns": 0.047080118913771084,
+ "routed_wns_ns": 0.01408240230953041,
+ "ideal_f_est_mhz": 705.7,
+ "routed_tns_ns": 0.0,
+ "placed_f_est_mhz": 659.9,
+ "routed_f_est_mhz": 645.8,
+ "area_um2": 1626.0,
+ "runtime_s": 3.1,
+ "method": "yosys (synth.py flow, sopb) -> OpenROAD floorplan / place / repair_design / CTS / global_route; worst slack with global-route parasitics (setRC.tcl), no repair_timing, no detailed route; f_est = 1 / (period - WNS)",
+ "wire_penalty": 0.0928
+}

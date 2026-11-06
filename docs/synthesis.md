@@ -200,6 +200,57 @@ expected in magnitude. The ordering differs, though: in sky130 the square-root s
 multipliers. A sky130 implementation would split those first. This is recorded here, not
 acted on (no sky130 target).
 
+## Place and route: what the wires cost (OpenROAD, 2026-11-06)
+
+Every number above is ABC's critical path with **no wire load**. `tools/pnr.py` takes the
+same yosys netlist (pinned yosys, `sopb`, NanGate45) through OpenROAD:
+
+- floorplan at 40 % utilization, then global placement and `repair_design`
+  (slew / cap / fanout);
+- detailed placement, then clock-tree synthesis;
+- global routing, with parasitics estimated from the global routes (ORFS `setRC.tcl`).
+
+It times three things:
+
+- **ideal**: the final netlist with ideal wires and an ideal clock (same timer, same gate
+  sizes);
+- **placed**: after placement;
+- **routed**: after global routing, with the propagated clock tree.
+
+`wire_penalty` = ideal / routed − 1. OpenROAD is litex-hub's 2.0-12381 build, installed and
+pinned by `tools/get_openroad.sh`. There is no detailed routing or extraction, so the
+numbers sit between "no wires" and sign-off. Results are in `results/pnr/` and are not
+rendered into `docs/results.md`.
+
+| block (clock 1.5625 ns = 640 MHz) | ABC (no wires) | ideal wires | placed | **routed** | wire penalty | area (µm²) |
+|---|---|---|---|---|---|---|
+| `dpd_term` (K1=1, Q_PAIR=15, SH=14: DDR's slowest) | 710 MHz | 721 | 661 | **644 MHz** | 11.9 % | 17 003 |
+| `dpd_term` (defaults) | 722 | 726 | 675 | **658** | 10.3 % | 15 280 |
+| `dpd_pow` (Q2=15, Q3=31, Q4=46) | 757 | 719 | 676 | **663** | 8.3 % | 12 230 |
+| `dpd_env` | 726 | 852 | 804 | **895** | −4.9 % | 8 455 |
+| `dpd_acc` | 1646 | 2799 | 2685 | **3010** | −7.0 % | 171 |
+| `dp_cal_lms` | 529 | 706 | 660 | **646** | 9.3 % | 1 626 |
+| `dtc_dither` | 1936 | 2237 | 2155 | **2100** | 6.6 % | 236 |
+| `polar_dpd_lut` | 1736 | 2751 | 2425 | **2695** | 2.1 % | 750 |
+
+What this says:
+
+- **The multiplier stages lose 8–12 % to wires and the clock tree.** `dpd_term` drops from
+  721 to 644 MHz and `dpd_pow` from 719 to 663. Both are still ≥ 640 MHz, but only just.
+- **Negative penalties are clock skew, not faster wires.** For `dpd_env`, `dpd_acc` and the
+  LUT, the propagated clock tree happens to lend time to the worst path (useful skew).
+- **ABC and the ideal-wire timer disagree in both directions** (`dp_cal_lms` 529 vs 706 MHz).
+  `repair_design` upsized about 2400 gates, and ABC's `stime` is its own delay model. The
+  apples-to-apples wire cost is ideal vs routed, not ABC vs routed.
+- **Timing-driven repair buys about 5 %.** `--repair-timing` (`repair_timing -setup` after
+  CTS) does nothing at 640 MHz, where nothing fails. Asked for 690 MHz (1.45 ns), it lifts
+  routed `dpd_term` to 674.5 MHz for +14 µm².
+- **P = 1 at 640 MSPS sits at the edge once wires count.** In situ the same `dpd_term` maps
+  5 % slower than alone (1313 vs 1255 ps). Add the ~10 % wire penalty and P = 1 lands near
+  610 MHz. `repair_timing` claws back about 5 %. P = 2 needs only 320 MHz per lane, about
+  half the routed figure, so it is the robust choice. Settling P = 1 needs place-and-route of the whole P = 1
+  datapath (1.6 M cells), which this flow has not been run on.
+
 ## How to read `results/synth/*.json`
 
 Every file has `"kind": "estimate"`, the `method` string, the library name and sha256, the

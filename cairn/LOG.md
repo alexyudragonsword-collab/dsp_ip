@@ -1,5 +1,14 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-06 · OpenROAD 布局布线：乘法级线网代价 8–12 %，P=1 回到边缘
+
+- 用户选 litex-hub 包。频道依赖要 Anaconda `defaults` 的 libboost 1.73（另有条款，不用），conda-forge 上三者一起无解，Python 3.10 还被解成 GraalPy（没有 libpython）。
+  最后用两个 conda-forge 前缀凑齐动态库：`tools/get_openroad.sh`，从零 26 s。
+- 第一版比较是 ABC 对布线，`dp_cal_lms` 布线后"更快"（529 → 646 MHz）——**这个比较是错的**：`repair_design` 改了约 2400 个门的尺寸，ABC 的 `stime` 也是另一套延迟模型。改为同一网表、同一计时器的"理想线网 vs 布线"。
+- 布线代价：`dpd_term` −11.9 %（721 → 644 MHz）、`dpd_pow` −8.3 %、`dp_cal_lms` −9.3 %；env / acc / LUT 为负（时钟偏斜）。`repair_timing` @1.45 ns：`dpd_term` 674.5 MHz。
+- **被推翻的判断**：上一轮"P=1 达 640 MSPS"是无线网结论；带线网后 P=1 在边缘（估约 610 MHz），稳妥是 P=2，已写进 ROADMAP 与 `docs/synthesis.md`。
+- 两次运行逐值相同。CI 加 `pnr` job。下一步：polar_tx 数字链 IP；Halo 流式化。
+
 ## 2026-11-06 · polar_tx#17 合并（0e76e3e），全部 polar_tx 文件改 pin
 
 - 用户选"合并 #17 并改 pin"。合并提交的 src/ 与 PR 头 `e928557` 相同（PR 头之后只有 Windows 换行的测试修复 `b26e8ae`）。

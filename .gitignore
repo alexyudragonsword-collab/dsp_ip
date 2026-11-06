@@ -13,6 +13,7 @@ ip/*/vectors/.lockstep.lock
 # simulation / synthesis outputs (CI uploads them as artifacts)
 results/lockstep/
 results/synth/logs/
+results/pnr/work/
 obj_dir/
 obj_*/
 *.vvp

@@ -118,6 +118,41 @@ jobs:
             results/synth-ci/*.json
             results/synth/logs/**/yosys.log
 
+  pnr:
+    # Rule 5, with wires: OpenROAD place + CTS + global route of small blocks (pinned
+    # OpenROAD, tools/get_openroad.sh); the dtc_dither point must reproduce its committed JSON.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Pinned yosys + OpenROAD downloads
+        uses: actions/cache@v6
+        with:
+          path: third_party/dl
+          key: oss-cad-suite-2026-10-25-openroad-2.0-12381
+      - run: tools/get_yosys.sh
+      - run: tools/get_openroad.sh
+      - run: pip install -e ".[test,upstream]"
+      - run: tools/get_liberty.sh
+      - name: OpenROAD platform files (NanGate45, pinned ORFS)
+        run: git -C third_party/orfs sparse-checkout add flow/platforms/nangate45
+      - name: Place and route, small blocks
+        run: |
+          python tools/pnr.py --ip dtc_dither --set ramp --out results/pnr-ci/dtc_dither.json
+          python tools/pnr.py --ip dp_cal_lms --set ble_5pct --out results/pnr-ci/dp_cal_lms.json
+      - name: P&R tool tests (the small block reproduces bit for bit)
+        run: python -m pytest -q tests/test_pnr_tool.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pnr-estimates
+          path: |
+            results/pnr-ci/*.json
+            results/pnr/work/**/openroad.log
+
   synth-long:
     # Rule 5, the full picture: P = 1 / 2 / 4 hier points of both bases from one RTL version.
     # Manual trigger only (6 runners, up to a few hours each). The estimate JSON is printed

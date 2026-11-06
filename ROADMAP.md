@@ -2,7 +2,8 @@
 
 ## 里程碑 1 收尾（可选、不阻塞验收）
 
-（无。P=1 已达 640 MSPS（estimate），2026-11-05 见 `cairn/LOG.md`。）
+- [ ] **P=1 在布线后处于边缘**（2026-11-06，`docs/synthesis.md`「Place and route」）：`dpd_term` 单模块布线后 644 MHz（线网与时钟树代价 11.9 %），在位置上还要慢约 5 % → 估约 610 MHz < 640。
+      `repair_timing` 能收回约 5 %。要定论需对整条 P=1 数据通路（1.6 M 单元）做布局布线：`tools/pnr.py` 已能做，但本机内存与时长未试。在此之前稳妥结论是 P=2。
 
 ## 里程碑 2 之后（Halo 五个模块都已进脚手架，只做 lockstep）
 
@@ -17,8 +18,6 @@
 （无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）与 #17（rtl_vectors 导出、dp_cal 变体）已合并，现 pin 在 `0e76e3e`；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
 
 ## 被外部阻塞
-
-- [ ] **布局布线级频率估计**（用户已选）：本机与 apt 都没有 OpenROAD。litex-hub conda 频道有预编译包 `openroad-2.0_12381_g01bba3695`（2024-02），但下载并执行这个外部二进制被本会话的自动权限策略拒绝。需要用户决定：允许它，或给一个可信来源（官方 Docker 镜像 / 自行构建）。ORFS 平台文件已 pin 在 `third_party/orfs`。
 
 - [ ] 删两个已合并的上游 PR 分支：Halo_Serdes `fix/rtl-dsp-ip-findings`（19d104f）、PA_DPD `fix/export-for-integer-rtl`（9d9c4b6）。两者都已是各自 main 的祖先（`git merge-base --is-ancestor`）；本会话 `git push origin --delete <branch>` 回 HTTP 403（git 代理策略），需用户在 GitHub 网页上删。
 

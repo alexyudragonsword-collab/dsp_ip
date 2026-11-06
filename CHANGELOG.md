@@ -1,5 +1,22 @@
 # CHANGELOG（按里程碑）
 
+## 布局布线估计：OpenROAD 进流程（2026-11-06）
+
+- **`tools/get_openroad.sh`**：固定版本的 OpenROAD（litex-hub `openroad-2.0_12381_g01bba3695`，按频道索引核对 sha256）。
+  - 依赖（Boost 1.73、Qt 5.9、spdlog 1.9 / fmt 8、CPython 3.10）已无法在 conda-forge 一次装齐，`libboost` 1.73 只在 Anaconda `defaults`（另有服务条款，不用）里。
+  - 改为两个 conda-forge 前缀提供同样的动态库，micromamba 也按 sha256 固定；从零安装 26 s。
+- **`tools/pnr.py`**：同一 yosys 网表（`sopb`）→ floorplan / 放置 / `repair_design` / CTS / 全局布线。时序取三处：最终网表理想线网、放置后、布线后（传播时钟）。
+  - `wire_penalty` = 理想 / 布线 − 1。
+  - `--repair-timing` 可选。
+  - 结果在 `results/pnr/`，不入表。
+- **结果**（NanGate45，640 MHz 时钟，estimate）：
+  - `dpd_term` 最慢参数化：ABC 710 → 理想 721 → 布线 **644 MHz**（−11.9 %）；`dpd_pow` 719 → **663**（−8.3 %）。
+  - `dp_cal_lms` 706 → 646；`dtc_dither` 2237 → 2100。
+  - `dpd_env` / `dpd_acc` / LUT 布线后反而更快，是时钟偏斜帮忙。
+  - `repair_timing` 在 1.45 ns 目标下把 `dpd_term` 拉到 674.5 MHz（+14 µm²）。
+- **结论**：P=1 在布线后处于边缘（在位置的 `dpd_term` 估约 610 MHz），稳妥是 P=2。整条通路的布局布线未做（ROADMAP）。
+- CI 新 job `pnr`：装 OpenROAD，跑两个小块，`dtc_dither` 必须逐值复现提交的 JSON。
+
 ## 两个 polar_tx 新 IP、dp_cal_lms 覆盖、指纹全覆盖、时序余量与 sky130 交叉（2026-11-05）
 
 - **`ip/dtc_dither`**（新）：开环 DTC 相位字的一阶误差反馈（EFM1）抖动，参考是 polar_tx `export/rtl.py` 的 `efm1_int_golden`（原样 vendor）。
