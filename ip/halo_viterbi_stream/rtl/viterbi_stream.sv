@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/viterbi_stream.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/viterbi_stream.sv
 // Streaming Viterbi MLSD — the synthesizable form of viterbi_mlsd.sv.
 //
 // Same arithmetic as viterbi_mlsd.sv / halo_serdes.dsp.fixed_viterbi._viterbi_fixed_py

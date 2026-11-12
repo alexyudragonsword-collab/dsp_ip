@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/dfse_mlsd.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/dfse_mlsd.sv
 // Fixed-point reduced-state Viterbi MLSD (decision-feedback sequence
 // estimation).
 //

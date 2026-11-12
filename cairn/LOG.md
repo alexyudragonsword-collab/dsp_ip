@@ -1,5 +1,15 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-12 · Halo_Serdes#147、#148 合并，全部 Halo 文件改 pin 到 `6516f1c`
+
+- Halo 方在 #147 留言：main 先合了 #146、#150，#147 冲突；要求合 main、解冲突、按实测更新测试总数，绿了再通知；#147 合后 #148 改基到 main 同样处理。
+- #147：合 main（`f2ece76`，冲突只在 CHANGELOG / LOG，两边保留按日期排），本地全量 1472 passed / 3 skipped（1475 项）写进 README / COMPARISON（`3ad9048`），CI 9/9 绿，留言后用户合并（`d5789c2`）。
+- #148：改基到 main，合 main（`d1ec3b3`），本地全量 1475 passed / 3 skipped（1478 项，`f021823`），CI 9/9 绿，留言后合并（`6516f1c`）。
+- 新容器什么都没装：先装 Halo `.[gui,fec,jit,test]` + iverilog 12（同 CI），才能实测总数；第一次 `pytest` 在没装依赖的 Python 上直接报"No module named pytest"，没算数。
+- 改 pin：`rtl/` 在 `32d562e` 与 `6516f1c` 之间逐字节相同（#150 不碰 rtl）；18 个 `.sv` 头、19 个 SOURCE.md、`ci.yml` `HALO_SHA`、`vendor/__init__.py`、upstream-findings；重锁 9 个 Halo IP（只变 SOURCE.md 哈希）。
+- 顺带发现：PA_DPD、polar_tx 的 main 已越过本库 pin（本地 strict 报 4 个 stale pin）；polar_tx main 重导 11 组逐字节相同，PA_DPD 的 ILA / GMP 有行为改动 → 记 ROADMAP。
+- 下一步：Halo 侧余项都在 Halo ROADMAP P3 #13（`adc_dsp_loop` 流式、Viterbi 综合、受控光标两级推测）；本库 ROADMAP 已删"等合并"项。
+
 ## 2026-11-06 · CI 发行版 Verilator 5.032 抓到滑窗流式的错；lockstep 换仿真器沿用旧二进制
 
 - run 59 / 60 `lockstep (distro)` 红：只有 `halo_sliding_stream`，6 点全 abort（rc −6）。runner 的 apt Verilator 已是 5.032（之前 5.020）。

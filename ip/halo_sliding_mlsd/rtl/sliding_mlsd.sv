@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/sliding_mlsd.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/sliding_mlsd.sv
 // Fixed-point sliding-detector MLSD (DragonPHY's error-event post-detector).
 //
 // An INDEPENDENT SystemVerilog implementation of

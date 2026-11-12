@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/viterbi_mlsd.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/viterbi_mlsd.sv
 // Fixed-point Viterbi MLSD over the residual ISI.
 //
 // An INDEPENDENT SystemVerilog implementation of

@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/tb_viterbi_mlsd.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/tb_viterbi_mlsd.sv
 // Lockstep testbench for viterbi_mlsd.sv against the vectors
 // halo_serdes.dsp.fixed_viterbi.dump_viterbi_vectors wrote. Exits non-zero
 // on any mismatch.

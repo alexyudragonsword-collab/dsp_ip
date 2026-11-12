@@ -1,4 +1,4 @@
-// Vendored from Halo_Serdes@32d562e: rtl/sliding_stream.sv
+// Vendored from Halo_Serdes@6516f1c: rtl/sliding_stream.sv
 // Streaming sliding-detector MLSD — the synthesizable form of sliding_mlsd.sv.
 //
 // Same arithmetic as sliding_mlsd.sv / halo_serdes.dsp.fixed_mlsd._sliding_fixed_py
