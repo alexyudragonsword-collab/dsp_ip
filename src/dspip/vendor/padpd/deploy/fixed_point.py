@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@5718b83: src/padpd/deploy/fixed_point.py
+# Vendored from PA_DPD@a9220d6: src/padpd/deploy/fixed_point.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Fixed-point (bit-true) evaluation of linear-in-parameters models.
 

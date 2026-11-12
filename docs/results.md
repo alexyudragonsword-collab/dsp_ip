@@ -2,7 +2,7 @@
 
 ## Fixed-point vs float: ACLR (rule 2)
 
-Dataset DPA_160MHz; metric ACLR_AVG dBc via PA_DPD DGRU surrogate; upstream numbers from PA_DPD@5718b83 docs/03_roadmap.md:112-121.
+Dataset DPA_160MHz; metric ACLR_AVG dBc via PA_DPD DGRU surrogate; upstream numbers from PA_DPD@a9220d6 docs/03_roadmap.md:115-124.
 
 | basis | model | float | W16 | W12 | W10 |
 |---|---|---|---|---|---|

@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@5718b83: src/padpd/pa/presets.py
+# Vendored from PA_DPD@a9220d6: src/padpd/pa/presets.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Model configurations matching OpenDPD's published classical baselines.
 

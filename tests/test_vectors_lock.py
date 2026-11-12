@@ -29,7 +29,7 @@ def test_upstream_export_hashes():
     for name in actual:
         if name != "EXPORT.md":
             assert name in entry["files"], f"{name} not pinned"
-    assert re.search(r"5718b835f9d6e5cd3680252e5d9046ab08aae7be", (UP / "EXPORT.md").read_text())
+    assert re.search(r"a9220d68fa3c0ca8fe2e58ce1efe25dccb3d7a89", (UP / "EXPORT.md").read_text())
 
 
 @pytest.mark.parametrize("ip", [s.name for s in all_ips(IP_ROOT)])

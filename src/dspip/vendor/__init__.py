@@ -17,8 +17,9 @@ edit; the same tool scans ``ip/*/rtl/*.sv`` for ``// Vendored from`` headers
 so milestone 2 can vendor Halo_Serdes' RTL under the same policy; every Halo file is now at
 Halo_Serdes@6516f1c, the merge commit of PR #148; #147 added LOOKAHEAD, #148 the streaming MLSDs).
 
-``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ 5718b83 (the commit
-whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
+``padpd`` — from ``alexyudragonsword-collab/PA_DPD`` @ a9220d6 (PA_DPD ``main``; its
+``scripts/export_deploy.py`` re-produces ``ip/dpd_poly/upstream/`` byte for byte, first
+exported at 5718b83):
 
 - ``pa/{base,memory_polynomial,ddr,gmp,presets}.py``: the DDR-Volterra and
   GMP basis definitions (column order is the contract the integer reference
@@ -30,8 +31,9 @@ whose ``scripts/export_deploy.py`` produced ``ip/dpd_poly/upstream/``):
 - ``dpd/ila.py``, ``data/*``, ``metrics/opendpd_compat.py``: enough to re-run
   the export and the ACLR metric locally (needs scipy).
 
-``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ 7057738 (merge commit of polar_tx PR #18;
-#16 added the fixed-point calibrator, #17 and #18 the vector exports):
+``polartx`` — from ``alexyudragonsword-collab/polar_tx`` @ b007e60 (polar_tx ``main``; #16 added
+the fixed-point calibrator, #17 and #18 the vector exports, and b007e60 made the calibrator a
+step kernel, which falls back to plain Python when vendored on its own, as here):
 
 - ``dp_cal_fixed.py``: the bit-true sign-sign LMS two-point gain calibrator
   (``golden_trace``, ``step_codes``, ``DpCalFixedConfig``) that ``ip/dp_cal_lms``

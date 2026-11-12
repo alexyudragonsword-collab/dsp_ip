@@ -77,7 +77,7 @@
   }
  },
  "upstream": {
-  "command": "see ip/dpd_poly/upstream/DPA_160MHz/EXPORT.md (PA_DPD@5718b83 scripts/export_deploy.py)",
+  "command": "see ip/dpd_poly/upstream/DPA_160MHz/EXPORT.md (PA_DPD@a9220d6 scripts/export_deploy.py)",
   "files": {
    "ddr_r1_w12_coeffs.json": "3fd777e2f8b5815a73167fb999d23bc02767251b9852c7234ace0b5efe6eb497",
    "ddr_r1_w12_refvec.csv": "a716acef48b610864b0836e5f2618ff48ac9b45270cb34ed8a348f384e0c56b6",

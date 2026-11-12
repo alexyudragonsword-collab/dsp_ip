@@ -1,8 +1,9 @@
 # Committed vector set: polar_tx export (dp_cal_lms / ble_m5pct)
 
-Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `70577381f678da34da20fcd083c5052afae1c437`
-(head of polar_tx PR #18, which added the datapath and remaining block exports; earlier sets
-are byte-identical to their #16 / #17 exports; re-pinned to the merge commit once merged) with
+Exported unchanged from `alexyudragonsword-collab/polar_tx` @ `b007e60477bac68806138db733cbafd0c0761282`
+(polar_tx `main`, after #18 added the datapath and remaining block exports and the
+calibrator became a step kernel; every set re-exports byte-identically to its #16 / #17 / #18
+export) with
 
     python -m polartx.export.dp_cal_vectors OUTDIR --variant ble_m5pct    # in a polar_tx checkout, pip install -e .
 

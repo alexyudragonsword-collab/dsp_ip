@@ -6,7 +6,7 @@ upstream repositories. Each item stays until upstream has answered.
 
 ## PA_DPD @ 08b9725 — filed as alexyudragonsword-collab/PA_DPD#2 (2026-11-02)
 
-**Fixed upstream by PA_DPD#3, merged 2026-11-04 as `5718b83`; dsp_ip is pinned there.**
+**Fixed upstream by PA_DPD#3, merged 2026-11-04 as `5718b83`; dsp_ip was pinned there, and since 2026-11-12 at PA_DPD `main` `a9220d6`, whose export is byte-identical.**
 The export now carries the input / per-column exponents (`fixed_point` in the JSON) and the
 integer input codes (two CSV columns appended), the docstrings say "float emulation,
 output not quantized", and both doc nits are fixed. The algorithm and the ACLR numbers did

@@ -1,4 +1,4 @@
-# Vendored from PA_DPD@5718b83: src/padpd/deploy/export.py
+# Vendored from PA_DPD@a9220d6: src/padpd/deploy/export.py
 # Adapted-copy policy: see src/dspip/vendor/__init__.py
 """Deployment hand-off: fixed-point coefficient and reference-vector export.
 

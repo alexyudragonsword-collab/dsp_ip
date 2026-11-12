@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rule 3 drift gate: re-run the consumer's export and compare with the committed copy.
 
-    python tools/check_upstream_export.py --pa-dpd <PA_DPD checkout @5718b83> \
+    python tools/check_upstream_export.py --pa-dpd <PA_DPD checkout @a9220d6> \
         --dataset <OpenDPD>/datasets/DPA_160MHz [--out <scratch dir>]
 
 Re-runs ``scripts/export_deploy.py`` (W16 and W12) from the pinned PA_DPD checkout against

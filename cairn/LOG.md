@@ -1,5 +1,14 @@
 # LOG（新条目在顶部；每条 ≤ 20 行：摘要 + 数字原值 + 被推翻的判断 + 下一步）
 
+## 2026-11-12 · polar_tx、PA_DPD 改 pin 到各自 main（导出都逐字节相同）
+
+- 用户说"做吧"。polar_tx `7057738` → `b007e60`：`dp_cal_fixed.py` 改成步进 kernel（单独 vendor 时退回纯 Python）；`check_polartx_export` 11 组逐字节相同；7 个 IP 重锁（只变 SOURCE.md 哈希）；指纹测试过（参考输出未变）。
+- PA_DPD `5718b83` → `a9220d6`：`check_upstream_export` 在 `a9220d6` 重导，4 个系数 JSON + 4 个参考向量 CSV **逐字节相同**（不止 ±1 LSB 内）。`ila.py` 的改动只在 `fit()`（keep-best 1 dB 容差）；本库走的 `fit_measured` / `__call__` AST 相同。上游 ACLR 表内容未变，只是从 112–121 行移到 115–124 行，引用改过来。
+- **被推翻的判断**：上一条说"PA_DPD 的 ILA / GMP 有行为改动 → 可能动 dpd_poly 系数与向量"——实测不动：行为改动在本库不走的路径上（`fit()`、`tap_spacing` 非默认）。
+- 没在本地验 fixed-vs-float 的 ACLR：`download.pytorch.org` 被本会话网络策略拒绝，装不了 CPU torch；CI 的 fixed-vs-float job（`DSPIP_REQUIRE_TORCH=1`）是这一项的验证。
+- 我自己的失误：重 vendor 时只写了第一行头注释，丢了 `# Adapted-copy policy` 第二行（15 个：12 个 padpd、3 个 polartx）；vendor_check 只比正文所以没报，看 diff 发现后补回。
+- 验证：vendor_check --strict 33/33 verbatim、无 stale pin；lockstep 全过（`dpd_poly` 一点遇 Verilator 5.020 编译崩溃，重跑过，记 ROADMAP）；非 lockstep 测试 172 passed / 10 skipped（无 yosys / OpenROAD）；ruff；render_tables --check。
+
 ## 2026-11-12 · Halo_Serdes#147、#148 合并，全部 Halo 文件改 pin 到 `6516f1c`
 
 - Halo 方在 #147 留言：main 先合了 #146、#150，#147 冲突；要求合 main、解冲突、按实测更新测试总数，绿了再通知；#147 合后 #148 改基到 main 同样处理。
@@ -7,7 +16,7 @@
 - #148：改基到 main，合 main（`d1ec3b3`），本地全量 1475 passed / 3 skipped（1478 项，`f021823`），CI 9/9 绿，留言后合并（`6516f1c`）。
 - 新容器什么都没装：先装 Halo `.[gui,fec,jit,test]` + iverilog 12（同 CI），才能实测总数；第一次 `pytest` 在没装依赖的 Python 上直接报"No module named pytest"，没算数。
 - 改 pin：`rtl/` 在 `32d562e` 与 `6516f1c` 之间逐字节相同（#150 不碰 rtl）；18 个 `.sv` 头、19 个 SOURCE.md、`ci.yml` `HALO_SHA`、`vendor/__init__.py`、upstream-findings；重锁 9 个 Halo IP（只变 SOURCE.md 哈希）。
-- 顺带发现：PA_DPD、polar_tx 的 main 已越过本库 pin（本地 strict 报 4 个 stale pin）；polar_tx main 重导 11 组逐字节相同，PA_DPD 的 ILA / GMP 有行为改动 → 记 ROADMAP。
+- 顺带发现：PA_DPD、polar_tx 的 main 已越过本库 pin（本地 strict 报 4 个 stale pin）；polar_tx main 重导 11 组逐字节相同，PA_DPD 的 ILA / GMP 有行为改动 → 记 ROADMAP（同日改 pin，见上一条）。
 - 下一步：Halo 侧余项都在 Halo ROADMAP P3 #13（`adc_dsp_loop` 流式、Viterbi 综合、受控光标两级推测）；本库 ROADMAP 已删"等合并"项。
 
 ## 2026-11-06 · CI 发行版 Verilator 5.032 抓到滑窗流式的错；lockstep 换仿真器沿用旧二进制

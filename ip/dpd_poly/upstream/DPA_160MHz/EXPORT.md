@@ -6,13 +6,13 @@ library only stores them, their hashes and the command that made them).
 
 | item | value |
 |---|---|
-| PA_DPD commit | `5718b835f9d6e5cd3680252e5d9046ab08aae7be` (merge of PA_DPD#3; before: `08b9725`) |
+| PA_DPD commit | `a9220d68fa3c0ca8fe2e58ce1efe25dccb3d7a89` (PA_DPD `main`, 2026-11-12; the files were first exported at `5718b83`, the merge of PA_DPD#3, and re-export byte-identically here; before: `08b9725`) |
 | OpenDPD commit (dataset `datasets/DPA_160MHz`) | `a362a8db618cb11249f310e12212a5bf7a6db9f9` |
 | command (run twice, byte-identical both times) | see below |
-| scipy / numpy used | 1.18.1 / 2.5.3, Python 3.13.16 |
+| scipy / numpy used | 1.18.1 / 2.5.3, Python 3.13.16 (at `5718b83`); 1.18.1 / 2.5.3, Python 3.13.18 (re-export at `a9220d6`) |
 
 ```sh
-git clone --depth 1 https://github.com/alexyudragonsword-collab/PA_DPD && git -C PA_DPD checkout 5718b83
+git clone --depth 1 https://github.com/alexyudragonsword-collab/PA_DPD && git -C PA_DPD checkout a9220d6
 git clone --filter=blob:none --sparse --depth 1 https://github.com/lab-emi/OpenDPD && git -C OpenDPD sparse-checkout set datasets/DPA_160MHz
 cd PA_DPD
 PYTHONPATH=src python3 scripts/export_deploy.py --dataset-dir ../OpenDPD/datasets/DPA_160MHz --w-bits 16 --out <out>

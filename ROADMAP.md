@@ -19,12 +19,9 @@
 
 ## 推回上游
 
-- [ ] **PA_DPD 与 polar_tx 的 main 已越过本库的 pin**（2026-11-12 发现；本地 `tools/vendor_check.py --strict` 报 4 个 stale pin，CI 按 pin 检出所以不报）。
-      - polar_tx `7057738` → `b007e60`：`cal/dp_cal_fixed.py` 改成步进 kernel（+97 / −18 行）；`check_polartx_export.py --polar-tx <main 检出>` 11 组全部逐字节相同 → 改 pin 只是换 SHA 与 vendored 文件。
-      - PA_DPD `5718b83` → `a9220d6`：`dpd/ila.py`（ILA keep-best 加 1 dB 容差，74 行）、`pa/gmp.py`（tap_spacing、时域 PA 记忆，#4，36 行）有行为改动；改 pin 可能动 dpd_poly 的系数与向量，要重新导出、lockstep、fixed-vs-float 一起过。
-      - 复现：两个兄弟仓库检出各自 main，跑 `python tools/vendor_check.py --strict`。
-
 （无待回应项。PA_DPD#2 由 PA_DPD#3 修复、Halo_Serdes#136 由 Halo_Serdes#142 修复，两者已合并并重新 pin；polar_tx#16（dp_cal_lms 的定点参考）、#17（rtl_vectors 导出、dp_cal 变体）、#18（整条数字链导出）已合并，现 pin 在 `7057738`；Halo_Serdes#145（流式 FFE + DFE）、#147（`LOOKAHEAD`）、#148（三种流式 MLSD）已合并，Halo 现 pin 在 #148 的合并提交 `6516f1c`；过程见 `docs/upstream-findings.md`。新发现照旧：上游修，合并后重新 pin、重新导出、`vendor_check --strict`。）
+
+- [ ] **本地 Verilator 5.020 偶发编译崩溃**：`%Error: Internal Error: attempted to destroy locked Thread Pool`（`-j 4` 并行编译时），2026-11-06 在 `halo_adc_dsp_loop/cal`、2026-11-12 在 `dpd_poly/ddr_r1_w12 P=2` 各一次，重跑即过，CI 未遇到。是编译器崩溃不是不匹配；可在 `tools/lockstep.py` 对这一条错误降到 `-j 1` 重编一次（只认这条信息，不吞别的编译错误）。
 
 ## 被外部阻塞
 

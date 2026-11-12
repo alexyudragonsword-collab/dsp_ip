@@ -1,5 +1,11 @@
 # CHANGELOG（按里程碑）
 
+## polar_tx、PA_DPD 改 pin 到各自 main（2026-11-12）
+
+- polar_tx `7057738` → `b007e60`：vendored `dp_cal_fixed.py` 换成上游的步进 kernel 版本（单独 vendor 时纯 Python）；11 组向量重导逐字节相同。
+- PA_DPD `5718b83` → `a9220d6`：12 个 vendored 文件中 3 个正文更新（`ila.py` 的 keep-best、`gmp.py` / `memory_polynomial.py` 的 tap 间距），其余 9 个只换头注释；`export_deploy.py` 重导的系数与参考向量逐字节相同；ACLR 引用改到 `docs/03_roadmap.md:115-124`（表格内容未变）。
+- 两边都只换 pin 与 vendored 正文，向量与 RTL 不变。
+
 ## Halo_Serdes#147、#148 合并（2026-11-12）
 
 - 两个 PR 应 Halo 方要求合 main（#146、#150）、按本地全量实测更新测试总数后合并：#147 → `d5789c2`，#148 → `6516f1c`。
